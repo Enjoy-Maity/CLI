@@ -20,13 +20,13 @@ def vsd_cont_mappin_yes(cli,row_dictionary,key):
             cli = f"{cli}\
                 bgp\n"
 
-            if((len(row_dictionary['vsi-export / RT-Export']) > 0) and (row_dictionary['vsi-export / RT-Export'] != "TempNA")):
+            if((len(row_dictionary['vsi-export']) > 0) and (row_dictionary['vsi-export'] != "TempNA")):
                 cli = f"{cli}\
-                        vsi-export {row_dictionary['vsi-export / RT-Export']}\n"
+                        vsi-export {row_dictionary['vsi-export']}\n"
             
-            if((len(row_dictionary['vsi-import / RT-Import']) > 0) and (row_dictionary['vsi-import / RT-Import'] != "TempNA")):
+            if((len(row_dictionary['vsi-import']) > 0) and (row_dictionary['vsi-import'] != "TempNA")):
                 cli = f"{cli}\
-                    vsi-import {row_dictionary['vsi-import / RT-Import']}\n"
+                    vsi-import {row_dictionary['vsi-import']}\n"
             
             cli = f"{cli}\
                         exit\n"
@@ -52,13 +52,11 @@ def vsd_cont_mappin_yes(cli,row_dictionary,key):
         
         if((len(row_dictionary['vsd-domain']) > 0) and (row_dictionary['vsd-domain'] != "TempNA")):
             cli = f"{cli}\
-                vsd-domain {row_dictionary['vsd-domain']}\n\
-                shutdown\n\
-                    exit\n"
-        else:
-            cli = f"{cli}\
-                shutdown\n\
-                    exit\n"
+                vsd-domain {row_dictionary['vsd-domain']}\n"
+        
+        cli = f"{cli}\
+            shutdown\n\
+                exit\n"
     
         return cli
         
@@ -80,25 +78,35 @@ def vsd_cont_mappin_no(cli,row_dictionary,key):
                     exit\n"
         
         cli = f"{cli}\
-                  vxlan instance {row_dictionary['vxlan instance']} vni {row_dictionary['VNI ID']} create\n"
+                  vxlan instance {row_dictionary['vxlan instance']} vni {row_dictionary['VNI ID']} create\n\
+                    exit\n"
         
         if((len(row_dictionary['BGP']) > 0) and (row_dictionary['BGP'] != "TempNA")):
             cli =  f"{cli}\
                       bgp\n\
                         {row_dictionary['BGP']}\n"
             
-            if(((len(row_dictionary['vsi-export / RT-Export']) > 0) and (row_dictionary['vsi-export / RT-Export'] != "TempNA")) and ((len(row_dictionary['vsi-import / RT-Import']) > 0) and (row_dictionary['vsi-import / RT-Import'] != "TempNA"))):
+            if((len(row_dictionary['vsi-export']) > 0) and (row_dictionary['vsi-export'] != "TempNA")):
                 cli = f"{cli}\
-                    route-target export target:{row_dictionary['vsi-export / RT-Export']} import target:{row_dictionary['vsi-import / RT-Import']}\n"
+                        vsi-export {row_dictionary['vsi-export']}\n"
+            
+            if((len(row_dictionary['vsi-import']) > 0) and (row_dictionary['vsi-import'] != "TempNA")):
+                cli = f"{cli}\
+                    vsi-import {row_dictionary['vsi-import']}\n"
+                
+            
+            if(((len(row_dictionary['RT-Export']) > 0) and (row_dictionary['RT-Export'] != "TempNA")) and ((len(row_dictionary['RT-Import']) > 0) and (row_dictionary['RT-Import'] != "TempNA"))):
+                cli = f"{cli}\
+                    route-target export target:{row_dictionary['RT-Export']} import target:{row_dictionary['RT-Import']}\n"
             
             else:
-                if((len(row_dictionary['vsi-export / RT-Export']) > 0) and (row_dictionary['vsi-export / RT-Export'] != "TempNA")):
+                if((len(row_dictionary['RT-Export']) > 0) and (row_dictionary['RT-Export'] != "TempNA")):
                     cli = f"{cli}\
-                            route-target export target:{row_dictionary['vsi-export / RT-Export']}\n"
+                            route-target export target:{row_dictionary['RT-Export']}\n"
                 
-                if((len(row_dictionary['vsi-import / RT-Import']) > 0) and (row_dictionary['vsi-import / RT-Import'] != "TempNA")):
+                if((len(row_dictionary['RT-Import']) > 0) and (row_dictionary['RT-Import'] != "TempNA")):
                     cli = f"{cli}\
-                        route-target import target:{row_dictionary['vsi-import / RT-Import']}\n"
+                        route-target import target:{row_dictionary['RT-Import']}\n"
             
             cli = f"{cli}\
                         exit\n"
@@ -123,13 +131,11 @@ def vsd_cont_mappin_no(cli,row_dictionary,key):
                         exit\n"
         if((len(row_dictionary['vsd-domain']) > 0) and (row_dictionary['vsd-domain'] != "TempNA")):
             cli = f"{cli}\
-                vsd-domain {row_dictionary['vsd-domain']}\n\
-                shutdown\n\
-                    exit\n"
-        else:
-            cli = f"{cli}\
-                shutdown\n\
-                    exit\n"
+                vsd-domain {row_dictionary['vsd-domain']}\n"
+
+        cli = f"{cli}\
+            shutdown\n\
+                exit\n"
         
         return cli
 
@@ -152,10 +158,10 @@ def cli_maker(dataframe,key,cli):
             
         for i in range(len(dataframe)):
             if (dataframe.iloc[i]['VSD Controller Mapping'].upper() == "YES"):
-                cli = vsd_cont_mappin_yes(cli,dataframe.loc[i].to_dict(),key)
+                cli = vsd_cont_mappin_yes(cli,dataframe.iloc[i].to_dict(),key)
             
             if (dataframe.iloc[i]['VSD Controller Mapping'].upper() == "NO"):
-                cli = vsd_cont_mappin_no(cli,dataframe.loc[i].to_dict(),key)
+                cli = vsd_cont_mappin_no(cli,dataframe.iloc[i].to_dict(),key)
            
         return cli
     
