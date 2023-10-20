@@ -6,11 +6,24 @@ import numpy as np
 import traceback
 from tkinter import messagebox
 from Custom_Exception import CustomException
+from datetime import datetime
+from CustomThread import CustomThread
+from Section_splitter import section_splitter
 
 log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
 Path(log_file_path).mkdir(parents=True,exist_ok=True)
 
 log_file = os.path.join(log_file_path,"Template_checks.log")
+
+today = datetime.now()
+
+if(os.path.exists(log_file)):
+    #getting the creation time of the log file
+    log_file_create_time= datetime.fromtimestamp(os.path.getctime(log_file))
+
+    if(log_file_create_time < today):
+        os.remove(log_file)
+
 
 logging.basicConfig(filename=log_file,
                              filemode="a",
@@ -37,8 +50,11 @@ def main_func(**kwargs):
             host_details_df = pd.read_excel(file_name,'Host Details')
             unique_host_ips = host_details_df['Host_IP'].unique()
 
+            # if(pd.NA in nan_test ):
             nan_test = any(pd.isna(element) for element in unique_host_ips)
             
+            # if(np.nan in nan_test):
+            #     nan_test = any(pd.isna(element) for element in unique_host_ips)            
             blank_Sr_no_list = []
             # If nan_test is true
             if(nan_test):
@@ -90,6 +106,60 @@ def main_func(**kwargs):
                 raise CustomException("Host IP Details Incorrect!",
                                       f"Duplicate Host IPs found for Sr no: {', '.join(str(element) for element in duplicated_host_ip_Sr_no_list)}")
 
+            
+            # Finding the non_available_ip_sheets mentioned in the 'Host Details' sheet
+            sheetnames.remove('Host Details')
+            non_available_host_ip_sheets = []
+            non_available_sheet_ip_in_unique_host_ips = []
+            if(unique_host_ips.size >= (len(sheetnames))):
+                i = 0
+                while(i<unique_host_ips.size):
+                    if(not unique_host_ips[i] in sheetnames):
+                        non_available_host_ip_sheets.append(unique_host_ips[i])
+                    i+=1
+            
+            # Raising the custom exception in case the len(non_available_host_ip_sheets) is greater than 0
+            if(len(non_available_host_ip_sheets) > 0):
+                raise CustomException("Host IP Details Incorrect!",
+                                      f"Please cross-check the uploaded workbook as host ip/s '{', '.join(non_available_host_ip_sheets)}' input sheets are missing!")
+
+            if(unique_host_ips.size < len(sheetnames)):
+                i = 0
+                while(i<len(sheetnames)):
+                    if(not sheetnames[i] in unique_host_ips):
+                        non_available_sheet_ip_in_unique_host_ips.append(sheetnames[i])
+                    i+=1
+                
+            # Raising the custom exception in case the len(non_available_sheet_ip_in_unique_host_ips) is greater than 0
+            if(len(non_available_sheet_ip_in_unique_host_ips) > 0):
+                raise CustomException("Host IP Details Not Found!",
+                                      f"Please cross-check the uploaded workbook as sheets -ip/s '{', '.join(non_available_sheet_ip_in_unique_host_ips)}' are not found in host details!")
+            
+            # Calling the section Splitter for splitting the nodes according to the sections and then according to the actions
+            thread_list = []
+            i = 0
+            while(i<len(sheetnames)):
+                temp_var_for_thread = CustomThread(target = section_splitter,
+                                                args=(pd.read_excel(file_reader,sheetnames[i],engine='openpyxl'),'Template_checks'))
+                thread_list.append(temp_var_for_thread)
+                temp_var_for_thread.daemon = True
+                temp_var_for_thread.start()
+                i+=1
+            
+            dictionary_for_node_to_section = {}
+            i = 0
+            while(i<len(sheetnames)):
+                dictionary_for_node_to_section[sheetnames[i]] = thread_list[i].join()
+                print("\n\n\n\n\n\n\n")
+                # print(dictionary_for_node_to_section[sheetnames[i]])
+                print(sheetnames[i])
+                sections = list(dictionary_for_node_to_section[sheetnames[i]].keys())
+                j = 0 
+                while(j< len(sections)):
+                    print(f"{sections[j]} ==> {dictionary_for_node_to_section[sheetnames[i]][sections[j]]}\n\n")
+                    j+=1
+                i+=1
+            
             
             # file_read   = pd.read_excel(file_reader,)
             file_reader.close()
