@@ -24,6 +24,7 @@ if(os.path.exists(log_file)):
     if(log_file_create_time < today):
         os.remove(log_file)
 
+flag = ''
 
 logging.basicConfig(filename=log_file,
                              filemode="a",
@@ -31,11 +32,11 @@ logging.basicConfig(filename=log_file,
                              datefmt='%d-%b-%Y %I:%M:%S %p',
                              encoding= "UTF-8",
                              level=logging.DEBUG)
-
+logging.captureWarnings(capture=True)
 
 def main_func(**kwargs):
     file_name = str(kwargs['filename'])
-    logging.info("Starting the Root Template Checks Process")
+    logging.info("#######################################################<<Starting the Root Template Checks Process>>########################################################################")
 
     try:
         logging.info("Reading the file selected by the user")
@@ -51,64 +52,64 @@ def main_func(**kwargs):
             unique_host_ips = host_details_df['Host_IP'].unique()
 
             # if(pd.NA in nan_test ):
-            nan_test = any(pd.isna(element) for element in unique_host_ips)
+            # nan_test = any(pd.isna(element) for element in unique_host_ips)
             
             # if(np.nan in nan_test):
             #     nan_test = any(pd.isna(element) for element in unique_host_ips)            
-            blank_Sr_no_list = []
-            # If nan_test is true
-            if(nan_test):
-                i = 0
-                while(i<len(host_details_df)):
-                    if(pd.isna(host_details_df.iloc[i]['Host_IP'])):
-                        blank_Sr_no_list.append(host_details_df.iloc[i]['Sr.No'])
-                    i+=1
+            # blank_Sr_no_list = []
+            # # If nan_test is true
+            # if(nan_test):
+            #     i = 0
+            #     while(i<len(host_details_df)):
+            #         if(pd.isna(host_details_df.iloc[i]['Host_IP'])):
+            #             blank_Sr_no_list.append(host_details_df.iloc[i]['Sr.No'])
+            #         i+=1
             
             # temp_array = unique_host_ips[~np.isnan(unique_host_ips)]
-            temp_array = unique_host_ips[~pd.isna(unique_host_ips)]
-            host_details_df.dropna(inplace= True)
+            # temp_array = unique_host_ips[~pd.isna(unique_host_ips)]
+            # host_details_df.dropna(inplace= True)
             
 
-            # Checking duplicated Host IPs in the Host Details sheet
-            duplicate_host_ip_boolean_series = host_details_df.duplicated(subset=['Host_IP'])
-            duplicated_host_ip_Sr_no_list = []
-            logging.info("Checking duplicated host ip details in the Host Details sheet")
+            # # Checking duplicated Host IPs in the Host Details sheet
+            # duplicate_host_ip_boolean_series = host_details_df.duplicated(subset=['Host_IP'])
+            # duplicated_host_ip_Sr_no_list = []
+            # logging.info("Checking duplicated host ip details in the Host Details sheet")
             
-            i = 0
-            while(i < duplicate_host_ip_boolean_series.size):
-                if(duplicate_host_ip_boolean_series[i]):
-                    temp_array_list = host_details_df[host_details_df['Host_IP'] == host_details_df.iloc[i]['Host_IP']]
-                    duplicated_host_ip_Sr_no_list.extend(list(temp_array_list['Sr.No']))
-                i+=1
+            # i = 0
+            # while(i < duplicate_host_ip_boolean_series.size):
+            #     if(duplicate_host_ip_boolean_series[i]):
+            #         temp_array_list = host_details_df[host_details_df['Host_IP'] == host_details_df.iloc[i]['Host_IP']]
+            #         duplicated_host_ip_Sr_no_list.extend(list(temp_array_list['Sr.No']))
+            #     i+=1
             
             
-            if(len(duplicated_host_ip_Sr_no_list) >0):
-                duplicated_host_ip_Sr_no_list = np.unique(np.array(duplicated_host_ip_Sr_no_list))
+            # if(len(duplicated_host_ip_Sr_no_list) >0):
+            #     duplicated_host_ip_Sr_no_list = np.unique(np.array(duplicated_host_ip_Sr_no_list))
             
-            if((len(blank_Sr_no_list)> 0) and (len(duplicated_host_ip_Sr_no_list) > 0)):
-                file_reader.close()
-                del file_reader
-                logging.error("Blank Host IP and duplicated Host IP details are found!")
-                raise CustomException("Host IP Details Incorrect!",
-                                      f"Blank IP Details found for Sr no.: {', '.join(str(element) for element in blank_Sr_no_list)}\n\nand \n\nDuplicate Host IPs found for Sr no: {', '.join(str(element) for element in duplicated_host_ip_Sr_no_list)}")
+            # if((len(blank_Sr_no_list)> 0) and (len(duplicated_host_ip_Sr_no_list) > 0)):
+            #     file_reader.close()
+            #     del file_reader
+            #     logging.error("Blank Host IP and duplicated Host IP details are found!")
+            #     raise CustomException("Host IP Details Incorrect!",
+            #                           f"Blank IP Details found for Sr no.: {', '.join(str(element) for element in blank_Sr_no_list)}\n\nand \n\nDuplicate Host IPs found for Sr no: {', '.join(str(element) for element in duplicated_host_ip_Sr_no_list)}")
             
-            if(len(blank_Sr_no_list) > 0):
-                file_reader.close()
-                del file_reader
-                logging.error("Blank Host IP details are found!")
-                raise CustomException("Blank Host IP Details Found!",
-                                      f"Blank IP Details found for Sr no.: {', '.join(str(element) for element in blank_Sr_no_list)}")
+            # if(len(blank_Sr_no_list) > 0):
+            #     file_reader.close()
+            #     del file_reader
+            #     logging.error("Blank Host IP details are found!")
+            #     raise CustomException("Blank Host IP Details Found!",
+            #                           f"Blank IP Details found for Sr no.: {', '.join(str(element) for element in blank_Sr_no_list)}")
             
-            if(len(duplicated_host_ip_Sr_no_list) > 0):
-                file_reader.close()
-                del file_reader
-                logging.error("Duplicated Host IP details are found!")
-                raise CustomException("Host IP Details Incorrect!",
-                                      f"Duplicate Host IPs found for Sr no: {', '.join(str(element) for element in duplicated_host_ip_Sr_no_list)}")
+            # if(len(duplicated_host_ip_Sr_no_list) > 0):
+            #     file_reader.close()
+            #     del file_reader
+            #     logging.error("Duplicated Host IP details are found!")
+            #     raise CustomException("Host IP Details Incorrect!",
+            #                           f"Duplicate Host IPs found for Sr no: {', '.join(str(element) for element in duplicated_host_ip_Sr_no_list)}")
 
             
             # Finding the non_available_ip_sheets mentioned in the 'Host Details' sheet
-            sheetnames.remove('Host Details')
+            # sheetnames.remove('Host Details')
             non_available_host_ip_sheets = []
             non_available_sheet_ip_in_unique_host_ips = []
             if(unique_host_ips.size >= (len(sheetnames))):
@@ -150,15 +151,16 @@ def main_func(**kwargs):
             i = 0
             while(i<len(sheetnames)):
                 dictionary_for_node_to_section[sheetnames[i]] = thread_list[i].join()
-                print("\n\n\n\n\n\n\n")
+                # print("\n\n\n\n\n\n\n")
                 # print(dictionary_for_node_to_section[sheetnames[i]])
-                print(sheetnames[i])
-                sections = list(dictionary_for_node_to_section[sheetnames[i]].keys())
-                j = 0 
-                while(j< len(sections)):
-                    print(f"{sections[j]} ==> {dictionary_for_node_to_section[sheetnames[i]][sections[j]]}\n\n")
-                    j+=1
+                # print(sheetnames[i])
+                # sections = list(dictionary_for_node_to_section[sheetnames[i]].keys())
+                # j = 0 
+                # while(j< len(sections)):
+                #     print(f"{sections[j]} ==> {dictionary_for_node_to_section[sheetnames[i]][sections[j]]}\n\n")
+                #     j+=1
                 i+=1
+            
             
             
             # file_read   = pd.read_excel(file_reader,)
@@ -166,11 +168,15 @@ def main_func(**kwargs):
             del file_reader
     
     except CustomException as e:
+        flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntiltle = {e.title}\nmessage = {e.message}")
 
     except Exception as e:
+        flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
         messagebox.showerror("Exception Occurred!",e)
     
+    finally:
+        return flag
 
 main_func(filename=r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Nokia_Design Input_Template.xlsx")
