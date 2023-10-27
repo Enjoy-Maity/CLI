@@ -26,7 +26,8 @@ def section_splitter(dataframe,method_called):
         string_to_be_found = "#Secti0n_MPBN"
         dataframe = dataframe.fillna("TempNA")
         section_dictionary = {}
-
+        
+        logging.debug(f"Starting splitting of the node sheet")
         i = 0
         while(i < len(dataframe)):
             if(str(dataframe.iloc[i][0]).strip().__contains__(string_to_be_found)):
@@ -79,6 +80,7 @@ def section_splitter(dataframe,method_called):
             else:
                 i+=1
         
+        logging.debug("Checking for sections with empty dataframes")
         sections = list(section_dictionary.keys())
         i = 0
         while(i<len(sections)):
