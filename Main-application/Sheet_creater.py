@@ -26,92 +26,115 @@ logging.captureWarnings(capture=True)
 flag = ''
 
 def sheet_creater(**kwargs):
-    logging.info(f"Starting the Sheet Creater for {os.path.basename(kwargs['file'])}")
-    host_ips_sheets_required = kwargs['host_ips_sheets_required']
-    file                     = kwargs['file']
-    standard_input           = kwargs['standard_input']
-    file_name                = os.path.basename(file)
-    standard_input_file_name = os.path.basename(standard_input)
-    
-    logging.debug(f"Reading the '{standard_input_file_name}' for the 'Standard Template' worksheet using 'openpyxl'")
-    standard_input_workbook = load_workbook(standard_input)
-    standard_input_template_worksheet = standard_input_workbook['Standard Template']
-    max_rows                          = standard_input_template_worksheet.max_row
-    max_columns                       = standard_input_template_worksheet.max_column
+    try:
+        logging.info(f"Starting the Sheet Creater for {os.path.basename(kwargs['file'])}")
+        host_ips_sheets_required = kwargs['host_ips_sheets_required']
+        file                     = kwargs['file']
+        standard_input           = kwargs['standard_design_template_path']
+        file_name                = os.path.basename(file)
+        standard_input_file_name = os.path.basename(standard_input)
 
-    logging.debug(f"Reading the {file_name} using openpyxl")
-    host_ips_sheets_required_workbook = load_workbook(file)
-    host_ips_sheetnames_present_in_the_workbook = host_ips_sheetnames_present_in_the_workbook.sheetnames
+        logging.debug(f"Reading the '{standard_input_file_name}' for the 'Standard Template' worksheet using 'openpyxl'")
+        standard_input_workbook = load_workbook(standard_input)
+        standard_input_template_worksheet = standard_input_workbook['Standard Template']
+        max_rows                          = standard_input_template_worksheet.max_row
+        max_columns                       = standard_input_template_worksheet.max_column
 
-    logging.debug("Getting the length for widths for the columns of the worksheet")
-    width_list = []
-    i = 1
-    while(i <= max_rows):
-        j = 1
-        while(j <= max_columns):
-            cell_selected = f'{get_column_letter(j)}{i}'
-            if(len(width_list) < j):
-                width_list.insert(j-1,len(str(standard_input_template_worksheet[cell_selected].value))+3)
-            
-            else:
-                if((len(str(standard_input_template_worksheet[cell_selected].value))+3) > width_list[j-1]):
-                    width_list[j-1] = len(str(standard_input_template_worksheet[cell_selected].value))+3
-            j+=1
-        i+=1
+        logging.debug(f"Reading the {file_name} using openpyxl")
+        host_ips_sheets_required_workbook = load_workbook(file)
+        host_ips_sheetnames_present_in_the_workbook = host_ips_sheets_required_workbook.sheetnames
 
-    i = 0
-    while(i < host_ips_sheets_required.size):
-        logging.debug(f"Checking for presence of {host_ips_sheets_required[i]} in {file_name} \n")
-        if(not host_ips_sheets_required[i] in host_ips_sheetnames_present_in_the_workbook):
-            
-            logging.debug(f"Creating {host_ips_sheets_required[i]} sheet in {file_name}")
-            worksheet = host_ips_sheets_required_workbook.create_sheet(title=host_ips_sheets_required[i])
-            font = Font(name='Ericsson Hilda')
-            
-            j = 1
-            while(j <= max_rows):
-                k = 1
-                while(k <= max_columns):
-                    cell_selected = f'{get_column_letter(k)}{j}'
-                    color = standard_input_template_worksheet[cell_selected].fill.start_color
-                    side = Side(color=Color(rgb='00000000'), style='thin')
-                    # logging.debug(f"Writing {cell_selected} for {host_ips_sheets_required[i]} in {file_name}")
-                    
-                    worksheet[cell_selected].value = standard_input_template_worksheet[cell_selected].value
-                    if(not ((color.rgb == None) or (color == Color(rgb = '00000000') or (color == Color(rgb = 'FFFFFFFF'))))):
-                        font.bold = True
-                        worksheet[cell_selected].fill = PatternFill(start_color = color,
-                                                                    end_color = color,
-                                                                    bgColor = color,
-                                                                    fill_type = 'solid')
-                    
-                    worksheet[cell_selected].font = font
-                    
-                    worksheet[cell_selected].alignment = Alignment(horizontal='center',
-                                                                   vertical='center')
-                    
-                    worksheet[cell_selected].border = Border(left = side,
-                                                             right = side,
-                                                             top = side,
-                                                             bottom = side)
-                    
-                    k+=1
-                j+=1
-
+        logging.debug("Getting the length for widths for the columns of the worksheet")
+        width_list = []
+        i = 1
+        while(i <= max_rows):
             j = 1
             while(j <= max_columns):
-                worksheet.column_dimensions[get_column_letter(j)].width = width_list[j-1]
+                cell_selected = f'{get_column_letter(j)}{i}'
+                if(len(width_list) < j):
+                    width_list.insert(j-1,len(str(standard_input_template_worksheet[cell_selected].value))+3)
+
+                else:
+                    if((len(str(standard_input_template_worksheet[cell_selected].value))+3) > width_list[j-1]):
+                        width_list[j-1] = len(str(standard_input_template_worksheet[cell_selected].value))+3
                 j+=1
-        i+=1
+            i+=1
 
-    logging.info(f"Saving the file {file_name}")
-    host_ips_sheets_required_workbook.save(file)
-    host_ips_sheets_required_workbook.close()
-    del host_ips_sheets_required_workbook
+        # print(host_ips_sheetnames_present_in_the_workbook)
 
-    logging.debug(f"Closing the {standard_input_file_name}")
-    standard_input_workbook.close()
-    del standard_input_workbook
+        i = 0
+        while(i < host_ips_sheets_required.size):
+            logging.debug(f"Checking for presence of {host_ips_sheets_required[i]} in {file_name} \n")
+            logging.debug(f"Checking the condition for {not host_ips_sheets_required[i] in host_ips_sheetnames_present_in_the_workbook}")
+            if(not host_ips_sheets_required[i] in host_ips_sheetnames_present_in_the_workbook):
+
+                logging.debug(f"Creating {host_ips_sheets_required[i]} sheet in {file_name}")
+                worksheet = host_ips_sheets_required_workbook.create_sheet(title=host_ips_sheets_required[i])
+
+                j = 1
+                while(j <= max_rows):
+                    k = 1
+                    while(k <= max_columns):
+                        cell_selected = f'{get_column_letter(k)}{j}'
+                        # color = standard_input_template_worksheet[cell_selected].fill.start_color
+                        side = Side(color=Color(rgb='00000000'), style='thin')
+                        # logging.debug(f"Writing {cell_selected} for {host_ips_sheets_required[i]} in {file_name}")
+
+                        worksheet[cell_selected].value = standard_input_template_worksheet[cell_selected].value
+                        # with open(r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\demo.txt","a+") as f:
+                        #     f.write(f"color of {get_column_letter(k)}{j} =====> {color}\n\n")
+                        # if(not ( (color.rgb == None) or (color == Color(rgb = '00000000')) ) ):
+                        #     # font.bold = True
+                        #     worksheet[cell_selected].fill = PatternFill(start_color = color,
+                        #                                                 end_color = color,
+                        #                                                 bgColor = color,
+                        #                                                 fill_type = 'solid')
+
+                        # worksheet[cell_selected].font = 
+                        # worksheet[cell_selected].alignment = Alignment(horizontal='center',
+                        #                                                vertical='center')
+                        
+                        worksheet[cell_selected].font      = standard_input_template_worksheet[cell_selected].font.copy()
+                        worksheet[cell_selected].alignment = standard_input_template_worksheet[cell_selected].alignment.copy()
+                        worksheet[cell_selected].fill      = standard_input_template_worksheet[cell_selected].fill.copy()
+                        worksheet[cell_selected].border    = Border(left = side,
+                                                                    right = side,
+                                                                    top = side,
+                                                                    bottom = side)
+
+                        k+=1
+                    j+=1
+
+                j = 1
+                while(j <= max_columns):
+                    worksheet.column_dimensions[get_column_letter(j)].width = width_list[j-1]
+                    j+=1
+            i+=1
+
+        logging.info("Removing the extra sheet that are not required in the workbook")
+        for sheet in host_ips_sheetnames_present_in_the_workbook:
+            if(not (sheet in host_ips_sheets_required)):
+                del host_ips_sheets_required_workbook[sheet]
+
+        logging.info(f"Saving the file {file_name}")
+        host_ips_sheets_required_workbook.save(file)
+
+        host_ips_sheets_required_workbook.close()
+        del host_ips_sheets_required_workbook
+
+        logging.debug(f"Closing the {standard_input_file_name}")
+        standard_input_workbook.close()
+        del standard_input_workbook
+    
+    except CustomException:
+        global flag;
+        flag = 'Unsuccessful'
+        logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntiltle = {e.title}\nmessage = {e.message}")
+
+    except Exception as e:
+        flag = 'Unsuccessful'
+        logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
+        messagebox.showerror("Exception Occurred!",e)
 
     
 def file_creater(**kwargs):
@@ -124,6 +147,7 @@ def file_creater(**kwargs):
 # kwargs.keys() ==> (file_name)
 def main_func(**kwargs):
     logging.info("#############################################<<Starting the Sheet Creation Task>>#################################################")
+    global flag;
     try:
         host_details_file_name = kwargs['file_name']
         file_reader = pd.ExcelFile(host_details_file_name,engine='openpyxl')
@@ -138,7 +162,7 @@ def main_func(**kwargs):
         # Creating the host details sheet dataframe
         host_details_df = pd.read_excel(file_reader,sheet_name='Host Details')
         
-        logging.info(f'Read the host details {host_details_df}')
+        logging.info(f'Read the host details\n\n{host_details_df}')
 
         # Performing all the mandatory checks for the 'Host Details' sheet.
         unique_host_ips = host_details_df['Host_IP'].unique()
@@ -282,53 +306,62 @@ def main_func(**kwargs):
         
         # Task for creating the host ip sheets in the respective Vendor workbook
         thread_list_for_vendor_sheet_creation = []
-        i = 0
-        while(i < unique_vendors_in_host_details.size):
-            host_ips_sheets_required = host_details_df[host_details_df['Vendor'] == unique_vendors_in_host_details[i]]
-            host_ips_sheets_required = np.array(host_ips_sheets_required['Host_IP'])
-            
-            # Checking the file existence for the input files for the user
-            logging.debug(f"Checking if the '{file_to_be_created.format(unique_vendors_in_host_details[i])}' exists or not, if yes then adding ip sheets, otherwise creating the file itself.")
-            
-            if(not Path(os.path.join(file_to_be_created.format(unique_vendors_in_host_details[i]))).exists()):
-                file_creater(file = os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])))
+        try:
+            i = 0
+            while(i < unique_vendors_in_host_details.size):
+                host_ips_sheets_required = host_details_df[host_details_df['Vendor'] == unique_vendors_in_host_details[i]]
+                host_ips_sheets_required = np.array(host_ips_sheets_required['Host_IP'])
+                
+                # Checking the file existence for the input files for the user
+                logging.debug(f"Checking if the '{file_to_be_created.format(unique_vendors_in_host_details[i])}' exists or not, if yes then adding ip sheets, otherwise creating the file itself.")
+                logging.debug(f"Checking the condition working or not '{not Path(os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i]))).exists() =}'")
 
-            
-            logging.debug(f"Checking for the presence of the 'Standard Template' worksheet in the {file_to_be_selected.format(unique_vendors_in_host_details[i])}")
-            temp_reader = pd.ExcelFile(os.path.join(parent_dir,file_to_be_selected.format(unique_vendors_in_host_details[i])))
-            
-            if(not 'Standard Template' in temp_reader.sheet_names):
+                if(not Path(os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i]))).exists()):
+                    file_creater(file = os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])))
+
+                
+                logging.debug(f"Checking for the presence of the 'Standard Template' worksheet in the {file_to_be_selected.format(unique_vendors_in_host_details[i])}")
+                temp_reader = pd.ExcelFile(os.path.join(parent_dir,file_to_be_selected.format(unique_vendors_in_host_details[i])))
+                
+                if(not 'Standard Template' in temp_reader.sheet_names):
+                    del temp_reader
+                    messagebox.showwarning("Template Sheet Missing!",f"'Standard Template' worksheet missing in {file_to_be_selected.format(unique_vendors_in_host_details[i])}, Kindly Check and Try Again!")
+                    continue
+                
+                logging.info("Deleting the temp_reader (Created to find the existence of 'Standard Template' worksheet)")
                 del temp_reader
-                messagebox.showwarning("Template Sheet Missing!",f"'Standard Template' worksheet missing in {file_to_be_selected.format(unique_vendors_in_host_details[i])}, Kindly Check and Try Again!")
-                continue
-            
-            logging.info("Deleting the temp_reader (Created to find the existence of 'Standard Template' worksheet)")
-            del temp_reader
-            
-            logging.debug(f"Creating the input file with sheets for '{unique_vendors_in_host_details[i]}' via thread")
+                
+                logging.debug(f"Creating the input file with sheets for '{unique_vendors_in_host_details[i]}' via thread")
 
-            # Creating Sheets for the unique IPs using threads
-            thread = Thread(target = sheet_creater,
-                            kwargs={'host_ips_sheets_required': host_ips_sheets_required,
-                                    'file' :os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])),
-                                    'standard_design_template_path': os.path.join(parent_dir,file_to_be_selected.format(unique_vendors_in_host_details[i]))})
-            thread_list_for_vendor_sheet_creation.append(thread)
-            thread.daemon = True
-            thread.start()
-            i+=1
+                # Creating Sheets for the unique IPs using threads
+                thread = Thread(target = sheet_creater,
+                                kwargs={'host_ips_sheets_required': host_ips_sheets_required,
+                                        'file' :os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])),
+                                        'standard_design_template_path': os.path.join(parent_dir,file_to_be_selected.format(unique_vendors_in_host_details[i]))})
+                thread_list_for_vendor_sheet_creation.append(thread)
+                thread.daemon = True
+                thread.start()
+                i+=1
+            
+            logging.info("Stopping all the threads for vendor workbook after writing the information")
+            i = 0
+            while(i < len(thread_list_for_vendor_sheet_creation)):
+                thread_list_for_vendor_sheet_creation[i].join()
+                i+=1
         
-        logging.info("Stopping all the threads for vendor workbook after writing the information")
-        i = 0
-        while(i < len(thread_list_for_vendor_sheet_creation)):
-            thread_list_for_vendor_sheet_creation[i].join()
-            i+=1
+        except Exception as e:
+            global flag;
+            flag = 'Unsuccessful'
+            logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
+            messagebox.showerror("Exception Occurred!",e)
 
         del host_details_file_name
         file_reader.close()
         del file_reader
         
-        logging.info("Setting the flag status to 'Successful'")
-        flag = 'Successful'
+        if(flag != 'Unsuccessful'):
+            logging.info("Setting the flag status to 'Successful'")
+            flag = 'Successful'
 
     except CustomException:
         flag = 'Unsuccessful'
@@ -343,3 +376,5 @@ def main_func(**kwargs):
         logging.info(f"Returning Flag\n\n\t{flag=}")
         logging.shutdown()
         return flag
+    
+# print(main_func(file_name = r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Host_Details.xlsx"))
