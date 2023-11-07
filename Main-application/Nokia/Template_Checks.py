@@ -25,7 +25,7 @@ logging.basicConfig(filename=log_file,
                     level=logging.DEBUG)
 
 
-def main_func(**kwargs):
+def nokia_main_func(**kwargs):
     file_name = kwargs['filename']
     
     
