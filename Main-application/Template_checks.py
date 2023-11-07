@@ -11,6 +11,8 @@ from datetime import datetime
 from CustomThread import CustomThread
 from Section_splitter import section_splitter
 
+
+
 log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
 Path(log_file_path).mkdir(parents=True,exist_ok=True)
 
@@ -37,7 +39,7 @@ logging.captureWarnings(capture=True)
 
 def pickling_func(dictionary:dict, vendor_selected:str):
     username = os.popen(r'cmd.exe /C "echo %username%"').read()
-    path_for_pickle_files = f"C:\\Users\\{username}\\AppData\\Local\\CLI_Automation\\{vendor_selected}.pickle"
+    path_for_pickle_files = f"C:\\Users\\{username.strip()}\\AppData\\Local\\CLI_Automation\\{vendor_selected}.pickle"
     parent_dir = os.path.dirname(path_for_pickle_files)
 
     logging.debug("Creating the folder for the Application in Appdata if not exists")
@@ -48,9 +50,15 @@ def pickling_func(dictionary:dict, vendor_selected:str):
         pickle.dump(dictionary,f)
         f.close()
     
+    logging.debug("Checking the pickle file thus created")
+    with open(path_for_pickle_files,'rb') as f:
+        logging.debug(f"Pickle file =====>\n\t{pickle.load(f)}")
+        f.close()
     del f
 
-def action_blank_check(dataframe:pd.DataFrame):
+
+
+def action_blank_check(dataframe:pd.DataFrame) -> []:
     result = []
     
     dataframe.fillna("TempNA", inplace = True)
@@ -199,6 +207,7 @@ def main_func(**kwargs):
         pickling_func(dictionary=node_to_section_dictionary,
                       vendor_selected=vendor_selected)
         
+        
         logging.debug("Checking if any section of any node ip sheet has blank value in the 'Action' column.")
         try:
             i = 0
@@ -231,6 +240,7 @@ def main_func(**kwargs):
                 thread_return_list.append(thread_list[i].join())
                 i+=1
 
+            logging.debug(f"Got the thread_return_list :-\n{thread_return_list}")
             i = 0
             while(i < len(keys_pertaining_nodes)):
                 selected_node = keys_pertaining_nodes[i]
@@ -240,8 +250,12 @@ def main_func(**kwargs):
                 j = 0
                 while(j < len(sections)):
                     selected_section = sections[j]
-                    if(len(thread_return_list[k]) != 0):
-                        section_dictionary_for_message[selected_section] = thread_return_list[k]
+                    try:
+                        if(len(thread_return_list[k]) != 0):
+                            section_dictionary_for_message[selected_section] = thread_return_list[k]
+                    except:
+                        if(thread_return_list[k] != None):
+                            section_dictionary_for_message[selected_section] = thread_return_list[k]
                     k+=1
                     j+=1
                 
@@ -249,9 +263,46 @@ def main_func(**kwargs):
                     dictionary_for_message[selected_node] = section_dictionary_for_message
 
                 i+=1
+            
+            if(len(dictionary_for_message) > 0):
+                error_folder = os.path.join(parent_folder,"Error_Folder")
+
+                logging.debug("Creating the path for the folder for getting errors")
+                Path(error_folder).mkdir(parents=True,exist_ok=True)
+                
+                logging.info(f"Created '{error_folder}' if not existed, if existed did not raised an exception")
+                
+                logging.info("Creating the Error File path for writing into the exceptions")
+                error_file = os.path.join(error_folder,"Template_Checks_error_Vendor_wise.txt")
+
+                dictionary_for_message_keys_list = list(dictionary_for_message.keys())
+
+                message_to_be_written = f"Issues have been found for below '{vendor_selected}' nodes for Sr.No on {datetime.now().strftime('%d-%b-%Y %H:%M %A')}\n\n"
+                i = 0 
+                while(i < len(dictionary_for_message.keys())):
+                    node_selected = dictionary_for_message_keys_list[i]
+                    sections_in_dictionary_for_message = list(dictionary_for_message[node_selected].keys())
+
+                    message_to_be_written = f"{message_to_be_written}Node :- '{node_selected}'\n"
+                    j = 0
+                    while(j < len(sections_in_dictionary_for_message)):
+                        section_selected = sections_in_dictionary_for_message[j]
+                        message_to_be_written = f"{message_to_be_written}Section : '{section_selected}' :- Sr.No.: {','.join(str(element) for element in dictionary_for_message[node_selected][section_selected])}\n"
+                        j+=1
+                    
+                    message_to_be_written = f"{message_to_be_written}\n\n"
+                    i+=1
+
+                
+                with open(error_file,'w') as f:
+                    f.write(message_to_be_written)
+                    f.close()
+                
+                raise CustomException("Input Issue!",
+                                     f"Issues have been observed in uploaded input sheet. To find the issue in detail, Please! check the 'Template_Checks_error_Vendor_wise' inside 'Error_Folder'")
 
         except CustomException:
-            global flag;
+            # global flag;
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntitle = {e.title}\nmessage = {e.message}")
 
@@ -264,11 +315,29 @@ def main_func(**kwargs):
         host_details_excelfile.close()
         del host_details_excelfile
 
+        
+        # logging.info("Going to perform template checks on 'Nokia' Design Template")
+        # if(vendor_selected.upper() == 'NOKIA'):
+        #     from Nokia.Template_Checks import nokia_main_func
+        #     flag = nokia_main_func(log_file = log_file)
+        
+        # logging.info("Going to perform template checks on 'Cisco' Design Template")
+        # if(vendor_selected.upper() == 'CISCO'):
+        #     pass
+        
+        # logging.info("Going to perform template checks on 'Huawei' Design Template")
+        # if(vendor_selected.upper() == 'HUAWEI'):
+        #     pass
+        
+        # logging.info("Going to perform template checks on 'Ericsson' Design Template")
+        # if(vendor_selected.upper() == 'ERICSSON'):
+        #     pass
+
         if(flag != 'Unsuccessful'):
             flag = 'Successful'
     
     except CustomException as e:
-        global flag;
+        # global flag;
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntitle = {e.title}\nmessage = {e.message}")
     
@@ -288,4 +357,4 @@ def main_func(**kwargs):
         logging.shutdown()
         return flag
 
-# main_func(filename=r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Nokia_Design Input_Template.xlsx")
+main_func(filename=r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Nokia_Design Input_Template.xlsx", vendor_selected = 'Nokia')
