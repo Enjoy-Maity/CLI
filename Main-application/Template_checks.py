@@ -39,7 +39,7 @@ logging.captureWarnings(capture=True)
 
 def pickling_func(dictionary:dict, vendor_selected:str):
     username = os.popen(r'cmd.exe /C "echo %username%"').read()
-    path_for_pickle_files = f"C:\\Users\\{username.strip()}\\AppData\\Local\\CLI_Automation\\{vendor_selected}.pickle"
+    path_for_pickle_files = f"C:\\Users\\{username.strip()}\\AppData\\Local\\CLI_Automation\\{vendor_selected.upper()}.pickle"
     parent_dir = os.path.dirname(path_for_pickle_files)
 
     logging.debug("Creating the folder for the Application in Appdata if not exists")
@@ -54,6 +54,7 @@ def pickling_func(dictionary:dict, vendor_selected:str):
     with open(path_for_pickle_files,'rb') as f:
         logging.debug(f"Pickle file =====>\n\t{pickle.load(f)}")
         f.close()
+        
     del f
 
 
@@ -202,10 +203,7 @@ def main_func(**kwargs):
         if(len(list_of_sheet_with_empty_section_data) > 0):
             raise CustomException("Empty Worksheet Found!",
                                       f"Worksheet with No Section data found, Kindly Check {input_design_file_name.format(vendor_selected)} for the below mentioned nodes:\n\n\t{'\n\t'.join(list_of_sheet_with_empty_section_data)}\n\nKindly Ckeck!")
-        
-        logging.debug("Calling the Pickling Function to create pickles")
-        pickling_func(dictionary=node_to_section_dictionary,
-                      vendor_selected=vendor_selected)
+
         
         
         logging.debug("Checking if any section of any node ip sheet has blank value in the 'Action' column.")
@@ -277,7 +275,7 @@ def main_func(**kwargs):
 
                 dictionary_for_message_keys_list = list(dictionary_for_message.keys())
 
-                message_to_be_written = f"Issues have been found for below '{vendor_selected}' nodes for Sr.No on {datetime.now().strftime('%d-%b-%Y %H:%M %A')}\n\n"
+                message_to_be_written = f"General Check Issues:\n\nIssues have been found for below '{vendor_selected}' nodes for Sr.No on {datetime.now().strftime('%d-%b-%Y %H:%M %A')}\n\n"
                 i = 0 
                 while(i < len(dictionary_for_message.keys())):
                     node_selected = dictionary_for_message_keys_list[i]
@@ -315,23 +313,26 @@ def main_func(**kwargs):
         host_details_excelfile.close()
         del host_details_excelfile
 
+        logging.debug("Calling the Pickling Function to create pickles")
+        pickling_func(dictionary=node_to_section_dictionary,
+                      vendor_selected=vendor_selected)
         
-        # logging.info("Going to perform template checks on 'Nokia' Design Template")
-        # if(vendor_selected.upper() == 'NOKIA'):
-        #     from Nokia.Template_Checks import nokia_main_func
-        #     flag = nokia_main_func(log_file = log_file)
+        logging.info("Going to perform template checks on 'Nokia' Design Template")
+        if(vendor_selected.upper() == 'NOKIA'):
+            from Nokia.Nokia_Template_Checks import nokia_main_func
+            flag = nokia_main_func(log_file = log_file)
         
-        # logging.info("Going to perform template checks on 'Cisco' Design Template")
-        # if(vendor_selected.upper() == 'CISCO'):
-        #     pass
+        logging.info("Going to perform template checks on 'Cisco' Design Template")
+        if(vendor_selected.upper() == 'CISCO'):
+            pass
         
-        # logging.info("Going to perform template checks on 'Huawei' Design Template")
-        # if(vendor_selected.upper() == 'HUAWEI'):
-        #     pass
+        logging.info("Going to perform template checks on 'Huawei' Design Template")
+        if(vendor_selected.upper() == 'HUAWEI'):
+            pass
         
-        # logging.info("Going to perform template checks on 'Ericsson' Design Template")
-        # if(vendor_selected.upper() == 'ERICSSON'):
-        #     pass
+        logging.info("Going to perform template checks on 'Ericsson' Design Template")
+        if(vendor_selected.upper() == 'ERICSSON'):
+            pass
 
         if(flag != 'Unsuccessful'):
             flag = 'Successful'
