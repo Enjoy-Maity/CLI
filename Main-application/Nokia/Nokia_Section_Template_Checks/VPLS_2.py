@@ -16,18 +16,18 @@ logging.basicConfig(filename=log_file,
 
 def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
     """
-    Performs the Template checks for the VPLS 2 Section (VPLS with VSD/VNI)
-    
-    Arguments : (dataframe, ip_node)
-        dataframe => pd.DataFrame,  
-           description ====> contains the section dataframe in this case for VPLS 2, obtained from Input Design workbook.
+        Performs the Template checks for the VPLS 2 Section (VPLS with VSD/VNI)
         
-        ip_node   => str,  
-           description ====> contains the name of the 'IP Node' worksheet, being checked.
-    
-    returns : result_dictionary 
-        result_dictionary => dict, 
-           description ====> contains the dictionary with the list of all errors found in Template Checks with reason as keys.
+        Arguments : (dataframe, ip_node)
+            dataframe => pd.DataFrame,  
+            description ====> contains the section dataframe in this case for VPLS 2, obtained from Input Design workbook.
+            
+            ip_node   => str,  
+            description ====> contains the name of the 'IP Node' worksheet, being checked.
+        
+        returns : result_dictionary 
+            result_dictionary => dict, 
+            description ====> contains the dictionary with the list of all errors found in Template Checks with reason as keys.
     """
 
     logging.debug(f"Created the empty dictionary for returning as result for IP Node: -{ip_node} for VPLS 2 section")
@@ -154,6 +154,8 @@ def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
                 else:
                     result_dictionary[reason3].append(df_with_vsd_controller_yes.iloc[i,df_with_vsd_controller_yes.columns.get_loc('S.No.')])
             i+=1
+        
+        logging.debug(f"Created enteries for the 'VSD Controller Mapping' equal to \'Yes\' status in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}")
     
     if(len(df_with_vsd_controller_no) > 0):
         logging.debug(f"Checking for the enteries of the \'Vsd-domain Name\', \'Vsd-domain Description\', and \'Vsd-domain Type\' for value of \'VSD-Controller Mapping\' equal to \'No\' for VPLS-2 for node ip \'{ip_node}\'")
@@ -185,6 +187,37 @@ def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
                 else:
                     result_dictionary[reason3].append(df_with_vsd_controller_no.iloc[i,df_with_vsd_controller_no.columns.get_loc('S.No.')])
             i+=1
+        
+        logging.debug(f"Created enteries for the 'VSD Controller Mapping' equal to \'No\' status in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}")
+
+    filtered_df_for_rt_export_for_string_length_greater_than_32 = df[df['RT-Export'].map(len) > 32]
+    filtered_df_for_rt_import_for_string_length_greater_than_32 = df[df['RT-Import'].map(len) > 32]
+    filtered_df_for_VSI_export_for_string_length_greater_than_32 = df[df['VSI-Export'].map(len) > 32]
+    filtered_df_for_VSI_import_for_string_length_greater_than_32 = df[df['VSI-Import'].map(len) > 32]
+
+    # Entry checking for RT-Export Character length
+    if(len(filtered_df_for_rt_export_for_string_length_greater_than_32) > 0):
+        reason = 'RT-Export Field Entry Length Greater than 32 characters'
+        result_dictionary[reason] = filtered_df_for_rt_export_for_string_length_greater_than_32['S.No.'].tolist()
+        logging.debug(f"Created enteries for the '{reason}' in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}")
+    
+    # Entry checking for RT-Import Character length
+    if(len(filtered_df_for_rt_import_for_string_length_greater_than_32) > 0):
+        reason = 'RT-Import Field Entry Length Greater than 32 characters'
+        result_dictionary[reason] = filtered_df_for_rt_import_for_string_length_greater_than_32['S.No.'].tolist()
+        logging.debug(f"Created enteries for the '{reason}' in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}")
+    
+    # Entry checking for VSI-Export Character length
+    if(len(filtered_df_for_VSI_export_for_string_length_greater_than_32) > 0):
+        reason = 'VSI-Export Field Entry Length Greater than 32 characters'
+        result_dictionary[reason] = filtered_df_for_VSI_export_for_string_length_greater_than_32['S.No.'].tolist()
+        logging.debug(f"Created enteries for the '{reason}' in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}")
+    
+    # Entry checking for VSI-Import Character length
+    if(len(filtered_df_for_VSI_import_for_string_length_greater_than_32) > 0):
+        reason = 'VSI-Import Field Entry Length Greater than 32 characters'
+        result_dictionary[reason] = filtered_df_for_VSI_import_for_string_length_greater_than_32['S.No.'].tolist()
+        logging.debug(f"Created enteries for the '{reason}' in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}")
 
     logging.debug(f"The result_dictionary for node_ip({ip_node}) for VPLS-2 ==>\n {result_dictionary}")
     

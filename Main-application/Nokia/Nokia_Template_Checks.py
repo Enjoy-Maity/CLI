@@ -59,7 +59,19 @@ def section_wise_input(dictionary: dict, ip_node: str) -> dict:
     return thread_result_dictionary
 
 
-def nokia_main_func(**kwargs):
+def nokia_main_func(**kwargs) -> str:
+    """
+        Performs the Template Checks for Sections pertaining to 'Nokia' vendor
+
+        Arguments : (**kwargs) ==> arguments in a dictionary
+            kwargs ==> 'log_file' : str
+                            description =====> path of file containing logs for the module
+        
+        return flag
+            flag : str
+                description =====> contains 'Unsuccessful' or 'Successful' string corresponding the status of execution completion
+    
+    """
     log_file = kwargs['log_file']
     logging.basicConfig(filename=log_file,
                         filemode="a",

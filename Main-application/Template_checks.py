@@ -37,7 +37,7 @@ logging.basicConfig(filename=log_file,
                              level=logging.DEBUG)
 logging.captureWarnings(capture=True)
 
-def pickling_func(dictionary:dict, vendor_selected:str):
+def pickling_func(dictionary:dict, vendor_selected:str) -> None:
     username = os.popen(r'cmd.exe /C "echo %username%"').read()
     path_for_pickle_files = f"C:\\Users\\{username.strip()}\\AppData\\Local\\CLI_Automation\\{vendor_selected.upper()}.pickle"
     parent_dir = os.path.dirname(path_for_pickle_files)
@@ -59,8 +59,8 @@ def pickling_func(dictionary:dict, vendor_selected:str):
 
 
 
-def action_blank_check(dataframe:pd.DataFrame) -> []:
-    result = []
+def action_blank_check(dataframe:pd.DataFrame) -> list:
+    result = list()
     
     dataframe.fillna("TempNA", inplace = True)
     
@@ -73,7 +73,22 @@ def action_blank_check(dataframe:pd.DataFrame) -> []:
         
     return result
 
-def main_func(**kwargs):
+def main_func(**kwargs) -> str:
+    """
+        Performs the Initial General Template checks and then calls the module specific to the vendor to perform further Template checks.
+
+        Arguments : (**kwargs) ===> provides a dictionary of arguments.
+            kwargs ===>  'filename' : str
+                            description =====> path for file containing 'Host Details'
+                         
+                         'vendor_selected' : str
+                            description =====> selected vendor by the user in GUI
+        
+        return flag
+            flag : str
+                description ===> contains 'Unsuccessful' or 'Successful' string corresponding the status of execution completion
+
+    """
     file_name = str(kwargs['filename'])     # File containing the host details
     logging.info("#######################################################<<Starting the Root Template Checks Process>>########################################################################")
 
