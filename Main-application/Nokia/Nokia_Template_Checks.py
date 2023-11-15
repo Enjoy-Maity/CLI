@@ -22,16 +22,17 @@ section_dictionary = {
     'VPLS-2' : importlib.import_module('Nokia_Section_Template.VPLS_2')
 }
 
-def section_wise_input(dictionary: dict, ip_node: str):
+def section_wise_input(dictionary: dict, ip_node: str) -> dict:
     sections = list(dictionary.keys())
     thread_dictionary = {}
     i = 0
     while(i < len(sections)):
-        module_to_be_called = section_dictionary[sections[i]]
-        thread_dictionary[sections[i]] = CustomThread(target=module_to_be_called.main_func,
-                            args=(dictionary[sections[i]],ip_node))
-        thread_dictionary[sections[i]].daemon = True
-        thread_dictionary[sections[i]].start()
+        if(len(dictionary[sections[i]])> 0):
+            module_to_be_called = section_dictionary[sections[i]]
+            thread_dictionary[sections[i]] = CustomThread(target=module_to_be_called.main_func,
+                                args=(dictionary[sections[i]],ip_node))
+            thread_dictionary[sections[i]].daemon = True
+            thread_dictionary[sections[i]].start()
         i+=1
     
     thread_result_dictionary = {}
@@ -104,6 +105,7 @@ def nokia_main_func(**kwargs):
                 result_from_thread = thread_dictionary[ip_nodes[i]]
                 logging.debug(f"Nokia ===> {ip_nodes[i]} ===> {result_from_thread}")
                 if(result_from_thread == None):
+                    logging.error(f"Result from thread for {ip_nodes[i]} ==> {result_from_thread}")
                     raise CustomException("Exception Occurred!", "Could not parse data!")
                 
                 if(isinstance(result_from_thread,dict)):
