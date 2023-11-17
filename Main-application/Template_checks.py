@@ -13,29 +13,6 @@ from Section_splitter import section_splitter
 
 
 
-log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
-Path(log_file_path).mkdir(parents=True,exist_ok=True)
-
-log_file = os.path.join(log_file_path,"Template_checks.log")
-
-today = datetime.now()
-
-if(os.path.exists(log_file)):
-    #getting the creation time of the log file
-    log_file_create_time= datetime.fromtimestamp(os.path.getctime(log_file))
-
-    if(log_file_create_time < today):
-        os.remove(log_file)
-
-flag = ''
-
-logging.basicConfig(filename=log_file,
-                             filemode="a",
-                             format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
-                             datefmt='%d-%b-%Y %I:%M:%S %p',
-                             encoding= "UTF-8",
-                             level=logging.DEBUG)
-logging.captureWarnings(capture=True)
 
 def pickling_func(dictionary:dict, vendor_selected:str) -> None:
     username = os.popen(r'cmd.exe /C "echo %username%"').read()
@@ -67,8 +44,8 @@ def action_blank_check(dataframe:pd.DataFrame) -> list:
     i = 0
 
     while(i < len(dataframe)):
-        if(dataframe.iloc[i]['Action'] == "TempNA"):
-            result.append(str(dataframe.iloc[i]['S.No.']))
+        if(dataframe.iloc[i,dataframe.columns.get_loc('Action')] == "TempNA"):
+            result.append(str(dataframe.iloc[i,dataframe.columns.get_loc('S.No.')]))
         i+=1
         
     return result
@@ -89,11 +66,33 @@ def main_func(**kwargs) -> str:
                 description ===> contains 'Unsuccessful' or 'Successful' string corresponding the status of execution completion
 
     """
+    log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
+    Path(log_file_path).mkdir(parents=True,exist_ok=True)
+
+    log_file = os.path.join(log_file_path,"Template_checks.log")
+
+    today = datetime.now()
+
+    if(os.path.exists(log_file)):
+        #getting the creation time of the log file
+        log_file_create_time= datetime.fromtimestamp(os.path.getctime(log_file))
+
+        if(log_file_create_time < today):
+            os.remove(log_file)
+
+    global flag; flag = ''
+
+    logging.basicConfig(filename=log_file,
+                                 filemode="a",
+                                 format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
+                                 datefmt='%d-%b-%Y %I:%M:%S %p',
+                                 encoding= "UTF-8",
+                                 level=logging.DEBUG)
+    logging.captureWarnings(capture=True)
     file_name = str(kwargs['filename'])     # File containing the host details
     logging.info("#######################################################<<Starting the Root Template Checks Process>>########################################################################")
 
     try:
-        global flag;
         logging.debug("Checking whether the file uploaded by the user is an excel file or not")
         assert ((len(file_name) > 0) and (file_name.strip().endswith('.xlsx'))), 'Please Select the Host details Excel Workbook!'
         
@@ -154,11 +153,12 @@ def main_func(**kwargs) -> str:
            (len(host_details_present_in_workbook_but_not_in_host_details) > 0)):
             response = messagebox.askyesno("Wrong Data Input!",f"Host Details not found in {input_design_file_name.format(vendor_selected)} workbook:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nand\n\n extra Host IP details found :\n\n{', '.join(host_details_present_in_workbook_but_not_in_host_details)}\n\nDo You want to proceed?",icon = 'warning')
         
-        if(len(host_details_not_present_in_the_workbook) > 0):
-            response = messagebox.askyesno("Host Details Missing!",f"Host Details IPs Missing in {input_design_file_name.format(vendor_selected)}:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",icon = 'warning')
-        
-        if(len(host_details_present_in_workbook_but_not_in_host_details) > 0):
-            response = messagebox.askyesno("Extra Host Details Found!",f"Extra Host IP details found in {input_design_file_name.format(vendor_selected)} but not present in uploaded Host Details:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",icon = 'warning')
+        else:
+            if(len(host_details_not_present_in_the_workbook) > 0):
+                response = messagebox.askyesno("Host Details Missing!",f"Host Details IPs Missing in {input_design_file_name.format(vendor_selected)}:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",icon = 'warning')
+            
+            if(len(host_details_present_in_workbook_but_not_in_host_details) > 0):
+                response = messagebox.askyesno("Extra Host Details Found!",f"Extra Host IP details found in {input_design_file_name.format(vendor_selected)} but not present in uploaded Host Details:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",icon = 'warning')
 
         if((response != None) and (not response)):
             selected_vendor_book_excel_file.close()
@@ -192,7 +192,7 @@ def main_func(**kwargs) -> str:
                 i+=1
         
         except CustomException:
-            global flag;
+            # global flag;
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntitle = {e.title}\nmessage = {e.message}")
 
@@ -277,17 +277,16 @@ def main_func(**kwargs) -> str:
 
                 i+=1
             
+            error_folder = os.path.join(parent_folder,"Error_Folder")
+            logging.info(f"Created '{error_folder}' if not existed, if existed did not raised an exception")
+            
+            logging.debug("Creating the path for the folder for getting errors")
+            Path(error_folder).mkdir(parents=True,exist_ok=True)
+            
+            logging.info("Creating the Error File path for writing into the exceptions")
+            error_file = os.path.join(error_folder,"Template_Checks_error_Vendor_wise.txt")
+            
             if(len(dictionary_for_message) > 0):
-                error_folder = os.path.join(parent_folder,"Error_Folder")
-
-                logging.debug("Creating the path for the folder for getting errors")
-                Path(error_folder).mkdir(parents=True,exist_ok=True)
-                
-                logging.info(f"Created '{error_folder}' if not existed, if existed did not raised an exception")
-                
-                logging.info("Creating the Error File path for writing into the exceptions")
-                error_file = os.path.join(error_folder,"Template_Checks_error_Vendor_wise.txt")
-
                 dictionary_for_message_keys_list = list(dictionary_for_message.keys())
 
                 message_to_be_written = f"General Check Issues:\n\nIssues have been found for below '{vendor_selected}' nodes for Sr.No on {datetime.now().strftime('%d-%b-%Y %H:%M %A')}\n\n"
@@ -313,6 +312,10 @@ def main_func(**kwargs) -> str:
                 
                 raise CustomException("Input Issue!",
                                      f"Issues have been observed in uploaded input sheet. To find the issue in detail, Please! check the 'Template_Checks_error_Vendor_wise' inside 'Error_Folder'")
+            
+            with open(error_file, 'w') as f:
+                f.write('')
+                f.close()
 
         except CustomException:
             # global flag;
@@ -324,30 +327,35 @@ def main_func(**kwargs) -> str:
             logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
             messagebox.showerror("Exception Occurred!",e)
 
-        logging.info(f"Deleting host_details_excelfile")
-        host_details_excelfile.close()
-        del host_details_excelfile
+        else:
+            logging.info(f"Deleting host_details_excelfile")
+            host_details_excelfile.close()
+            del host_details_excelfile
 
-        logging.debug("Calling the Pickling Function to create pickles")
-        pickling_func(dictionary=node_to_section_dictionary,
-                      vendor_selected=vendor_selected)
+            logging.debug("Calling the Pickling Function to create pickles")
+            pickling_func(dictionary=node_to_section_dictionary,
+                        vendor_selected=vendor_selected)
+            
+            logging.info("Going to perform template checks on 'Nokia' Design Template")
+            if(vendor_selected.upper() == 'NOKIA'):
+                from Nokia.Nokia_Template_Checks import nokia_main_func
+                flag = nokia_main_func(log_file = log_file,
+                                        parent_folder = parent_folder)
+            
+            logging.info("Going to perform template checks on 'Cisco' Design Template")
+            if(vendor_selected.upper() == 'CISCO'):
+                pass
+            
+            logging.info("Going to perform template checks on 'Huawei' Design Template")
+            if(vendor_selected.upper() == 'HUAWEI'):
+                pass
+            
+            logging.info("Going to perform template checks on 'Ericsson' Design Template")
+            if(vendor_selected.upper() == 'ERICSSON'):
+                pass
         
-        logging.info("Going to perform template checks on 'Nokia' Design Template")
-        if(vendor_selected.upper() == 'NOKIA'):
-            from Nokia.Nokia_Template_Checks import nokia_main_func
-            flag = nokia_main_func(log_file = log_file)
-        
-        logging.info("Going to perform template checks on 'Cisco' Design Template")
-        if(vendor_selected.upper() == 'CISCO'):
-            pass
-        
-        logging.info("Going to perform template checks on 'Huawei' Design Template")
-        if(vendor_selected.upper() == 'HUAWEI'):
-            pass
-        
-        logging.info("Going to perform template checks on 'Ericsson' Design Template")
-        if(vendor_selected.upper() == 'ERICSSON'):
-            pass
+        if(flag == ''):
+            flag = 'Unsuccessful'
 
         if(flag != 'Unsuccessful'):
             flag = 'Successful'
@@ -373,4 +381,4 @@ def main_func(**kwargs) -> str:
         logging.shutdown()
         return flag
 
-main_func(filename=r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Nokia_Design Input_Template.xlsx", vendor_selected = 'Nokia')
+# main_func(filename=r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Nokia_Design Input_Template.xlsx", vendor_selected = 'Nokia')

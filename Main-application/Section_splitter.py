@@ -30,9 +30,9 @@ def section_splitter(dataframe,method_called):
         logging.debug(f"Starting splitting of the node sheet")
         i = 0
         while(i < len(dataframe)):
-            if(str(dataframe.iloc[i][0]).strip().__contains__(string_to_be_found)):
-                section = dataframe.iloc[i][0].split(string_to_be_found)[0]
-                unrefind_columns = dataframe.iloc[i+1].tolist()
+            if(str(dataframe.iloc[i,0]).strip().__contains__(string_to_be_found)):
+                section = dataframe.iloc[i,0].split(string_to_be_found)[0]
+                unrefind_columns = dataframe.loc[i+1].tolist()
                 columns = []
 
                 # Getting required columns for the section dataframe creation.
@@ -56,7 +56,7 @@ def section_splitter(dataframe,method_called):
                 while(j<len(dataframe)):
                     # If either we have reached the last row of the dataframe or encountered another row with special section string
                     # we are breaking the loop
-                    if(((j+2) < len(dataframe)) and (str(dataframe.iloc[j+2][0]).strip().__contains__(string_to_be_found))):
+                    if(((j+2) < len(dataframe)) and (str(dataframe.iloc[j+2,0]).strip().__contains__(string_to_be_found))):
                         break
 
                     else:
@@ -64,7 +64,7 @@ def section_splitter(dataframe,method_called):
                         # corresponding to the row number
                         k = 0
                         while(k<len(columns)):
-                            dictionary_for_columns[columns[k]].append(dataframe.iloc[j][k])
+                            dictionary_for_columns[columns[k]].append(dataframe.iloc[j,k])
                             k+=1
                     j+=1
                 
