@@ -36,19 +36,26 @@ def pickling_func(dictionary:dict, vendor_selected:str) -> None:
 
 
 
-def action_blank_check(dataframe:pd.DataFrame) -> list:
-    result = list()
-    
-    dataframe.fillna("TempNA", inplace = True)
-    
-    i = 0
-
-    while(i < len(dataframe)):
-        if(dataframe.iloc[i,dataframe.columns.get_loc('Action')] == "TempNA"):
-            result.append(str(dataframe.iloc[i,dataframe.columns.get_loc('S.No.')]))
-        i+=1
+def action_blank_check(*args) -> list:
+    try:
+        assert isinstance(args[0],pd.DataFrame)
+        dataframe = args[0]
+        result = list()
         
-    return result
+        dataframe.fillna("TempNA", inplace = True)
+        
+        i = 0
+
+        while(i < len(dataframe)):
+            if(dataframe.iloc[i,dataframe.columns.get_loc('Action')] == "TempNA"):
+                result.append(str(dataframe.iloc[i,dataframe.columns.get_loc('S.No.')]))
+            i+=1
+            
+        return result
+    
+    except AssertionError as e:
+        logging.debug(f"Assertion Error====>\n{traceback.format_exc()}\n{e}")
+        messagebox.showerror('Wrong Data Type!',e)
 
 def main_func(**kwargs) -> str:
     """
@@ -234,7 +241,7 @@ def main_func(**kwargs) -> str:
                     selected_section = sections[j]
                     dataframe = node_to_section_dictionary[selected_node][selected_section]
                     temp_thread = CustomThread(target = action_blank_check,
-                                               args = (dataframe))
+                                               args = (dataframe,))
                     temp_thread.daemon = True
                     thread_list.append(temp_thread)
                     temp_thread.start()
@@ -277,14 +284,15 @@ def main_func(**kwargs) -> str:
 
                 i+=1
             
-            error_folder = os.path.join(parent_folder,"Error_Folder")
+            error_folder = os.path.join(os.path.join(parent_folder,"Error_Folder"),"Design_Input_Checks_Results")
             logging.info(f"Created '{error_folder}' if not existed, if existed did not raised an exception")
             
             logging.debug("Creating the path for the folder for getting errors")
             Path(error_folder).mkdir(parents=True,exist_ok=True)
             
+            
             logging.info("Creating the Error File path for writing into the exceptions")
-            error_file = os.path.join(error_folder,"Template_Checks_error_Vendor_wise.txt")
+            error_file = os.path.join(error_folder,"General_Design_Input_Checks_Errors.txt")
             
             if(len(dictionary_for_message) > 0):
                 dictionary_for_message_keys_list = list(dictionary_for_message.keys())
@@ -313,9 +321,9 @@ def main_func(**kwargs) -> str:
                 raise CustomException("Input Issue!",
                                      f"Issues have been observed in uploaded input sheet. To find the issue in detail, Please! check the 'Template_Checks_error_Vendor_wise' inside 'Error_Folder'")
             
-            with open(error_file, 'w') as f:
-                f.write('')
-                f.close()
+            # with open(error_file, 'w') as f:
+            #     f.write('')
+            #     f.close()
 
         except CustomException:
             # global flag;
@@ -381,4 +389,4 @@ def main_func(**kwargs) -> str:
         logging.shutdown()
         return flag
 
-# main_func(filename=r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Nokia_Design Input_Template.xlsx", vendor_selected = 'Nokia')
+main_func(filename=r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Nokia_Design Input_Template.xlsx", vendor_selected = 'Nokia')
