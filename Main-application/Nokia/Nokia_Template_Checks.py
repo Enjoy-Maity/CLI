@@ -220,7 +220,7 @@ def nokia_main_func(**kwargs) -> str:
                                 error_message = f"{error_message}\n\t{k+1}.) {reason} ==>> {', '.join(str(element) for element in sr_no_list)}"
                             
                             else:
-                                error_message = f"{error_message}\n\t{k+1}.) {reason} for \'S.No.\' ==>> {', '.join(str(int(element)) for element in sr_no_list)}"
+                                error_message = f"{error_message}\n\t{k+1}.) {reason} for \'S.No.\' ==>> ({', '.join(str(int(element)) for element in sr_no_list)})"
                             k+=1
                         
                         error_message = f"{error_message}\n"
