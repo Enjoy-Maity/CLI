@@ -37,6 +37,7 @@ def pickling_func(dictionary:dict, vendor_selected:str) -> None:
 
 
 def action_blank_check(*args) -> list:
+    
     try:
         assert isinstance(args[0],pd.DataFrame)
         dataframe = args[0]
@@ -307,7 +308,7 @@ def main_func(**kwargs) -> str:
                     j = 0
                     while(j < len(sections_in_dictionary_for_message)):
                         section_selected = sections_in_dictionary_for_message[j]
-                        message_to_be_written = f"{message_to_be_written}Section : '{section_selected}' :- Sr.No.: {','.join(str(element) for element in dictionary_for_message[node_selected][section_selected])}\n"
+                        message_to_be_written = f"{message_to_be_written}Section : '{section_selected}' :- Sr.No.: ({','.join(str(element) for element in dictionary_for_message[node_selected][section_selected])})\n"
                         j+=1
                     
                     message_to_be_written = f"{message_to_be_written}\n\n"
