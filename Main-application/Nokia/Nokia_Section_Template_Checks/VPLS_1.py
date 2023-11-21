@@ -88,6 +88,28 @@ def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
                     result_dictionary[reason].append(df.iloc[i,df.columns.get_loc('S.No.')])
             i+=1
         logging.debug(f"Entered the enteries for 'Blank VPLS ID' for node ip {ip_node} for VPLS 1 ==>\n{result_dictionary}\n\n")
+        
+        reason = 'Blank Sequence entry found'
+        temp_df = df[df['Sequence'] == 'TempNA']
+        
+        logging.debug(f"Finding the blank Sequence entry in VPLS -1 for node_ip {ip_node} ===>\n{temp_df.to_markdown()}")
+        
+        if(len(temp_df) > 0):
+            result_dictionary[reason] = list(temp_df['S.No.'])
+        
+        reason = 'Blank MPBN Node Type found'
+        
+        temp_df = df[df['MPBN Node Type ( Router/Switch )'] == 'TempNA']
+        logging.debug(f"Finding the blank MPBN Node Type ( Router/Switch ) entry in VPLS -1 for node_ip {ip_node} ===>\n{temp_df.to_markdown()}")
+        
+        if(len(temp_df) > 0):
+            result_dictionary[reason] = list(temp_df['S.No.'])
+        
+        reason = 'Space found in VPLS Name'
+        temp_df = df[df['VPLS Name'].str.strip().str.contains(' ')]
+        logging.debug(f"Finding the {reason} in VPLS -1 for node_ip {ip_node} ===>\n{temp_df.to_markdown()}")
+        if(len(temp_df) > 0):
+            result_dictionary[reason] = list(temp_df['S.No.'])
     
     if(len(df_add) > 0):
         i = 0

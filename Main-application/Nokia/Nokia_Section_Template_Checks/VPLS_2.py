@@ -70,6 +70,22 @@ def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
                     result_dictionary[reason].append(df.iloc[i,df.columns.get_loc('S.No.')])
             i+=1
         logging.debug(f"Entered the enteries for 'Blank VPLS ID' for node ip {ip_node} for VPLS 2 ==>\n{result_dictionary}\n\n")
+        
+        reason = 'Space found in VPLS Name'
+        temp_df = df[df['VPLS Name'].str.strip().str.contains(' ')]
+        
+        logging.debug(f"Finding the {reason} in VPLS - 2 for node_ip {ip_node} ===>\n{temp_df.to_markdown()}")
+        
+        if(len(temp_df) > 0):
+            result_dictionary[reason] = list(temp_df['S.No.'])
+        
+        reason = 'Space found in Vsd-domain Name'
+        temp_df = df[df['Vsd-domain Name'].str.strip().str.contains(' ')]
+        
+        logging.debug(f"Finding the {reason} in VPLS - 2 for node_ip {ip_node} ===>\n{temp_df.to_markdown()}")
+        
+        if(len(temp_df) > 0):
+            result_dictionary[reason] = list(temp_df['S.No.'])
     
     if(len(df_add) > 0):
         i = 0
