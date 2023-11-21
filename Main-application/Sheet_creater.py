@@ -12,20 +12,28 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font,Side,Border,PatternFill,Alignment
 from openpyxl.styles.colors import Color
 
-log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
-Path(log_file_path).mkdir(parents=True,exist_ok=True)
-log_file = os.path.join(log_file_path,"Sheet_Creation_Task.log")
-logging.basicConfig(filename=log_file,
-                             filemode="a",
-                             format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
-                             datefmt='%d-%b-%Y %I:%M:%S %p',
-                             encoding= "UTF-8",
-                             level=logging.DEBUG)
-logging.captureWarnings(capture=True)
+# log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
+# Path(log_file_path).mkdir(parents=True,exist_ok=True)
+# log_file = os.path.join(log_file_path,"Sheet_Creation_Task.log")
+# logging.basicConfig(filename=log_file,
+#                              filemode="a",
+#                              format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
+#                              datefmt='%d-%b-%Y %I:%M:%S %p',
+#                              encoding= "UTF-8",
+#                              level=logging.DEBUG)
+# logging.captureWarnings(capture=True)
 
-flag = ''
+# flag = ''
 
-def sheet_creater(**kwargs):
+def sheet_creater(**kwargs) -> str:
+    logging.basicConfig(filename=log_file,
+                                filemode="a",
+                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
+                                datefmt='%d-%b-%Y %I:%M:%S %p',
+                                encoding= "UTF-8",
+                                level=logging.DEBUG)
+    logging.captureWarnings(capture=True)
+    
     try:
         logging.info(f"Starting the Sheet Creater for {os.path.basename(kwargs['file'])}")
         host_ips_sheets_required = kwargs['host_ips_sheets_required']
@@ -138,6 +146,14 @@ def sheet_creater(**kwargs):
 
     
 def file_creater(**kwargs):
+    logging.basicConfig(filename=log_file,
+                                filemode="a",
+                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
+                                datefmt='%d-%b-%Y %I:%M:%S %p',
+                                encoding= "UTF-8",
+                                level=logging.DEBUG)
+    logging.captureWarnings(capture=True)
+    
     file = kwargs['file']
     wb = Workbook()
     wb.save(file)
@@ -145,9 +161,22 @@ def file_creater(**kwargs):
     del wb
 
 # kwargs.keys() ==> (file_name)
-def main_func(**kwargs):
+def main_func(**kwargs) -> str:
+    log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
+    Path(log_file_path).mkdir(parents=True,exist_ok=True)
+    global log_file; log_file = os.path.join(log_file_path,"Sheet_Creation_Task.log")
+    logging.basicConfig(filename=log_file,
+                                filemode="a",
+                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
+                                datefmt='%d-%b-%Y %I:%M:%S %p',
+                                encoding= "UTF-8",
+                                level=logging.DEBUG)
+    logging.captureWarnings(capture=True)
+
+    global flag; flag = ''
+
     logging.info("#############################################<<Starting the Sheet Creation Task>>#################################################")
-    global flag;
+    
     try:
         host_details_file_name = kwargs['file_name']
         file_reader = pd.ExcelFile(host_details_file_name,engine='openpyxl')
@@ -300,6 +329,10 @@ def main_func(**kwargs):
             logging.error("Standard Input design template missing")
             raise CustomException("Standard Input Design Template Missing!",
                                   f"Standard Input design template missing for below mentioned Vendors:\n\n{', '.join(missing_standard_input_design_template)}")
+        neo_parent_dir = os.path.join(parent_dir,"Design_Input_Sheets")
+        Path(neo_parent_dir).mkdir(exist_ok= True, parents=True)
+        
+        logging.debug(f"Created new folder if not created earlier \'{parent_dir}\'\n")
         
         file_to_be_created = "{}_Design_Input_Sheet.xlsx"
         file_to_be_selected = "{}_Design Input_Template.xlsx"
@@ -314,10 +347,10 @@ def main_func(**kwargs):
                 
                 # Checking the file existence for the input files for the user
                 logging.debug(f"Checking if the '{file_to_be_created.format(unique_vendors_in_host_details[i])}' exists or not, if yes then adding ip sheets, otherwise creating the file itself.")
-                logging.debug(f"Checking the condition working or not '{not Path(os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i]))).exists() =}'")
+                logging.debug(f"Checking the condition working or not '{not Path(os.path.join(neo_parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i]))).exists() =}'")
 
                 if(not Path(os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i]))).exists()):
-                    file_creater(file = os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])))
+                    file_creater(file = os.path.join(neo_parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])))
 
                 
                 logging.debug(f"Checking for the presence of the 'Standard Template' worksheet in the {file_to_be_selected.format(unique_vendors_in_host_details[i])}")
@@ -336,7 +369,7 @@ def main_func(**kwargs):
                 # Creating Sheets for the unique IPs using threads
                 thread = Thread(target = sheet_creater,
                                 kwargs={'host_ips_sheets_required': host_ips_sheets_required,
-                                        'file' :os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])),
+                                        'file' :os.path.join(neo_parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])),
                                         'standard_design_template_path': os.path.join(parent_dir,file_to_be_selected.format(unique_vendors_in_host_details[i]))})
                 thread_list_for_vendor_sheet_creation.append(thread)
                 thread.daemon = True
@@ -350,7 +383,7 @@ def main_func(**kwargs):
                 i+=1
         
         except Exception as e:
-            global flag;
+            # global flag;
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
             messagebox.showerror("Exception Occurred!",e)
