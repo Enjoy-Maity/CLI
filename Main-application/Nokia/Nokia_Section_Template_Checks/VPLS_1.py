@@ -78,7 +78,7 @@ def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
         i = 0
         while(i < len(df)):
             if(df.iloc[i,df.columns.get_loc('VPLS ID')] == "TempNA"):
-                reason = "Blank VPLS ID"
+                reason = "Blank VPLS ID found"
 
                 if(not reason in result_dictionary.keys()):
                     result_dictionary[reason] = []
@@ -91,7 +91,7 @@ def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
     
     if(len(df_add) > 0):
         i = 0
-        reason = 'Blank VPLS Name for Add Action'
+        reason = 'Blank VPLS Name found'
         while(i < len(df_add)):
             if(df_add.iloc[i, df_add.columns.get_loc('VPLS Name')] == 'TempNA'):
                 if(not reason in result_dictionary.keys()):
