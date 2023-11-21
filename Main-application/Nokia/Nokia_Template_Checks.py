@@ -181,9 +181,11 @@ def nokia_main_func(**kwargs) -> str:
             """
             
             if(len(error_message_dict) > 0):
-                error_folder = os.path.join(parent_folder,"Error_Folder")
+                error_folder = os.path.join(os.path.join(parent_folder,"Error_Folder"),"Design_Input_Checks_Results")
                 Path(error_folder).mkdir(exist_ok= True, parents=True)
-                error_file = os.path.join(error_folder,"Template_Checks_error_Vendor_wise.txt")
+                
+                logging.debug(f"Creating the folder for Template checks namely for Nokia template checks\n{error_folder}")
+                error_file = os.path.join(error_folder,"Nokia_Nodes_Design_Input_Checks_Error.txt")
 
                 """
                     error_message = "<================<<Errors Found in Template checks of "Nokia" Vendor Design Input sheet workbook>>================>
@@ -195,7 +197,7 @@ def nokia_main_func(**kwargs) -> str:
                                     .......................................'"
                 """
                 logging.debug(f"Got the error_message_dict =====>{error_message_dict}\n")
-                error_message = "<================<<Errors Found in Template checks of \"Nokia\" Vendor Design Input sheet workbook>>================>"
+                error_message = "<================<<Design Input Errors Observed in Below Uploaded Nodes for \"Nokia\" Vendor>>================>"
                 
                 node_ips = list(error_message_dict.keys())
 
@@ -207,7 +209,7 @@ def nokia_main_func(**kwargs) -> str:
                     error_message = f"{error_message}\nNode IP : \"{node_ips[i]}\""
                     j = 0
                     while(j < len(sections)):
-                        error_message = f"{error_message}\n\'{sections[j]}\'" 
+                        error_message = f"{error_message}\nSection : \'{sections[j]}\'" 
                         reasons = list(error_message_dict[node_ips[i]][sections[j]].keys())
                         k = 0 
                         while(k < len(reasons)):
@@ -215,10 +217,10 @@ def nokia_main_func(**kwargs) -> str:
                             sr_no_list = error_message_dict[node_ips[i]][sections[j]][reason]
                             
                             if(reason.endswith(")")):
-                                error_message = f"{error_message}\n{reason} ==>> {', '.join(str(element) for element in sr_no_list)}"
+                                error_message = f"{error_message}\n\t{k+1}.) {reason} ==>> {', '.join(str(element) for element in sr_no_list)}"
                             
                             else:
-                                error_message = f"{error_message}\n{reason} for \'S.No.\' ==>> {', '.join(str(int(element)) for element in sr_no_list)}"
+                                error_message = f"{error_message}\n\t{k+1}.) {reason} for \'S.No.\' ==>> {', '.join(str(int(element)) for element in sr_no_list)}"
                             k+=1
                         
                         error_message = f"{error_message}\n"
