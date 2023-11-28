@@ -7,10 +7,12 @@ from tkinter import messagebox
 from pathlib import Path
 from Custom_Exception import CustomException
 from threading import Thread
+from datetime import datetime, timedelta
 from openpyxl import Workbook,load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font,Side,Border,PatternFill,Alignment
 from openpyxl.styles.colors import Color
+from openpyxl.worksheet.datavalidation import DataValidation
 
 # log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
 # Path(log_file_path).mkdir(parents=True,exist_ok=True)
@@ -24,11 +26,195 @@ from openpyxl.styles.colors import Color
 # logging.captureWarnings(capture=True)
 
 # flag = ''
+def mpbn_node_login_file_creater(**kwargs) -> None:
+    """
+        Creates MPBN_Node_Login workbook for entering host details
+        
+        Arguments : (**kwargs)
+            **kwargs ===>   parent_dir : str
+                                description =====> contains the path for the parent directory for the selected Host Details workbook
+                            
+                            host_details_file_df : pandas.DataFrame
+                                description =====> contains the dataframe object from reading the 'Host Details' file uploaded by user
+
+        returns None
+    """
+    
+    logging.basicConfig(filename=log_file,
+                                filemode="a",
+                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/mpbn_node_login_file_creater): {'%(message)s'}",
+                                datefmt='%d-%b-%Y %I:%M:%S %p',
+                                encoding= "UTF-8",
+                                level=logging.DEBUG)
+    logging.captureWarnings(capture=True)
+    
+    host_details_file_df = kwargs['host_details_file_df']
+    parent_dir = kwargs['parent_dir']
+    path_for_user_mpbn_activity_nodes = os.path.join(parent_dir,"MPBN_Node_Login.xlsx")
+    logging.debug(f"Created the path for creation of \'MPBN_Node_Login.xlsx\' ==> {path_for_user_mpbn_activity_nodes}\n")
+    
+    if(Path(path_for_user_mpbn_activity_nodes).exists() == False):
+        logging.debug(f"\'MPBN_Node_Login.xlsx\'File not found, so creating the file")
+        wkbk = Workbook()
+        wkbk.save(path_for_user_mpbn_activity_nodes)
+        wkbk.close()
+        del wkbk
+
+    columns_for_mpbn_node_login_sheet = ["S.N.",
+                                            "Host Name",
+                                            "Host IP",
+                                            "Vendor Details",
+                                            "Host User Name",
+                                            "Host Password",
+                                            "OSS IP",
+                                            "OSS User Name",
+                                            "OSS Password",
+                                            "CR ID",
+                                            "Login Port For Node",
+                                            "Secondary Path IP",
+                                            "Secondary Path User Name",
+                                            "Secondary Path Password",
+                                            "CLI Execution File Required"]
+    
+    dataframe_for_mpbn_node_login = pd.DataFrame(columns = columns_for_mpbn_node_login_sheet)
+    
+    logging.debug("Entering details of the host details in \'MPBN_Node_Login.xlsx\'")
+    
+    dataframe_for_mpbn_node_login['Host Name'] = host_details_file_df['Host_Name']
+    dataframe_for_mpbn_node_login['Host IP']   = host_details_file_df['Host_IP']
+    dataframe_for_mpbn_node_login['CR ID']     = [f'{row['Vendor']}_{row['CR_ID']}' for _,row in host_details_file_df.iterrows()]
+    dataframe_for_mpbn_node_login['Vendor Details'] = [element.strip() if(element.strip() != 'Cisco') else '' for element in host_details_file_df['Vendor']]
+    dataframe_for_mpbn_node_login['S.N.'] = dataframe_for_mpbn_node_login.index+1
+    dataframe_for_mpbn_node_login['OSS IP'] = '150.236.9.9'
+    dataframe_for_mpbn_node_login['Login Port For Node'] = 22
+    
+    writer = pd.ExcelWriter(path_for_user_mpbn_activity_nodes, mode='w', engine='openpyxl')
+    dataframe_for_mpbn_node_login.to_excel(writer, sheet_name='Node_Login',index=False)
+    
+    logging.debug("Created the file \'MPBN_Node_Login.xlsx\' with sheetname \'Node_Login\'\n")
+    writer.close()
+    del writer
+    
+    # ensuring no other sheet exists in mpbn node login, than Node_Login
+    wkbk = load_workbook(path_for_user_mpbn_activity_nodes)
+    sheetnames = wkbk.sheetnames
+
+    if(len(sheetnames)>1):
+        for sheetname in sheetnames:
+            if(sheetname != 'Node_Login'):
+                del wkbk[sheetname]
+    
+    ws = wkbk['Node_Login']
+    
+    col_widths = []
+    for row_values in ws.iter_rows(values_only = True):
+        for j,value in enumerate(row_values):
+            if len(col_widths)>j:
+                if col_widths[j] < len(str(value)):
+                    col_widths[j] = len(str(value))
+            else:
+                col_widths.insert(j,len(str(value)))
+    logging.debug(f"Got the column widths for the headers =>\n{col_widths}")
+    
+    # Standardising the length of each column in the sheet.
+
+    i = 1
+    while(i <= len(col_widths)):
+        column_width = col_widths[i-1]
+        if column_width <= 47:
+            ws.column_dimensions[get_column_letter(i)].width = column_width+3
+        else:
+            ws.column_dimensions[get_column_letter(i)].width = 50
+        
+        i+=1
+    
+    logging.debug("Standardised the length of each column in the sheet")
+    
+    # for column in range(1,ws.max_column+1):   # ws.max_column returns the total number of columns present
+    font_style = Font(bold=True,color=Color(rgb= '00000000'))
+    i = 1
+    while(i <= ws.max_column):
+        column = i
+        col = get_column_letter(column)
+        color_fill = PatternFill(start_color = 'FFFF00',end_color = 'FFFF00',fill_type = 'solid')
+        ws[col+'1'].font = font_style
+        ws[col+'1'].fill = color_fill
+        ws[col+'1'].alignment = Alignment(horizontal = 'center',vertical = 'center')
+        
+        i+=1
+    
+    for row in ws:
+        for cell in row:
+            cell.alignment = Alignment(horizontal = 'center',vertical = 'center',wrap_text=False)
+            cell.border = Border(top = Side(border_style = 'medium',color = '000000'),
+                                 bottom = Side(border_style = 'medium',color = '000000'),
+                                 left = Side(border_style = 'medium',color = '000000'),
+                                 right = Side(border_style = 'medium',color = '000000'))
+    maxrows = ws.max_row
+    
+    # Creating a list for the selection.
+    vendor_list = ["Cisco_ASA_Firewall",
+                   "Cisco_IOS_Router",
+                   "Cisco_IOS_Switch",
+                   "Cisco_Nexus",
+                   "Cisco_XR",
+                   "Ericsson",
+                   "Extreme",
+                   "Huawei",
+                   "Huawei_Firewall",
+                   "Juniper",
+                   "Nokia",
+                   "NWI"]
+    
+    vendor_list = f"{','.join(vendor_list)}"
+    vendor_list = f'"{vendor_list}"'
+
+    Yes_no_list = ["Yes","No"]
+    Yes_no_list = f"{','.join(Yes_no_list)}"
+    Yes_no_list = f'"{Yes_no_list}"'
+
+    # Defining the rule
+    rule1 = DataValidation(type = "list", formula1= vendor_list, allow_blank = False)
+    rule1.error = "Your Entry is invalid"
+    rule1.errorTitle = "Invalid Entry"
+
+    rule1.prompt = "Please Select Vendor from the list"
+    rule1.promptTitle = "List Selection"
+
+    # Adding the rule to the worksheet
+    ws.add_data_validation(rule1)
+
+    # Defining the range for the rule to work in the worksheet.
+    range_setter = f"D2:D{maxrows}"
+
+    # Adding the range to the rule
+    rule1.add(range_setter)
+    
+    rule2 = DataValidation(type = "list", formula1= Yes_no_list, allow_blank = False)
+    rule2.error = "Your Entry is invalid"
+    rule2.errorTitle = "Invalid Entry"
+
+    rule2.prompt = "Please Select Yes/No from the list"
+    rule2.promptTitle = "List Selection"
+
+    # Adding the rule to the worksheet
+    ws.add_data_validation(rule2)
+
+    # Defining the range for the rule to work in the worksheet.
+    neo_range_setter = f"O2:O{maxrows}"
+
+    # Adding the range to the rule
+    rule2.add(neo_range_setter)
+
+    wkbk.save(path_for_user_mpbn_activity_nodes)
+    wkbk.close()
+    del wkbk
+
 
 def sheet_creater(**kwargs) -> str:
     logging.basicConfig(filename=log_file,
                                 filemode="a",
-                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
+                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/sheet_creater): {'%(message)s'}",
                                 datefmt='%d-%b-%Y %I:%M:%S %p',
                                 encoding= "UTF-8",
                                 level=logging.DEBUG)
@@ -145,10 +331,10 @@ def sheet_creater(**kwargs) -> str:
         messagebox.showerror("Exception Occurred!",e)
 
     
-def file_creater(**kwargs):
+def file_creater(**kwargs) -> None:
     logging.basicConfig(filename=log_file,
                                 filemode="a",
-                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
+                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/file_creater): {'%(message)s'}",
                                 datefmt='%d-%b-%Y %I:%M:%S %p',
                                 encoding= "UTF-8",
                                 level=logging.DEBUG)
@@ -162,12 +348,33 @@ def file_creater(**kwargs):
 
 # kwargs.keys() ==> (file_name)
 def main_func(**kwargs) -> str:
+    """
+        Main Function for the sheet creater, to create Sheets from Vendor Specific Design Input Templates
+        
+        Arguments : (**kwargs)
+            **kwargs ===> file_name : str
+                            description =====> contains the path of the uploaded host details file.
+        
+        return flag
+            flag : str
+                description =====> contains 'Unsuccessful' or 'Successful' string corresponding the status of execution completion
+    """
     log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
     Path(log_file_path).mkdir(parents=True,exist_ok=True)
     global log_file; log_file = os.path.join(log_file_path,"Sheet_Creation_Task.log")
+    today = datetime.now()
+    today = today.replace(hour=0, minute=0, second=0)
+
+    if(os.path.exists(log_file)):
+        #getting the creation time of the log file
+        log_file_create_time= datetime.fromtimestamp(os.path.getctime(log_file))
+
+        if(log_file_create_time < today):
+            os.remove(log_file)
+
     logging.basicConfig(filename=log_file,
                                 filemode="a",
-                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
+                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/main_func): {'%(message)s'}",
                                 datefmt='%d-%b-%Y %I:%M:%S %p',
                                 encoding= "UTF-8",
                                 level=logging.DEBUG)
@@ -177,9 +384,11 @@ def main_func(**kwargs) -> str:
 
     logging.info("#############################################<<Starting the Sheet Creation Task>>#################################################")
     
+    host_details_file_name = kwargs['file_name']
+    file_reader = pd.ExcelFile(host_details_file_name,engine='openpyxl')
+    
     try:
-        host_details_file_name = kwargs['file_name']
-        file_reader = pd.ExcelFile(host_details_file_name,engine='openpyxl')
+        
         host_details_file_sheetnames = file_reader.sheet_names
 
         # Checking for the sheet 'Host Details' in the uploaded workbook.
@@ -191,7 +400,7 @@ def main_func(**kwargs) -> str:
         # Creating the host details sheet dataframe
         host_details_df = pd.read_excel(file_reader,sheet_name='Host Details')
         
-        logging.info(f'Read the host details\n\n{host_details_df}')
+        logging.info(f'Read the host details\n\n{host_details_df.to_markdown()}\n')
 
         # Performing all the mandatory checks for the 'Host Details' sheet.
         unique_host_ips = host_details_df['Host_IP'].unique()
@@ -229,7 +438,7 @@ def main_func(**kwargs) -> str:
         
 
         # Checking duplicated Host IPs in the Host Details sheet
-        duplicate_host_ip_boolean_series = host_details_df.duplicated(subset=['Host_IP'])
+        duplicate_host_ip_boolean_series = host_details_df.duplicated(subset=['Host_IP'],keep=False)
         duplicated_host_ip_Sr_no_list = []
         logging.info("Checking duplicated host ip details in the Host Details sheet")
         
@@ -245,53 +454,76 @@ def main_func(**kwargs) -> str:
             duplicated_host_ip_Sr_no_list = np.unique(np.array(duplicated_host_ip_Sr_no_list))
         
         if((len(blank_Sr_no_list)> 0) and (len(duplicated_host_ip_Sr_no_list) > 0) and (len(blank_Sr_no_list_for_Vendor) > 0)):
-            file_reader.close()
-            del file_reader
+            # file_reader.close()
+            # del file_reader
             logging.error("Blank Host IP & Vendors and duplicated Host IP details are found!")
             raise CustomException("Host IP Details Incorrect!",
                                     f"Blank IP Details found for Sr no.: {', '.join(str(element) for element in blank_Sr_no_list)}\n\nand \n\nBlank Vendor Details found for Sr no: {', '.join(str(element) for element in blank_Sr_no_list_for_Vendor)}\n\nand \n\nDuplicate Host IPs found for Sr no: {', '.join(str(element) for element in duplicated_host_ip_Sr_no_list)}")
         
         if((len(blank_Sr_no_list)> 0) and (len(duplicated_host_ip_Sr_no_list) > 0)):
-            file_reader.close()
-            del file_reader
+            # file_reader.close()
+            # del file_reader
             logging.error("Blank Host IP and duplicated Host IP details are found!")
             raise CustomException("Host IP Details Incorrect!",
                                     f"Blank IP Details found for Sr no.: {', '.join(str(element) for element in blank_Sr_no_list)}\n\nand \n\nDuplicate Host IPs found for Sr no: {', '.join(str(element) for element in duplicated_host_ip_Sr_no_list)}")
         
         if((len(blank_Sr_no_list)> 0) and (len(blank_Sr_no_list_for_Vendor) > 0)):
-            file_reader.close()
-            del file_reader
+            # file_reader.close()
+            # del file_reader
             logging.error("Blank Host IP and duplicated Host IP details are found!")
             raise CustomException("Host IP Details Incorrect!",
                                     f"Blank IP Details found for Sr no.: {', '.join(str(element) for element in blank_Sr_no_list)}\n\nand \n\nBlank Vendor Details found for Sr no: {', '.join(str(element) for element in blank_Sr_no_list_for_Vendor)}")
         
         if((len(blank_Sr_no_list_for_Vendor)> 0) and (len(duplicated_host_ip_Sr_no_list) > 0)):
-            file_reader.close()
-            del file_reader
+            # file_reader.close()
+            # del file_reader
             logging.error("Blank Vendor and duplicated Host IP details are found!")
             raise CustomException("Host IP Details Incorrect!",
                                     f"Blank Vendor Details found for Sr no.: {', '.join(str(element) for element in blank_Sr_no_list_for_Vendor)}\n\nand \n\nDuplicate Host IPs found for Sr no: {', '.join(str(element) for element in duplicated_host_ip_Sr_no_list)}")
         
         if(len(blank_Sr_no_list) > 0):
-            file_reader.close()
-            del file_reader
+            # file_reader.close()
+            # del file_reader
             logging.error("Blank Host IP details are found!")
             raise CustomException("Blank Host IP Details Found!",
                                     f"Blank IP Details found for Sr no.: {', '.join(str(element) for element in blank_Sr_no_list)}")
         
         if(len(duplicated_host_ip_Sr_no_list) > 0):
-            file_reader.close()
-            del file_reader
+            # file_reader.close()
+            # del file_reader
             logging.error("Duplicated Host IP details are found!")
             raise CustomException("Host IP Details Incorrect!",
                                     f"Duplicate Host IPs found for Sr no: {', '.join(str(element) for element in duplicated_host_ip_Sr_no_list)}")
         
         if(len(blank_Sr_no_list_for_Vendor) > 0):
-            file_reader.close()
-            del file_reader
+            # file_reader.close()
+            # del file_reader
             logging.error("Blank Vendor details are found!")
             raise CustomException("Host IP Details Incorrect!",
                                     f"Duplicate Host IPs found for Sr no: {', '.join(str(element) for element in blank_Sr_no_list_for_Vendor)}")
+            
+        
+        blank_CR_ID_field_sr_no_list = [row['Sr.No'] for _, row in host_details_df.iterrows() if pd.isna(row['CR_ID'])]
+        
+        if(len(blank_CR_ID_field_sr_no_list) > 0):
+            logging.error(f"Blank CR IDs found for Below Sr.No. ====>\n{', '.join(blank_CR_ID_field_sr_no_list)}\n")
+            raise CustomException("Blank CR IDs Found!",f"Blank CR IDs found for Below Sr.No. :\n{', '.join(blank_CR_ID_field_sr_no_list)}\n Kindly Check!")
+        
+        blank_host_name_field_sr_no_list =  [row['Sr.No'] for _, row in host_details_df.iterrows() if pd.isna(row['Host_Name'])]
+        if(len(blank_host_name_field_sr_no_list) > 0):
+            logging.error(f"Blank Host Names found for Below Sr.No. ====>\n{', '.join(blank_host_name_field_sr_no_list)}\n")
+            raise CustomException("Blank Host Name/s Found!",f"Blank Host Name/s found for Below Sr.No. :\n{', '.join(blank_host_name_field_sr_no_list)}\n Kindly Check!")
+        
+        blank_vendor_field_sr_no_list = [row['Sr.No'] for _, row in host_details_df.iterrows() if pd.isna(row['Vendor'])]
+        if(len(blank_vendor_field_sr_no_list) > 0):
+            logging.error(f"Blank Vendor field/s found for Below Sr.No. ====>\n{', '.join(blank_vendor_field_sr_no_list)}\n")
+            raise CustomException("Blank Vendor field/s Found!",f"Blank Vendor field/s found for Below Sr.No. :\n{', '.join(blank_vendor_field_sr_no_list)}\n Kindly Check!")
+        
+        duplicated_host_names_sr_number_series = (host_details_df[host_details_df.duplicated(subset=['Host_Name'],keep=False)])['Sr.No']
+        if(len(duplicated_host_names_sr_number_series) > 0):
+            logging.error("Duplicated Host Name details are found!")
+            raise CustomException("Host Name Details Incorrect!",
+                                    f"Duplicate Host Names found for Sr no: {', '.join(str(element) for element in duplicated_host_names_sr_number_series)}")
         
         # getting the list of all the files present in the parent directory of host_details_file_name
         logging.info("Getting the list of all the files present in the parent directory of host_details_file_name")
@@ -329,6 +561,7 @@ def main_func(**kwargs) -> str:
             logging.error("Standard Input design template missing")
             raise CustomException("Standard Input Design Template Missing!",
                                   f"Standard Input design template missing for below mentioned Vendors:\n\n{', '.join(missing_standard_input_design_template)}")
+        
         neo_parent_dir = os.path.join(parent_dir,"Design_Input_Sheets")
         Path(neo_parent_dir).mkdir(exist_ok= True, parents=True)
         
@@ -387,10 +620,10 @@ def main_func(**kwargs) -> str:
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
             messagebox.showerror("Exception Occurred!",e)
-
-        del host_details_file_name
-        file_reader.close()
-        del file_reader
+        
+        logging.debug(f"Invoking mpbn_node_login_file_creater method for \"MPBN_Node_Login.xlsx\" creation from \'host_details_df\' ==> {host_details_df.to_markdown()}\n")
+        mpbn_node_login_file_creater(parent_dir = parent_dir,
+                                     host_details_file_df = host_details_df)
         
         if(flag != 'Unsuccessful'):
             logging.info("Setting the flag status to 'Successful'")
@@ -406,6 +639,11 @@ def main_func(**kwargs) -> str:
         messagebox.showerror("Exception Occurred!",e)
     
     finally:
+        
+        del host_details_file_name
+        file_reader.close()
+        del file_reader
+        
         logging.info(f"Returning Flag\n\n\t{flag=}")
         logging.shutdown()
         return flag

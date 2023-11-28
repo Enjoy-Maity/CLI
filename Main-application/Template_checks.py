@@ -13,7 +13,6 @@ from Section_splitter import section_splitter
 
 
 
-
 def pickling_func(dictionary:dict, vendor_selected:str) -> None:
     username = os.popen(r'cmd.exe /C "echo %username%"').read()
     path_for_pickle_files = f"C:\\Users\\{username.strip()}\\AppData\\Local\\CLI_Automation\\{vendor_selected.upper()}.pickle"
@@ -80,6 +79,7 @@ def main_func(**kwargs) -> str:
     log_file = os.path.join(log_file_path,"Template_checks.log")
 
     today = datetime.now()
+    today = today.replace(hour=0, minute=0, second=0)
 
     if(os.path.exists(log_file)):
         #getting the creation time of the log file
@@ -172,7 +172,7 @@ def main_func(**kwargs) -> str:
             selected_vendor_book_excel_file.close()
             del selected_vendor_book_excel_file
             host_details_excelfile.close()
-            del selected_vendor_book_excel_file
+            # del selected_vendor_book_excel_file
 
             raise CustomException("User Selected 'No'!","The User Have Selected 'No', so stopping the execution!")
         
