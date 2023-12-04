@@ -35,6 +35,7 @@ def hostnames_to_config_backup_file_mapping(list_of_filenames : list, list_of_ho
                                 level=logging.DEBUG)
     logging.captureWarnings(capture=True)
     
+    error_file_for_host_name_not_found = []
     result_dictionary = {}
     list_of_filenames = list_of_filenames.sort()
     list_of_filepaths = [os.path.join(parent_directory_of_config_backup_files,filename) for filename in list_of_filenames]
@@ -49,6 +50,7 @@ def hostnames_to_config_backup_file_mapping(list_of_filenames : list, list_of_ho
             if(selected_hostname.upper().strip() in list_of_filenames[j].upper().strip()):
                 result_dictionary[selected_hostname] = list_of_filepaths[j]
             j+=1
+        
         i+=1
         
         
@@ -143,7 +145,7 @@ def running_config_checks(**kwargs) -> str:
         if(vendor_selected.strip().upper() == 'NOKIA'):
             logging.debug("Calling the module for Running Configuration Checks for \'Nokia\' Vendor")
             from Nokia.Nokia_Running_Config_Checks import main_func
-            flag = main_func(h)
+            flag = main_func()
         
         if(vendor_selected.strip().upper() == 'ERICSSON'):
             logging.debug("Calling the module for Running Configuration Checks for \'Ericsson\' Vendor")
