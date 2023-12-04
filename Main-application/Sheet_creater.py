@@ -1,5 +1,6 @@
 import logging
 import os
+import pickle
 import traceback
 import numpy as np
 import pandas as pd
@@ -26,6 +27,118 @@ from openpyxl.worksheet.datavalidation import DataValidation
 # logging.captureWarnings(capture=True)
 
 # flag = ''
+
+def pickle_checker(host_details_df: pandas.DataFrame) -> list:
+    """
+        Checks the uploaded workbook with the pre-defined pickle in User/{signum}/AppData/Local/CLI_Automation/Host_details_Pickle_file/Host_detail_pickle.pkl
+        
+        Arguments : (host_details_df)
+            host_details_df : pandas.DataFrame
+                description =====> dataframe containing details from the uploaded Host Details workbook
+            
+        return result
+            result : list
+                description =====> list containing the status and message to show as exception in the main_func where 
+                                    result[0] ===> status
+                                    result[1] ===> message:str
+                                                    or
+                                                   None
+    """
+    
+    logging.basicConfig(filename=log_file,
+                                filemode="a",
+                                format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/pickle_checker): {'%(message)s'}",
+                                datefmt='%d-%b-%Y %I:%M:%S %p',
+                                encoding= "UTF-8",
+                                level=logging.DEBUG)
+    logging.captureWarnings(capture=True)
+    
+    username = os.popen(r'cmd.exe /C "echo %username%"').read()
+    logging.info(r"Got the username from the command \'cmd.exe /C \"echo %username%\"\'")
+    path_for_the_host_details_pickle = rf"C:\Users\{username}\AppData\Local\CLI_Automation\Host_details_Pickle_file\Host_details.pkl"
+    result = []
+    
+    logging.info(f"Checking if the there is any pickle file existing at \'{path_for_the_host_detail_pickle}\'")
+    try:
+        if(not Path(path_for_the_host_details_pickle).exists()):
+            logging.info("Didn't find the pickle file for Host Details so creating the pickle file for the Host Details\n")
+            Path(os.path.dirname(path_for_the_host_details_pickle)).mkdir(parents=True,exist_ok=True)
+            
+            host_details_df.to_pickle(path = path_for_the_host_details_pickle,
+                                    compression=None,
+                                    protocol= pickle.HIGHEST_PROTOCOL)
+            
+            result = ['Successful',None]
+        
+        else:
+            logging.info("Found the pickle file for the Host Details")
+            creation_time_of_host_details_pickle_file = datetime.fromtimestamp(os.path.getctime(path_for_the_host_details_pickle))
+            
+            today = datetime.now()
+            if(int((today - creation_time_of_host_details_pickle_file).__format__('%H')) >= 15):
+                logging.info("pickle file for Host Details found is older so creating the pickle file for the Host Details\n")
+                os.remove(path_for_the_host_details_pickle)
+                
+                host_details_df.to_pickle(path= path_for_the_host_details_pickle,
+                                        compression = None,
+                                        protocol= pickle.HIGHEST_PROTOCOL)
+                
+                result = ['Successful',None]
+            
+            else:
+                logging.info("Loading the pickle and checking the file with the pickle\n")
+                
+                pickle_to_df_of_previous_host_details = pd.read_pickle(filepath_or_buffer= path_for_the_host_details_pickle,
+                                                                    compression=None)
+                logging.info(f"Read the df from pickle ==> \n{pickle_to_df_of_previous_host_details.to_markdown()}\n")
+                
+                if(len(pickle_to_df_of_previous_host_details['Host_IP']) == len(host_details_df['Host_IP'])):
+                    temp_result_df = pickle_to_df_of_previous_host_details['Host_IP'].compare(host_details_df['Host_IP'])
+                    
+                    logging.debug(f"comparision between the uploaded host details and pickled host_details ==>\n{temp_result_df.to_markdown()}\n")
+                    
+                    if(len(temp_result_df) > 0):
+                        messagebox.info("Updated Host Details Information",f"New Host IP/s entry found in latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nNew Host IPs :- {', '.join(str(element) for element in temp_result_df['other'])}")
+                        host_details_df.to_pickle(path= path_for_the_host_details_pickle,
+                                                compression = None,
+                                                protocol= pickle.HIGHEST_PROTOCOL)
+                    
+                    else:
+                        messagebox.showinfo("Updated Host Details Information","You have uploaded same \'Host Details\'!")
+                    
+                    result = ['Successful', None]
+                        
+                else:
+                    previous_host_details_pickle_to_df_host_ip = pickle_to_df_of_previous_host_details['Host_IP'].to_numpy()
+                    uploaded_host_details_df_host_ip = host_details_df['Host_IP'].to_numpy()
+                    
+                    if(previous_host_details_pickle_to_df_host_ip.size < uploaded_host_details_df_host_ip.size):
+                        temp_delta = np.setdiff1d(ar1 = uploaded_host_details_df_host_ip,
+                                                ar2 = previous_host_details_pickle_to_df_host_ip)
+                        
+                        messagebox.info("Updated Host Details Information",f"New Host IP/s entry found in latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nNew Host IPs :- {', '.join(temp_delta.astype(dtype = str))}")
+                        host_details_df.to_pickle(path= path_for_the_host_details_pickle,
+                                                compression = None,
+                                                protocol= pickle.HIGHEST_PROTOCOL)
+                    
+                    else:
+                        temp_delta = np.setdiff1d(ar1= previous_host_details_pickle_to_df_host_ip,
+                                                ar2= uploaded_host_details_df_host_ip)
+                        
+                        messagebox.showinfo("Updated Host Details Information",f"Few Host IPs entry have been removed from latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nRemoved Host IPs :- {', '.join(temp_delta.astype(dtype = str))}")
+                        host_details_df.to_pickle(path= path_for_the_host_details_pickle,
+                                                compression = None,
+                                                protocol= pickle.HIGHEST_PROTOCOL)
+                    
+                    result = ['Successful',None]
+                    
+    except Exception as e:
+        logging.error(f"Exception Occurred ======>\n{traceback.format_exc()}\n\n{e}\n")
+        result = ['Unsuccessful',e]
+    
+    finally:    
+        return result 
+
 def mpbn_node_login_file_creater(**kwargs) -> None:
     """
         Creates MPBN_Node_Login workbook for entering host details
@@ -237,6 +350,14 @@ def sheet_creater(**kwargs) -> str:
         logging.debug(f"Reading the {file_name} using openpyxl")
         host_ips_sheets_required_workbook = load_workbook(file)
         host_ips_sheetnames_present_in_the_workbook = host_ips_sheets_required_workbook.sheetnames
+        host_ips_sheetnames_present_in_the_workbook = np.array(host_ips_sheetnames_present_in_the_workbook)
+        
+        setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array = np.setdiff1d(ar1=host_ips_sheetnames_present_in_the_workbook,
+                         ar2=host_ips_sheets_required)
+        
+        if(setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array.size > 0):
+            raise CustomException("Host IPs Mismatch",
+                                  f"Host IP mismatch found in uploaded \'Host Details\' and existing {filename}\nMismatch Host IPs: {', '.join(setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array.astype(str))}")
 
         logging.debug("Getting the length for widths for the columns of the worksheet")
         width_list = []
@@ -362,6 +483,7 @@ def main_func(**kwargs) -> str:
     log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
     Path(log_file_path).mkdir(parents=True,exist_ok=True)
     global log_file; log_file = os.path.join(log_file_path,"Sheet_Creation_Task.log")
+    
     today = datetime.now()
     today = today.replace(hour=0, minute=0, second=0)
 
@@ -399,6 +521,14 @@ def main_func(**kwargs) -> str:
         logging.debug("Creating dataframe for the host details sheet dataframe")
         # Creating the host details sheet dataframe
         host_details_df = pd.read_excel(file_reader,sheet_name='Host Details')
+        
+        logging.info("Calling the pickle checker function")
+        pickle_checker_result = pickle_checker(host_details_df= host_details_df)
+        
+        logging.info("Creating the checks for raising the host_details_df")
+        if(pickle_checker_result[0] == 'Unsuccessful'):
+            logging.debug("Raising the CustomException from the message gained in pickle_checker_result[1]")
+            raise CustomException(pickle_checker_result[1])
         
         logging.info(f'Read the host details\n\n{host_details_df.to_markdown()}\n')
 
@@ -603,7 +733,7 @@ def main_func(**kwargs) -> str:
                 thread = Thread(target = sheet_creater,
                                 kwargs={'host_ips_sheets_required': host_ips_sheets_required,
                                         'file' :os.path.join(neo_parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])),
-                                        'standard_design_template_path': os.path.join(parent_dir,file_to_be_selected.format(unique_vendors_in_host_details[i]))})
+                                        'standard_design_template_path': os.path.join(os.path.join(os.path.dirname(parent_dir),'Standard_Templates'),file_to_be_selected.format(unique_vendors_in_host_details[i]))})
                 thread_list_for_vendor_sheet_creation.append(thread)
                 thread.daemon = True
                 thread.start()
