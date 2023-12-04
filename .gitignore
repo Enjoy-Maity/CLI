@@ -2,3 +2,4 @@ venv/
 __pycache__/
 Nokia/__pycache__/
 Nokia_Section_Template_Checks/__pycache__/
+.vscode/
