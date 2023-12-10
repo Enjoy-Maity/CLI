@@ -12,7 +12,7 @@ def hostnames_to_config_backup_file_mapping(list_of_filenames : list, list_of_ho
         
         Arguments : (list_of_filenames, list_of_hostnames, parent_directory_of_config_backup_files)
             list_of_filenames : list
-                description =====> contains the list of config_backup filenames from \'Running_Config_Backup\'
+                description =====> contains the list of config_backup filenames from \'Pre_Running_Config_Backup\'
             
             list_of_hostnames : numpy.array
                 description =====> contains an array of all the hostnames of the selected vendor from uploaded \'Host Details\' sheet.
@@ -41,6 +41,7 @@ def hostnames_to_config_backup_file_mapping(list_of_filenames : list, list_of_ho
     list_of_filepaths = [os.path.join(parent_directory_of_config_backup_files,filename) for filename in list_of_filenames]
     logging.info(f"Created the list_of_filepaths ===>\n{'\n'.join(list_of_filepaths)}\n")
     
+    missing_config_backup_files_mapping = []
     i = 0
     while(i < list_of_hostnames.size):
         selected_hostname = list_of_hostnames[i]
@@ -51,9 +52,16 @@ def hostnames_to_config_backup_file_mapping(list_of_filenames : list, list_of_ho
                 result_dictionary[selected_hostname] = list_of_filepaths[j]
             j+=1
         
+        if(not selected_hostname in result_dictionary.keys()):
+            missing_config_backup_files_mapping.append(selected_hostname)
+            
         i+=1
         
-        
+    
+    if(len(missing_config_backup_files_mapping) > 0):
+        logging.debug("Missing Config Backup Files mapping to hostnames")
+        raise CustomException("Config Backup Files Missing",f"Below Config Backup files are missing as per uploaded host details:\n{', '.join(missing_config_backup_files_mapping)}")
+    
     logging.debug(f"Got the result dictionary:==>\n{result_dictionary}")
     return result_dictionary
     
@@ -62,8 +70,7 @@ def running_config_checks(**kwargs) -> str:
         Calls the vendor specific node checks modules
         
         Arguments : (**kwargs) ==> provides a dictionary of arguments.
-            kwargs ====>    host_details : str
-                                description =====> contains the file path of the 'Host Details' File uploaded by the user.
+            kwargs ====> 
                             vendor_selected : str
                                 description =====> contains the information related to the vendor selected
         
@@ -71,6 +78,7 @@ def running_config_checks(**kwargs) -> str:
             flag : str
                 description =====> contains 'Unsuccessful' or 'Successful' string corresponding the status of execution completion
     """
+    
     global flag; flag = ''
     log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
     Path(log_file_path).mkdir(parents=True,exist_ok=True)
@@ -99,13 +107,18 @@ def running_config_checks(**kwargs) -> str:
     
     vendor_selected = kwargs['vendor_selected']
     host_details    = kwargs['host_details']
+    username = (os.popen('cmd.exe /C "echo %username%"')).strip()
+    path_for_host_details = rf"C:\Users\{username}\AppData\Local\CLI_Automation\Host_details_Pickle_file\Host_details.pkl"
+    
     
     logging.info("Creating the Pandas ExcelFile object to read the host details file")
-    file_reader     = pd.ExcelFile(host_details)
-    host_details_df = pd.read_excel(file_reader,sheet_name= 'Host Details', engine='openpyxl')
+    # file_reader     = pd.ExcelFile(host_details)
+    # host_details_df = pd.read_excel(file_reader,sheet_name= 'Host Details', engine='openpyxl')
     
+    host_details_df = pd.read_pickle(path_for_host_details)
     host_details_df.fillna("TempNA",inplace=True)
-    logging.debug(f"Created the dataframe from \'{host_details}\' uploaded by the user ===>\n{host_details_df.to_markdown()}\n")
+    
+    logging.debug(f"Created the dataframe from \'Host_details.pkl\' uploaded by the user ===>\n{host_details_df.to_markdown()}\n")
     
     try:
         # logging.debug("Checking the host details file to filter on the basis of vendor and host name details\n")
@@ -117,7 +130,7 @@ def running_config_checks(**kwargs) -> str:
         # print(host_details_df.unique())
         # print(unique_vendor)
         
-        path_for_node_checks_pre_files_folder = os.path.join(os.path.dirname(host_details),'Running_Config_Backup')
+        path_for_node_checks_pre_files_folder = os.path.join(os.path.dirname(host_details),'Pre_Running_Config_Backup')
         logging.debug(f"Checking for the existence for \'{path_for_node_checks_pre_files_folder}\'\n")
         
         temp_df = host_details_df[host_details_df['Vendor'] == vendor_selected.strip()]
@@ -125,27 +138,37 @@ def running_config_checks(**kwargs) -> str:
         if(not Path(path_for_node_checks_pre_files_folder).exists()):
             logging.debug(f"\'{path_for_node_checks_pre_files_folder}\' not found\n")
             raise CustomException("Folder Not Founded!",
-                                  "\'Running Config Backup\' Folder not Found!")
+                                  "\'Pre_Running Config Backup\' Folder not Found!")
         
         list_of_files_in_running_config_backup_folder = os.listdir(path_for_node_checks_pre_files_folder)
         
         if(len(list_of_files_in_running_config_backup_folder) == 0):
-            logging.debug("Raising Custom Exception as there are no files in the \'Running_Config_Backup\' folder\n")
+            logging.debug("Raising Custom Exception as there are no files in the \'Pre_Running_Config_Backup\' folder\n")
             raise CustomException("Config Backup Files Missing!",
-                                  "No Config backup Files Found in \'Running_Config_Backup\' folder")
+                                  "No Config backup Files Found in \'Pre_Running_Config_Backup\' folder")
         
         list_of_files_in_running_config_backup_folder = [element for element in list_of_files_in_running_config_backup_folder if((os.path.isfile(os.path.join(path_for_node_checks_pre_files_folder, element))) and (element.endswith('.txt')))]
         
         
-        logging.info(f"Files found in \'Running_Config_Backup\' == \'{path_for_node_checks_pre_files_folder}\' ==>\n{'\n'.join(list_of_files_in_running_config_backup_folder)}\n")
+        logging.info(f"Files found in \'Pre_Running_Config_Backup\' == \'{path_for_node_checks_pre_files_folder}\' ==>\n{'\n'.join(list_of_files_in_running_config_backup_folder)}\n")
         
         logging.debug(f"Finding the array containing hostnames from the filtered \'Host Details\' file ====>\n{temp_df.to_markdown()}\n")
         array_of_unique_hostnames = temp_df['Host_Name'].unique()
         
+        ip_hostname_mapping = dict(zip(temp_df['Host_IP'],temp['Host_Name']))
+        
         if(vendor_selected.strip().upper() == 'NOKIA'):
+            logging.debug("Calling \'hostnames_to_config_backup_file_mapping\' to get the file path mapping to the hostnames\n")
+            
+            result_dictionary = hostnames_to_config_backup_file_mapping(list_of_filenames= list_of_files_in_running_config_backup_folder,
+                                                                        list_of_hostnames= array_of_unique_hostnames,
+                                                                        parent_directory_of_config_backup_files= path_for_node_checks_pre_files_folder)
+            
             logging.debug("Calling the module for Running Configuration Checks for \'Nokia\' Vendor")
+            
             from Nokia.Nokia_Running_Config_Checks import main_func
-            flag = main_func()
+            flag = main_func(file_mapping_dictionary = result_dictionary,
+                             ip_hostname_mapping = ip_hostname_mapping)
         
         if(vendor_selected.strip().upper() == 'ERICSSON'):
             logging.debug("Calling the module for Running Configuration Checks for \'Ericsson\' Vendor")
@@ -171,8 +194,8 @@ def running_config_checks(**kwargs) -> str:
     
     finally:
         del host_details_df
-        file_reader.close()
-        del file_reader
+        # file_reader.close()
+        # del file_reader
         
         logging.debug(f"Retuning the flag variable ====> {flag}")
         logging.shutdown()
