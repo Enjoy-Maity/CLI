@@ -15,7 +15,7 @@ from Section_splitter import section_splitter
 
 def pickling_func(dictionary:dict, vendor_selected:str) -> None:
     username = os.popen(r'cmd.exe /C "echo %username%"').read()
-    path_for_pickle_files = f"C:\\Users\\{username.strip()}\\AppData\\Local\\CLI_Automation\\{vendor_selected.upper()}.pickle"
+    path_for_pickle_files = f"C:\\Users\\{username.strip()}\\AppData\\Local\\CLI_Automation\\Vendor_pickles\\{vendor_selected.upper()}.pickle"
     parent_dir = os.path.dirname(path_for_pickle_files)
 
     logging.debug("Creating the folder for the Application in Appdata if not exists")
@@ -71,8 +71,8 @@ def main_func(**kwargs) -> str:
         return flag
             flag : str
                 description ===> contains 'Unsuccessful' or 'Successful' string corresponding the status of execution completion
-
     """
+    
     log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
     Path(log_file_path).mkdir(parents=True,exist_ok=True)
 
@@ -97,7 +97,11 @@ def main_func(**kwargs) -> str:
                                  encoding= "UTF-8",
                                  level=logging.DEBUG)
     logging.captureWarnings(capture=True)
-    file_name = str(kwargs['filename'])     # File containing the host details
+    filename = str(kwargs['filename'])     # File containing the host details
+    
+    username = (os.popen('cmd.exe /C "echo %username%"').read()).strip()
+    pickle_path = rf"C:\Users\{username}\AppData\Local\CLI_Automation\Host_details_Pickle_file\Host_details.pkl"
+    file_name = pd.read_pickle()
     logging.info("#######################################################<<Starting the Root Template Checks Process>>########################################################################")
 
     try:
@@ -108,10 +112,12 @@ def main_func(**kwargs) -> str:
         input_design_file_name = "{}_Design_Input_Sheet.xlsx"
 
         logging.info("Reading the file selected by the user")
-        host_details_excelfile = pd.ExcelFile(file_name)
-        host_details_sheet     = pd.read_excel(host_details_excelfile,
-                                               sheet_name='Host Details',
-                                               engine='openpyxl')
+        # host_details_excelfile = pd.ExcelFile(file_name)
+        # host_details_sheet     = pd.read_excel(host_details_excelfile,
+        #                                        sheet_name='Host Details',
+        #                                        engine='openpyxl')
+        
+        host_details_sheet      = file_name
         
         logging.info(f"Read the Host Details ====>\n{host_details_sheet}")
         
@@ -122,8 +128,8 @@ def main_func(**kwargs) -> str:
         i = 0
         while(i < unique_vendors_mentioned.size):
             if(not Path(os.path.join(parent_folder,input_design_file_name.format(unique_vendors_mentioned[i]))).exists()):
-                host_details_excelfile.close()
-                del host_details_excelfile
+                # host_details_excelfile.close()
+                # del host_details_excelfile
                 raise CustomException("Design Input File Missing!",
                                       f"{input_design_file_name.format(unique_vendors_mentioned[i])} not found in {parent_folder}, Kindly Check!")
             i+=1
@@ -171,7 +177,7 @@ def main_func(**kwargs) -> str:
         if((response != None) and (not response)):
             selected_vendor_book_excel_file.close()
             del selected_vendor_book_excel_file
-            host_details_excelfile.close()
+            # host_details_excelfile.close()
             # del selected_vendor_book_excel_file
 
             raise CustomException("User Selected 'No'!","The User Have Selected 'No', so stopping the execution!")
@@ -337,9 +343,9 @@ def main_func(**kwargs) -> str:
             messagebox.showerror("Exception Occurred!",e)
 
         else:
-            logging.info(f"Deleting host_details_excelfile")
-            host_details_excelfile.close()
-            del host_details_excelfile
+            # logging.info(f"Deleting host_details_excelfile")
+            # host_details_excelfile.close()
+            # del host_details_excelfile
 
             logging.debug("Calling the Pickling Function to create pickles")
             pickling_func(dictionary=node_to_section_dictionary,
