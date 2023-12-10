@@ -12,15 +12,10 @@ def start_func():
     # Getting the parent directory of the folder
     # parent_directory = str(Path(__file__).resolve().parents[1])
     #or
-    parent_directory = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    sys.path.append(parent_directory)   #Adding the parent in system path
-    from Custom_Exception import CustomException
-    from CustomThread import CustomThread
+    from Beginner_importer import start_func
+    start_func()
     
-    global CustomException; CustomException = CustomException
-    global CustomThread; CustomThread = CustomThread
-    
-    global flag; flag = ''
+    global flag; flag = ""
 
     global section_dictionary; section_dictionary = {
         'VPLS-1' : importlib.import_module("Nokia.Nokia_Section_Template_Checks.VPLS_1"),
@@ -155,7 +150,7 @@ def nokia_main_func(**kwargs) -> str:
             i =0 
             while(i < len(thread_dictionary)):
                 result_from_thread = thread_dictionary[ip_nodes[i]]
-                logging.debug(f"Nokia ===> {ip_nodes[i]} ===> {result_from_thread}")
+                logging.debug(f"Nokia ===> {ip_nodes[i]} ===> {result_from_thread =}")
                 
                 if(result_from_thread == None):
                     logging.error(f"Result from thread for {ip_nodes[i]} ==> {result_from_thread}")
