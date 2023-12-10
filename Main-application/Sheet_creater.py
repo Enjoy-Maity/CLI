@@ -28,7 +28,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 # flag = ''
 
-def pickle_checker(host_details_df: pandas.DataFrame) -> list:
+def pickle_checker(host_details_df: pd.DataFrame) -> list:
     """
         Checks the uploaded workbook with the pre-defined pickle in User/{signum}/AppData/Local/CLI_Automation/Host_details_Pickle_file/Host_detail_pickle.pkl
         
@@ -55,14 +55,14 @@ def pickle_checker(host_details_df: pandas.DataFrame) -> list:
     
     username = os.popen(r'cmd.exe /C "echo %username%"').read()
     logging.info(r"Got the username from the command \'cmd.exe /C \"echo %username%\"\'")
-    path_for_the_host_details_pickle = rf"C:\Users\{username}\AppData\Local\CLI_Automation\Host_details_Pickle_file\Host_details.pkl"
+    path_for_the_host_details_pickle = rf"C:\Users\{username.strip()}\AppData\Local\CLI_Automation\Host_details_Pickle_file\Host_details.pkl"
+    Path(os.path.dirname(path_for_the_host_details_pickle)).mkdir(parents=True,exist_ok=True)
     result = []
     
-    logging.info(f"Checking if the there is any pickle file existing at \'{path_for_the_host_detail_pickle}\'")
+    logging.info(f"Checking if the there is any pickle file existing at \'{path_for_the_host_details_pickle}\'")
     try:
         if(not Path(path_for_the_host_details_pickle).exists()):
             logging.info("Didn't find the pickle file for Host Details so creating the pickle file for the Host Details\n")
-            Path(os.path.dirname(path_for_the_host_details_pickle)).mkdir(parents=True,exist_ok=True)
             
             host_details_df.to_pickle(path = path_for_the_host_details_pickle,
                                     compression=None,
@@ -75,7 +75,7 @@ def pickle_checker(host_details_df: pandas.DataFrame) -> list:
             creation_time_of_host_details_pickle_file = datetime.fromtimestamp(os.path.getctime(path_for_the_host_details_pickle))
             
             today = datetime.now()
-            if(int((today - creation_time_of_host_details_pickle_file).__format__('%H')) >= 15):
+            if((today - creation_time_of_host_details_pickle_file).seconds//3600 >= 15):
                 logging.info("pickle file for Host Details found is older so creating the pickle file for the Host Details\n")
                 os.remove(path_for_the_host_details_pickle)
                 
@@ -98,7 +98,7 @@ def pickle_checker(host_details_df: pandas.DataFrame) -> list:
                     logging.debug(f"comparision between the uploaded host details and pickled host_details ==>\n{temp_result_df.to_markdown()}\n")
                     
                     if(len(temp_result_df) > 0):
-                        messagebox.info("Updated Host Details Information",f"New Host IP/s entry found in latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nNew Host IPs :- {', '.join(str(element) for element in temp_result_df['other'])}")
+                        messagebox.showinfo("Updated Host Details Information",f"New Host IP/s entry found in latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nNew Host IPs :- {', '.join(str(element) for element in temp_result_df['other'])}")
                         host_details_df.to_pickle(path= path_for_the_host_details_pickle,
                                                 compression = None,
                                                 protocol= pickle.HIGHEST_PROTOCOL)
@@ -116,7 +116,7 @@ def pickle_checker(host_details_df: pandas.DataFrame) -> list:
                         temp_delta = np.setdiff1d(ar1 = uploaded_host_details_df_host_ip,
                                                 ar2 = previous_host_details_pickle_to_df_host_ip)
                         
-                        messagebox.info("Updated Host Details Information",f"New Host IP/s entry found in latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nNew Host IPs :- {', '.join(temp_delta.astype(dtype = str))}")
+                        messagebox.showinfo("Updated Host Details Information",f"New Host IP/s entry found in latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nNew Host IPs :- {', '.join(temp_delta.astype(dtype = str))}")
                         host_details_df.to_pickle(path= path_for_the_host_details_pickle,
                                                 compression = None,
                                                 protocol= pickle.HIGHEST_PROTOCOL)
@@ -134,9 +134,10 @@ def pickle_checker(host_details_df: pandas.DataFrame) -> list:
                     
     except Exception as e:
         logging.error(f"Exception Occurred ======>\n{traceback.format_exc()}\n\n{e}\n")
-        result = ['Unsuccessful',e]
+        result = ['Unsuccessful',e.args[1]]
     
-    finally:    
+    finally:
+        logging.info(f"Returning the value {result}")
         return result 
 
 def mpbn_node_login_file_creater(**kwargs) -> None:
@@ -336,8 +337,14 @@ def sheet_creater(**kwargs) -> str:
     try:
         logging.info(f"Starting the Sheet Creater for {os.path.basename(kwargs['file'])}")
         host_ips_sheets_required = kwargs['host_ips_sheets_required']
+        logging.info(f"{host_ips_sheets_required =}")
+        
         file                     = kwargs['file']
+        logging.info(f"{file =}")
+        
         standard_input           = kwargs['standard_design_template_path']
+        logging.info(f"{standard_input = }")
+        
         file_name                = os.path.basename(file)
         standard_input_file_name = os.path.basename(standard_input)
 
@@ -349,15 +356,31 @@ def sheet_creater(**kwargs) -> str:
 
         logging.debug(f"Reading the {file_name} using openpyxl")
         host_ips_sheets_required_workbook = load_workbook(file)
+        # print(type(host_ips_sheets_required_workbook))
+        
         host_ips_sheetnames_present_in_the_workbook = host_ips_sheets_required_workbook.sheetnames
+        f = pd.ExcelFile(file)
+        # print("sheetnames for file",file,"===>",f.sheet_names)
+        f.close()
+        del f
+        
+        # print(file,"===>",host_ips_sheetnames_present_in_the_workbook)
+        logging.debug(f"Sheetnames present in {file_name} ====> {host_ips_sheetnames_present_in_the_workbook}")
+        
         host_ips_sheetnames_present_in_the_workbook = np.array(host_ips_sheetnames_present_in_the_workbook)
+        logging.debug(f"Host IPs mentioned in uploaded 'Host Details' workbook for filename {file_name}=> {host_ips_sheets_required}")
         
         setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array = np.setdiff1d(ar1=host_ips_sheetnames_present_in_the_workbook,
-                         ar2=host_ips_sheets_required)
+                                                                                                         ar2=host_ips_sheets_required)
+        
+        # setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array = setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array[np.where(setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array != 'Sheet')]
+        setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array = setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array[~np.char.startswith(setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array,'Sheet')]
+        logging.debug(f"Got the setdiff_between_workbook_and_host_ips_of_uploaded_host_details_array for '{file_name}'==>\n{setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array}")
         
         if(setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array.size > 0):
+            logging.debug(f"Raising CustomException as setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array.size > 0\nfor\n{setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array}")
             raise CustomException("Host IPs Mismatch",
-                                  f"Host IP mismatch found in uploaded \'Host Details\' and existing {filename}\nMismatch Host IPs: {', '.join(setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array.astype(str))}")
+                                  f"Host IP mismatch found in uploaded \'Host Details\' and existing {file_name}\nMismatch Host IPs: {', '.join(setdiff_between_input_design_workbook_and_host_ips_of_uploaded_host_details_array.astype(str))}")
 
         logging.debug("Getting the length for widths for the columns of the worksheet")
         width_list = []
@@ -428,8 +451,9 @@ def sheet_creater(**kwargs) -> str:
 
         logging.info("Removing the extra sheet that are not required in the workbook")
         for sheet in host_ips_sheetnames_present_in_the_workbook:
-            if(not (sheet in host_ips_sheets_required)):
+            if(sheet.startswith('Sheet')):
                 del host_ips_sheets_required_workbook[sheet]
+                
 
         logging.info(f"Saving the file {file_name}")
         host_ips_sheets_required_workbook.save(file)
@@ -441,7 +465,7 @@ def sheet_creater(**kwargs) -> str:
         standard_input_workbook.close()
         del standard_input_workbook
     
-    except CustomException:
+    except CustomException as e:
         global flag;
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntiltle = {e.title}\nmessage = {e.message}")
@@ -460,7 +484,7 @@ def file_creater(**kwargs) -> None:
                                 encoding= "UTF-8",
                                 level=logging.DEBUG)
     logging.captureWarnings(capture=True)
-    
+    # print("running file creater")
     file = kwargs['file']
     wb = Workbook()
     wb.save(file)
@@ -525,10 +549,10 @@ def main_func(**kwargs) -> str:
         logging.info("Calling the pickle checker function")
         pickle_checker_result = pickle_checker(host_details_df= host_details_df)
         
-        logging.info("Creating the checks for raising the host_details_df")
+        logging.info(f"Creating the checks for raising the host_details_df ==>\n{pickle_checker_result}\n")
         if(pickle_checker_result[0] == 'Unsuccessful'):
-            logging.debug("Raising the CustomException from the message gained in pickle_checker_result[1]")
-            raise CustomException(pickle_checker_result[1])
+            logging.debug("Raising the Exception from the message gained in pickle_checker_result[1]")
+            raise Exception(pickle_checker_result[1])
         
         logging.info(f'Read the host details\n\n{host_details_df.to_markdown()}\n')
 
@@ -668,19 +692,19 @@ def main_func(**kwargs) -> str:
         i = 0
         while(i < unique_vendors_in_host_details.size):
             if(unique_vendors_in_host_details[i].strip().upper() == 'NOKIA'):
-                if(not Path(os.path.join(parent_dir,'Nokia_Design Input_Template.xlsx')).exists()):
+                if(not Path(os.path.join(os.path.join(os.path.dirname(parent_dir),'Standard_Templates'),'Nokia_Design Input_Template.xlsx')).exists()):
                     missing_standard_input_design_template.append('Nokia')
             
             if(unique_vendors_in_host_details[i].strip().upper() == 'ERICSSON'):
-                if(not Path(os.path.join(parent_dir,'Ericsson_Design Input_Template.xlsx')).exists()):
+                if(not Path(os.path.join(os.path.join(os.path.dirname(parent_dir),'Standard_Templates'),'Ericsson_Design Input_Template.xlsx')).exists()):
                     missing_standard_input_design_template.append('Ericsson')
             
             if(unique_vendors_in_host_details[i].strip().upper() == 'HUAWEI'):
-                if(not Path(os.path.join(parent_dir,'Huawei_Design Input_Template.xlsx')).exists()):
+                if(not Path(os.path.join(os.path.join(os.path.dirname(parent_dir),'Standard_Templates'),'Huawei_Design Input_Template.xlsx')).exists()):
                     missing_standard_input_design_template.append('Huawei')
             
             if(unique_vendors_in_host_details[i].strip().upper() == 'CISCO'):
-                if(not Path(os.path.join(parent_dir,'Cisco_Design Input_Template.xlsx')).exists()):
+                if(not Path(os.path.join(os.path.join(os.path.dirname(parent_dir),'Standard_Templates'),'Cisco_Design Input_Template.xlsx')).exists()):
                     missing_standard_input_design_template.append('Cisco')
             i+=1
         
@@ -710,14 +734,15 @@ def main_func(**kwargs) -> str:
                 
                 # Checking the file existence for the input files for the user
                 logging.debug(f"Checking if the '{file_to_be_created.format(unique_vendors_in_host_details[i])}' exists or not, if yes then adding ip sheets, otherwise creating the file itself.")
-                logging.debug(f"Checking the condition working or not '{not Path(os.path.join(neo_parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i]))).exists() =}'")
-
-                if(not Path(os.path.join(parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i]))).exists()):
+                logging.debug(f"Checking the condition working or not '=> not Path(os.path.join(neo_parent_dir,{file_to_be_created.format(unique_vendors_in_host_details[i])})).exists() ={(not Path(os.path.join(neo_parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i]))).exists())}'")
+                
+                if((not Path(os.path.join(neo_parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i]))).exists())):
+                    logging.debug(f"Creating {file_to_be_created.format(unique_vendors_in_host_details[i])}")
                     file_creater(file = os.path.join(neo_parent_dir,file_to_be_created.format(unique_vendors_in_host_details[i])))
 
                 
                 logging.debug(f"Checking for the presence of the 'Standard Template' worksheet in the {file_to_be_selected.format(unique_vendors_in_host_details[i])}")
-                temp_reader = pd.ExcelFile(os.path.join(parent_dir,file_to_be_selected.format(unique_vendors_in_host_details[i])))
+                temp_reader = pd.ExcelFile(os.path.join(os.path.join(os.path.dirname(parent_dir),'Standard_Templates'),file_to_be_selected.format(unique_vendors_in_host_details[i])))
                 
                 if(not 'Standard Template' in temp_reader.sheet_names):
                     del temp_reader
@@ -745,21 +770,27 @@ def main_func(**kwargs) -> str:
                 thread_list_for_vendor_sheet_creation[i].join()
                 i+=1
         
+        except CustomException as e:
+            # global flag;
+            flag = 'Unsuccessful'
+            logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntiltle = {e.title}\nmessage = {e.message}")
+        
         except Exception as e:
             # global flag;
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
             messagebox.showerror("Exception Occurred!",e)
         
-        logging.debug(f"Invoking mpbn_node_login_file_creater method for \"MPBN_Node_Login.xlsx\" creation from \'host_details_df\' ==> {host_details_df.to_markdown()}\n")
-        mpbn_node_login_file_creater(parent_dir = parent_dir,
+        if(flag != 'Unsuccessful'):
+            logging.debug(f"Invoking mpbn_node_login_file_creater method for \"MPBN_Node_Login.xlsx\" creation from \'host_details_df\' ==> \n{host_details_df.to_markdown()}\n")
+            mpbn_node_login_file_creater(parent_dir = parent_dir,
                                      host_details_file_df = host_details_df)
         
         if(flag != 'Unsuccessful'):
             logging.info("Setting the flag status to 'Successful'")
             flag = 'Successful'
 
-    except CustomException:
+    except CustomException as e:
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntiltle = {e.title}\nmessage = {e.message}")
 
