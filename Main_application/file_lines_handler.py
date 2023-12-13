@@ -38,8 +38,8 @@ class File_lines_handler(Abstract_class_file_lines_handler):
                 cleaned_file_list ===> list
                     description =====> list of file lines without any escape sequences in file lines
         """
-        cleaned_file_list = [line for line in file_lines_list if(len(line.strip() > 0))]
-        del file_lines_list
+        cleaned_file_list = [line.strip() for line in file_lines_list if(len(line.strip()) > 0)]
+        
         
         return cleaned_file_list
     
@@ -60,12 +60,16 @@ class File_lines_handler(Abstract_class_file_lines_handler):
         """
         
         file_lines_list = self.file_lines_cleaner(file_lines_list=file_lines_list)
+        # print(file_lines_list)
         
         start_word = start_word.strip()
-        filtered_lines_list = [line for line in file_lines_list if line.startswith(start_word)]
+        # print(start_word)
+        # print(file_lines_list[0].startswith("Last"))
+        filtered_lines_list = [line for line in file_lines_list if(line.strip().startswith(start_word))]
         
         del file_lines_list
-        return result_list
+        # print(filtered_lines_list.sort())
+        return sorted(filtered_lines_list)
     
     def file_lines_contains_filter(self, file_lines_list: list, word_to_search_for : str) -> list:
         """
@@ -90,7 +94,7 @@ class File_lines_handler(Abstract_class_file_lines_handler):
         filtered_lines_list = [line for line in file_lines_list if(line.__contains__(word_to_search_for))]
         
         del file_lines_list
-        return filtered_lines_list
+        return sorted(filtered_lines_list)
 
     def file_lines_pattern_filter(self,file_lines_list: list, pattern_to_search_for: str) -> list:
         """
@@ -114,4 +118,4 @@ class File_lines_handler(Abstract_class_file_lines_handler):
         filtered_lines_list = [line for line in file_lines_list if(re.search(pattern=compiled_pattern,string=line))]
         
         del file_lines_list
-        return filtered_lines_list
+        return sorted(filtered_lines_list)

@@ -33,19 +33,19 @@ def same_vpls_id_found_error_message_generator(dataframe:pd.DataFrame, common_vp
 
 def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
     """
-    Performs the Template checks for the VPLS 1 Section (VPLS with Mesh-sdp/sap)
-    
-    Arguments : (dataframe, ip_node)
-        dataframe => pd.DataFrame,  
-           description ====> contains the section dataframe in this case for VPLS 1, obtained from Input Design workbook.
+        Performs the Template checks for the VPLS 1 Section (VPLS with Mesh-sdp/sap)
         
-        ip_node   => str,  
-           description ====> contains the name of the 'IP Node' worksheet, being checked.
-    
-    returns : result_dictionary 
-        result_dictionary => dict, 
-           description ====> {Reasons : [list of Serial Numbers containing the template error in the 'VPLS-1' Section]}
-                                contains the dictionary with the list of all errors found in Template Checks with reason as keys.
+        Arguments : (dataframe, ip_node)
+            dataframe => pd.DataFrame,  
+               description ====> contains the section dataframe in this case for VPLS 1, obtained from Input Design workbook.
+            
+            ip_node   => str,  
+               description ====> contains the name of the 'IP Node' worksheet, being checked.
+        
+        returns : result_dictionary 
+            result_dictionary => dict, 
+               description ====> {Reasons : [list of Serial Numbers containing the template error in the 'VPLS-1' Section]}
+                                    contains the dictionary with the list of all errors found in Template Checks with reason as keys.
     """
     log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
     Path(log_file_path).mkdir(parents=True,exist_ok=True)
