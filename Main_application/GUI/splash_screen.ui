@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>splash_screen</class>
+ <widget class="QWidget" name="splash_screen">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>640</width>
+    <height>480</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>CLI Automation</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="Application_GUI.qrc">
+    <normaloff>:/Main_Application_window/ericsson-blue-icon-logo.ico</normaloff>:/Main_Application_window/ericsson-blue-icon-logo.ico</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">#splash_screen{
+	background-image: url(:/Main_Application_window/wp3610575-automation-wallpapers-1080x675-copy.png);
+}</string>
+  </property>
+  <widget class="QProgressBar" name="progressBar">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>290</y>
+     <width>531</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <kerning>true</kerning>
+    </font>
+   </property>
+   <property name="value">
+    <number>10</number>
+   </property>
+   <property name="format">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QFrame" name="frame">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>591</width>
+     <height>221</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">#frame{
+background:transparent;
+}</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <family>Ericsson Hilda</family>
+          <pointsize>24</pointsize>
+          <italic>false</italic>
+          <underline>true</underline>
+          <fontweight>ExtraBold</fontweight>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">#label{
+color:white;
+background:transparent;
+	font: 800 24pt &quot;Ericsson Hilda&quot;;
+}</string>
+        </property>
+        <property name="text">
+         <string>MPBN Nokia CLI Automation</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignHCenter|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="styleSheet">
+         <string notr="true">#label_2{
+color:white;
+background:transparent;
+	font: 700 18pt &quot;Ericsson Hilda&quot;;
+}</string>
+        </property>
+        <property name="text">
+         <string>Welcome!</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources>
+  <include location="Application_GUI.qrc"/>
+ </resources>
+ <connections/>
+</ui>

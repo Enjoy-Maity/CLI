@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>surity_Dialog</class>
+ <widget class="QDialog" name="surity_Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>150</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>500</width>
+    <height>150</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>500</width>
+    <height>150</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Are you Sure?</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="Application_GUI.qrc">
+    <normaloff>:/Main_Application_window/ericsson-blue-icon-logo.ico</normaloff>:/Main_Application_window/ericsson-blue-icon-logo.ico</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-image: url(:/Main_Application_window/wp3610575-automation-wallpapers.png);</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="3" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="yes_pushButton">
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>33</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>60</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">#yes_pushButton{
+border:1px solid;
+color:white;
+border-radius:8px;
+border-color:rgb(255,255,255);
+font: 12pt &quot;Ericsson Hilda&quot;;
+background:solid;
+}
+#yes_pushButton:hover{
+background:solid;
+background-color: rgb(255, 255, 255);
+alternate-background-color: rgb(255, 255, 255) solid;
+border:1px solid;
+color:rgb(1, 67, 167);
+border-radius:8px;
+border-color:rgb(1, 67, 167);
+font: 700 12pt &quot;Ericsson Hilda&quot;;
+}
+#yes_pushButton:pressed{
+background:solid;
+background-color:rgb(190, 190, 190);
+	font: 800 12pt &quot;Ericsson Hilda&quot;;
+}</string>
+       </property>
+       <property name="text">
+        <string>Yes</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="no_pushButton">
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>33</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>60</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">#no_pushButton{
+border: 1px solid;
+border-radius:8px;
+border-color:white;
+color:white;
+	font: 12pt &quot;Ericsson Hilda&quot;;
+background:solid;
+}
+
+#no_pushButton:hover{
+background-color: white;
+border: 1px solid;
+border-radius:8px;
+color:rgb(1, 67, 167);
+border-color:rgb(1, 67, 167);
+	font: 700 12pt &quot;Ericsson Hilda&quot;;
+}
+
+#no_pushButton:pressed{
+background:solid;
+background-color:rgb(190, 190, 190);
+	font: 800 12pt &quot;Ericsson Hilda&quot;;
+}</string>
+       </property>
+       <property name="text">
+        <string>No</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0">
+    <widget class="QTextEdit" name="messagetextEdit">
+     <property name="styleSheet">
+      <string notr="true">#messagetextEdit{color:white;
+background:transparent;
+border:none;}</string>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="html">
+      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt;&quot;&gt;Are you sure you want to create a &lt;/span&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt; font-weight:700;&quot;&gt;New Session&lt;/span&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt;&quot;&gt;?&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt;&quot;&gt;Press &amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt; font-weight:700;&quot;&gt;Yes&lt;/span&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt;&quot;&gt;&amp;quot; for &lt;/span&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt; font-weight:700;&quot;&gt;New Session&lt;/span&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;
+&lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt;&quot;&gt;Press &amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt; font-weight:700;&quot;&gt;No&lt;/span&gt;&lt;span style=&quot; font-family:'Ericsson Hilda'; font-size:12pt;&quot;&gt;&amp;quot; to go back.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>messagetextEdit</tabstop>
+ </tabstops>
+ <resources>
+  <include location="Application_GUI.qrc"/>
+ </resources>
+ <connections/>
+</ui>

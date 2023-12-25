@@ -1,0 +1,17 @@
+<RCC>
+  <qresource prefix="Main_Application_window">
+    <file>drop-downarrow.png</file>
+    <file>wp3610575-automation-wallpapers-1080x675-copy.png</file>
+    <file>wp3610575-automation-wallpapers-1080x675.png</file>
+    <file>wp3610575-automation-wallpapers.png</file>
+    <file>ericsson-blue-icon-logo.ico</file>
+    <file>CLI_Automation_Test_1.png</file>
+  </qresource>
+  <qresource prefix="vendors_list">
+    <file>huawei-1.png</file>
+    <file>cicso-systems-seeklogo.com.png</file>
+    <file>Ericsson-1.png</file>
+    <file>huawei-logo-png-6990.png</file>
+    <file>nokia-2023-seeklogo.com.png</file>
+  </qresource>
+</RCC>
