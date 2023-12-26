@@ -43,7 +43,8 @@ def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
     logging.debug(f"Created the empty dictionary for returning as result for IP Node: -{ip_node} for VPLS 2 section")
 
     result_dictionary           = {}
-    df                          = dataframe.fillna("TempNA")
+    # df                          = dataframe.fillna("TempNA")
+    df                          = dataframe.where(~dataframe.isna(),"TempNA")
     logging.debug(f"Created a copy of dataframe passed for node_ip({ip_node}) for VPLS-2:-\n{df.to_markdown()}\n\n")
     
     df_add                      = df[df['Action'].str.strip().str.upper() == 'A:ADD']

@@ -116,7 +116,8 @@ def running_config_checks(**kwargs) -> str:
     # host_details_df = pd.read_excel(file_reader,sheet_name= 'Host Details', engine='openpyxl')
     
     host_details_df = pd.read_pickle(path_for_host_details)
-    host_details_df.fillna("TempNA",inplace=True)
+    # host_details_df.fillna("TempNA",inplace=True)
+    host_details_df = host_details_df.where(~host_details_df.isna(),"TempNA")
     
     logging.debug(f"Created the dataframe from \'Host_details.pkl\' uploaded by the user ===>\n{host_details_df.to_markdown()}\n")
     

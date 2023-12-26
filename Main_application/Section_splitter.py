@@ -24,7 +24,8 @@ def section_splitter(dataframe,method_called):
                              level=logging.DEBUG)
     try:
         string_to_be_found = "#Secti0n_MPBN"
-        dataframe = dataframe.fillna("TempNA")
+        # dataframe = dataframe.fillna("TempNA")
+        dataframe = dataframe.where(~dataframe.isna(),"TempNA")
         section_dictionary = {}
         
         logging.debug(f"Starting splitting of the node sheet")

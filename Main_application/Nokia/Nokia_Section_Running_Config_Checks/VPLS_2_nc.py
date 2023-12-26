@@ -40,12 +40,13 @@ def main_func(dataframe : pd.DataFrame, ip_node: str, running_config_backup_file
                         encoding= "UTF-8",
                         level=logging.DEBUG)
     
-    logging.debug(f"Ran the starter function from VPLS_1 module {ip_node}, in VPLS_2")
+    dataframe = dataframe.where(~dataframe.isna(),"TempNA")
+    logging.debug(f"Got the dataframe after getting all the null values replaced with \'TempNA\' ==> {dataframe.to_markdown()}")
     
     # from file_lines_handler import File_lines_handler as flh
     vpls_add_section_filter_lines_list = flh().file_lines_starter_filter(file_lines_list=running_config_backup_file_lines,
                                                                         start_word="vpls")
-   
+    
     print(vpls_add_section_filter_lines_list)
     
 

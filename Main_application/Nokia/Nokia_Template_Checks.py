@@ -8,23 +8,6 @@ import traceback
 from tkinter import messagebox
 
 
-def start_func():
-    # Getting the parent directory of the folder
-    # parent_directory = str(Path(__file__).resolve().parents[1])
-    #or
-    from Beginner_importer import start_func
-    start_func()
-    
-    global flag; flag = ""
-
-    global section_dictionary; section_dictionary = {
-        'VPLS-1' : importlib.import_module("Nokia.Nokia_Section_Template_Checks.VPLS_1_tc"),
-        'VPLS-2' : importlib.import_module("Nokia.Nokia_Section_Template_Checks.VPLS_2_tc")
-        }
-    # sys.path.append(os.path.join(parent_directory,"Nokia_Section_Template_Checks"))
-
-    # sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-
 def section_wise_input(dictionary: dict, ip_node: str) -> dict:
     """
         Creates thread for calling section wise modules for Template Checks
@@ -104,7 +87,14 @@ def nokia_main_func(**kwargs) -> str:
                 description =====> contains 'Unsuccessful' or 'Successful' string corresponding the status of execution completion
     
     """
-    start_func()
+    
+    global flag; flag = ""
+    
+    global section_dictionary; section_dictionary ={
+        'VPLS-1' : importlib.import_module("Nokia.Nokia_Section_Running_Config_Checks.VPLS_1"),
+        'VPLS-2' : importlib.import_module("Nokia.Nokia_Section_Running_Config_Checks.VPLS_2")
+    }
+    
     try:
         # print(kwargs)
         global log_file; log_file = kwargs['log_file']

@@ -42,7 +42,8 @@ def action_blank_check(*args) -> list:
         dataframe = args[0]
         result = list()
         
-        dataframe.fillna("TempNA", inplace = True)
+        # dataframe.fillna("TempNA", inplace = True)
+        dataframe = dataframe.where(~dataframe.isna(),"TempNA")
         
         i = 0
 

@@ -61,7 +61,8 @@ def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
     logging.debug(f"Created the empty dictionary for returning as result for IP Node: -{ip_node} for VPLS 1 section")
     
     result_dictionary           = {}
-    df                          = dataframe.fillna("TempNA")
+    # df                          = dataframe.fillna("TempNA")
+    df                          = dataframe.where(~dataframe.isna(),"TempNA")
     logging.debug(f"Created a copy of dataframe passed for node_ip({ip_node}) for VPLS-1:-\n{df.to_markdown()}\n\n")
     
     df_add                      = df[df['Action'].str.strip().str.upper() == 'A:ADD']
@@ -71,6 +72,11 @@ def main_func(dataframe : pd.DataFrame, ip_node: str) -> dict:
     logging.debug(f"Created the filtered copy of the Dataframe for Action 'A:Modify/A:Delete' for node_ip({ip_node}) for VPLS-1:-\n{df_delete_modify.to_markdown()}\n\n")
 
     logging.debug(f"Going to check the VPLS ID for VPLS-1 of node_ip({ip_node})")
+    
+    temp_df = df.loc[(df["Sequence"].str.startswith("TempNA"))]
+
+    if(len(temp_df) > 0):
+        result_dictionary["Blank 'Sequence' Action found"] = list(temp_df["S.No."])
     
     if(len(df) > 0):
         reason = ''

@@ -119,3 +119,35 @@ class File_lines_handler(Abstract_class_file_lines_handler):
         
         del file_lines_list
         return sorted(filtered_lines_list)
+    
+    def file_lines_chunk_divisor(self: Self,file_lines_list: list,start_string: str, end_string_pattern: str) -> list:
+        """Gets the chunks from file_lines_list
+
+        Args:
+            file_lines_list (list): _description_ : list of file lines
+            start_string (str): _description_ : first keywords from where parsing of chunk lines will be started
+            end_string_pattern (str): _description_ : last string pattern till where parsing of chunk lines will be terminated
+        
+        return:
+            filtered_lines_list (list): _description_ : chunk of parsed file lines lines
+        """
+        file_lines_list  = self.file_lines_cleaner(file_lines_list=file_lines_list)
+        
+        start_index = 0
+        end_index   = 0
+        
+        compiled_pattern = re.compile(end_string_pattern)
+        
+        i = 0
+        while(i < len(file_lines_list)):
+            if(file_lines_list[i].startswith(start_string)):
+                start_index = i
+            
+            if((re.search(compiled_pattern,file_lines_list[i]) != None) and (i > start_index)):
+                end_index = i
+                break
+            i+=1
+        
+        filtered_lines_list = file_lines_list[start_index:end_index]
+        
+        return filtered_lines_list

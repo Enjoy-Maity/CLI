@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from tkinter import messagebox
 from pathlib import Path
-from Custom_Exception import CustomException
+from .Custom_Exception import CustomException
 from threading import Thread
 from datetime import datetime, timedelta
 from openpyxl import Workbook,load_workbook

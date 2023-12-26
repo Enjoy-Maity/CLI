@@ -7,17 +7,6 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-def start_func()->None:
-    from Beginner_importer import start_func
-    
-    start_func()
-    
-    global flag; flag = ""
-    global section_dictionary; section_dictionary ={
-        'VPLS-1' : importlib.import_module("Nokia.Nokia_Section_Running_Config_Checks.VPLS_1"),
-        'VPLS-2' : importlib.import_module("Nokia.Nokia_Section_Running_Config_Checks.VPLS_2")
-    }
-
 def section_running_config_checks(dictionary, ip_node,running_config_backup_file_lines) -> dict:
     """
         Creates thread for calling section wise modules for Template Checks
@@ -117,8 +106,14 @@ def main_func(**kwargs):
     
     username = (os.popen('cmd.exe /C "echo %username%"').read()).strip()
     pickle_path = rf"C:\\Users\\{username}\\AppData\\Local\\CLI_Automation\\Vendor_pickles\\NOKIA.pickle"
-    global flag;
-    start_func()
+    
+    global flag; flag = ""
+    
+    global section_dictionary; section_dictionary ={
+        'VPLS-1' : importlib.import_module("Nokia.Nokia_Section_Running_Config_Checks.VPLS_1"),
+        'VPLS-2' : importlib.import_module("Nokia.Nokia_Section_Running_Config_Checks.VPLS_2")
+    }
+    
     try:
         if(not os.path.exists(pickle_path)):
             raise CustomException("Nokia_Pickle File Missing","Nokia Design Input Pickle File Not Found!")
@@ -161,6 +156,7 @@ def main_func(**kwargs):
             i+=1
         
         error_message_dict = {}
+        
         logging.debug("Checking the thread result")
         i = 0
         while(i < len(ip_hostname_mapping_ips)):
