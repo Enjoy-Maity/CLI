@@ -51,6 +51,8 @@ class Ui_splash_screen(object):
 "\n"
 "#progressBar::chunk{\n"
 "border-top-left-radius:8px;\n"
+"border-top-right-radius:8px;\n"
+"border-bottom-right-radius:8px;\n"
 "border-bottom-left-radius:8px;\n"
 "background-color: qlineargradient(spread:pad, x1:0, y1:0.54, x2:1, y2:0.523, stop:0 rgba(221, 0, 255, 255), stop:0.806818 rgba(255, 85, 158, 255));\n"
 "}")
