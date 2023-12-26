@@ -25,20 +25,10 @@ class Splash_screen(QMainWindow):
         self.counter = 0
     
     def progress(self):
-        
         self.ui.progressBar.setValue(self.counter)
         
         # Set Value to Progress Bar
         if(self.counter > 100):
             # Stop Timer
             self.timer.stop()
-            
-            # Show main Window
-        
         self.counter+=1
-            
-app = QApplication(sys.argv)
-main_window = QMainWindow()
-window = Splash_screen(main_window)
-window.show()
-sys.exit(app.exec())
