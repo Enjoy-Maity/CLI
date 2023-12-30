@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'app_start_dialog_boxxPWSbP.ui'
+## Form generated from reading UI file 'app_start_dialog_boxDeSjHC.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.6.0
 ##
@@ -18,7 +18,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
     QHBoxLayout, QPushButton, QSizePolicy, QTextEdit,
     QWidget)
-import Application_GUI_rc
+import GUI.Application_GUI_rc
 
 class Ui_application_start_dialog(object):
     def setupUi(self, application_start_dialog):
@@ -197,6 +197,7 @@ class Ui_application_start_dialog(object):
 "	color: rgb(15, 13, 125);\n"
 "	background-color: rgb(190, 190, 190);\n"
 "}")
+        self.existing_session_push_button.setCheckable(True)
         self.existing_session_push_button.setAutoDefault(False)
         self.existing_session_push_button.setFlat(True)
 
@@ -228,6 +229,7 @@ class Ui_application_start_dialog(object):
 "	background-color: rgb(190, 190, 190);\n"
 "}\n"
 "")
+        self.new_session_push_button.setCheckable(True)
 
         self.message_horizontalLayout.addWidget(self.new_session_push_button)
 

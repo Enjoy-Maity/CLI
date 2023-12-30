@@ -53,7 +53,7 @@
 color:white;</string>
      </property>
      <property name="title">
-      <string>MPBN Nokia CLI Automation</string>
+      <string>MPBN CLI Automation</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -483,7 +483,10 @@ color:rgb(22, 15, 121);
 }</string>
                </property>
                <property name="text">
-                <string>Sheet Creator</string>
+                <string>Sheet Creater</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
                </property>
               </widget>
              </item>

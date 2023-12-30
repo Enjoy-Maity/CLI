@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'main_application_first_windowWEsrZl.ui'
+## Form generated from reading UI file 'main_application_first_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.0
+## Created by: Qt User Interface Compiler version 6.6.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -19,16 +19,9 @@ from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QGroupBox,
     QHBoxLayout, QLabel, QLayout, QLineEdit,
     QPushButton, QSizePolicy, QSpacerItem, QVBoxLayout,
     QWidget)
-import GUI.Application_GUI_rc
+import Application_GUI_rc
 
 class Ui_CLI_automation_main_application_first_window(object):
-    def __init__(self):
-        self.colors = {'green':'rgb(0,255,0)',
-                       'red':'rgb(255,0,0)',
-                       'white':'rgb(255,255,255)'}
-        self.sheet_creator_status_label_color = ''
-        self.sheet_creator_status_label_text = ''
-        
     def setupUi(self, CLI_automation_main_application_first_window):
         if not CLI_automation_main_application_first_window.objectName():
             CLI_automation_main_application_first_window.setObjectName(u"CLI_automation_main_application_first_window")
@@ -288,9 +281,8 @@ class Ui_CLI_automation_main_application_first_window(object):
 "color:rgb(22, 15, 121);\n"
 "	font: 800 14pt \"Ericsson Hilda\";\n"
 "}")
-
         self.sheet_creator_pushButton.setCheckable(True)
-        
+
         self.horizontalLayout.addWidget(self.sheet_creator_pushButton)
 
         self.horizontalSpacer_5 = QSpacerItem(225, 50, QSizePolicy.Fixed, QSizePolicy.Minimum)
@@ -334,7 +326,6 @@ class Ui_CLI_automation_main_application_first_window(object):
 "color:rgb(22, 15, 121);\n"
 "	font: 800 14pt \"Ericsson Hilda\";\n"
 "}")
-        self.submit_button_pushButton.setCheckable(True)
         self.submit_button_pushButton.setAutoDefault(True)
 
         self.horizontalLayout.addWidget(self.submit_button_pushButton)
@@ -371,7 +362,6 @@ class Ui_CLI_automation_main_application_first_window(object):
 "padding-bottom:30px;\n"
 "margin-bottom:30px;\n"
 "	font: 700 16pt \"Ericsson Hilda\";\n"
-f"color:{self.sheet_creator_status_label_color};\n"
 "\n"
 "}")
         self.sheet_creator_status_label.setAlignment(Qt.AlignCenter)
@@ -415,12 +405,6 @@ f"color:{self.sheet_creator_status_label_color};\n"
     # setupUi
 
     def retranslateUi(self, CLI_automation_main_application_first_window):
-        # Using pixmap to set the background of the QWidget Main_Application_Window
-        pixmap = QPixmap(":/Main_Application_window/wp3610575-automation-wallpapers-1080x675-copy.png")
-        palette = QPalette()
-        palette.setBrush(QPalette.Window, pixmap)
-        CLI_automation_main_application_first_window.setPalette(palette)
-        
         CLI_automation_main_application_first_window.setWindowTitle(QCoreApplication.translate("CLI_automation_main_application_first_window", u"CLI Automation", None))
         self.groupBox.setTitle(QCoreApplication.translate("CLI_automation_main_application_first_window", u"MPBN CLI Automation", None))
         self.label_4.setText("")
@@ -434,7 +418,7 @@ f"color:{self.sheet_creator_status_label_color};\n"
         self.file_browser_pushButton.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Browse", None))
         self.sheet_creator_pushButton.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Sheet Creater", None))
         self.submit_button_pushButton.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Submit", None))
-        self.sheet_creator_status_label.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", f"{self.sheet_creator_status_label_text}", None))
+        self.sheet_creator_status_label.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Hello", None))
         self.label_6.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Note:- Kindly click on 'Submit' button after 'Successful' completion of 'Sheet Creator' Task", None))
     # retranslateUi
 

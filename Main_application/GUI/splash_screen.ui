@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>640</width>
-    <height>315</height>
+    <height>365</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -34,22 +34,59 @@
 	background-image: url(:/Main_Application_window/wp3610575-automation-wallpapers-1080x675-copy.png);
 }</string>
   </property>
-  <widget class="QProgressBar" name="progressBar">
-   <property name="geometry">
-    <rect>
-     <x>70</x>
-     <y>210</y>
-     <width>531</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <kerning>true</kerning>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">#progressBar{
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <widget class="QFrame" name="frame">
+     <property name="styleSheet">
+      <string notr="true">#frame{
+background:transparent;}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0" rowspan="3" colspan="3">
+       <widget class="QFrame" name="frame_2">
+        <property name="styleSheet">
+         <string notr="true">#frame{
+background:transparent;
+}</string>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="styleSheet">
+            <string notr="true">#label_3{
+color:white;
+text-align:center;
+}</string>
+           </property>
+           <property name="text">
+            <string>loading......</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QProgressBar" name="progressBar">
+           <property name="font">
+            <font>
+             <kerning>true</kerning>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">#progressBar{
 border-style:none;
 border-radius:8px;
 text-align:center;
@@ -58,109 +95,138 @@ color:rgb(2,2,2);
 
 #progressBar::chunk{
 border-top-left-radius:8px;
+border-top-right-radius:8px;
+border-bottom-right-radius:8px;
 border-bottom-left-radius:8px;
-background-color: qlineargradient(spread:pad, x1:0, y1:0.54, x2:1, y2:0.523, stop:0 rgba(221, 0, 255, 255), stop:0.806818 rgba(255, 85, 158, 255));
+	background-color: qlineargradient(spread:pad, x1:0.0738636, y1:0.585227, x2:0.914773, y2:0.5625, stop:0 rgba(0, 170, 0, 255), stop:1 rgba(170, 255, 0, 255));
 }</string>
-   </property>
-   <property name="value">
-    <number>10</number>
-   </property>
-   <property name="format">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QFrame" name="frame">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>30</y>
-     <width>591</width>
-     <height>161</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">#frame{
-background:transparent;
-}</string>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Raised</enum>
-   </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="font">
-         <font>
-          <family>Ericsson Hilda</family>
-          <pointsize>24</pointsize>
-          <italic>false</italic>
-          <underline>true</underline>
-          <fontweight>ExtraBold</fontweight>
-         </font>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">#label{
+           </property>
+           <property name="value">
+            <number>10</number>
+           </property>
+           <property name="format">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <spacer name="verticalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="font">
+              <font>
+               <family>Ericsson Hilda</family>
+               <pointsize>24</pointsize>
+               <italic>false</italic>
+               <underline>true</underline>
+               <fontweight>ExtraBold</fontweight>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">#label{
 color:white;
 background:transparent;
 	font: 800 24pt &quot;Ericsson Hilda&quot;;
 }</string>
-        </property>
-        <property name="text">
-         <string>MPBN Nokia CLI Automation</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignHCenter|Qt::AlignTop</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="styleSheet">
-         <string notr="true">#label_2{
+             </property>
+             <property name="text">
+              <string>MPBN CLI Automation</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignHCenter|Qt::AlignTop</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>10</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_2">
+             <property name="styleSheet">
+              <string notr="true">#label_2{
 color:white;
 background:transparent;
 	font: 700 18pt &quot;Ericsson Hilda&quot;;
 }</string>
-        </property>
-        <property name="text">
-         <string>Welcome!</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignBottom|Qt::AlignHCenter</set>
-        </property>
+             </property>
+             <property name="text">
+              <string>Welcome!</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>46</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="0">
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>54</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QLabel" name="label_3">
-   <property name="geometry">
-    <rect>
-     <x>80</x>
-     <y>240</y>
-     <width>511</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">#label_3{
-color:white;
-text-align:center;
-}</string>
-   </property>
-   <property name="text">
-    <string>loading......</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources>
   <include location="Application_GUI.qrc"/>

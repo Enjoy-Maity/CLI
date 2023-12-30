@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'Main_ApplicationMedYyI.ui'
+## Form generated from reading UI file 'Main_Application.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.0
+## Created by: Qt User Interface Compiler version 6.6.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -19,31 +19,9 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QFram
     QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QSpacerItem, QTableView, QVBoxLayout, QWidget)
-import GUI.Application_GUI_rc
+import Application_GUI_rc
 
 class Ui_Main_Application_Window(object):
-    def __init__(self):
-        self.colors = {'green':'rgb(0,255,0)',
-                       'red':'rgb(255,0,0)',
-                       'white':'rgb(255,255,255)'}
-        
-        self.template_checks_label_text = ''
-        self.template_checks_label_color = ''
-        
-        self.running_config_post_checks_label_text = ''
-        self.running_config_post_checks_label_color = ''
-        
-        self.running_config_pre_checks_label_text = ''
-        self.running_config_pre_checks_label_color = ''
-        
-        self.cli_preparation_status_label_text = ''
-        self.cli_preparation_status_label_color = ''
-        
-        self.sheet_creater_task_status_label_color = ''
-        self.sheet_creater_task_status_label_text = ''
-        
-        self.vendor_list = []
-        
     def setupUi(self, Main_Application_Window):
         if not Main_Application_Window.objectName():
             Main_Application_Window.setObjectName(u"Main_Application_Window")
@@ -57,9 +35,7 @@ class Ui_Main_Application_Window(object):
         icon = QIcon()
         icon.addFile(u":/Main_Application_window/ericsson-blue-icon-logo.ico", QSize(), QIcon.Normal, QIcon.Off)
         Main_Application_Window.setWindowIcon(icon)
-        
-        Main_Application_Window.setStyleSheet(u"background-image: url(:/Main_Application_window/wp3610575-automation-wallpapers-1080x675-copy.png);")
-        Main_Application_Window.setAutoFillBackground(True)
+        Main_Application_Window.setStyleSheet(u"#Main_Application_Window{background-image: url(:/Main_Application_window/wp3610575-automation-wallpapers-1080x675-copy.png);}")
         self.gridLayout = QGridLayout(Main_Application_Window)
         self.gridLayout.setObjectName(u"gridLayout")
         self.frame = QFrame(Main_Application_Window)
@@ -121,7 +97,7 @@ class Ui_Main_Application_Window(object):
 "	font: 800 14pt \"Ericsson Hilda\";\n"
 "}")
         self.template_checks_btn.setCheckable(True)
-        
+
         self.buttons_horizontal_layout.addWidget(self.template_checks_btn)
 
         self.running_config_pre_checks_btn = QPushButton(self.frame_for_buttons_and_their_status)
@@ -161,7 +137,7 @@ class Ui_Main_Application_Window(object):
 "	font: 800 14pt \"Ericsson Hilda\";\n"
 "}")
         self.running_config_pre_checks_btn.setCheckable(True)
-        
+
         self.buttons_horizontal_layout.addWidget(self.running_config_pre_checks_btn)
 
         self.cli_preparation_btn = QPushButton(self.frame_for_buttons_and_their_status)
@@ -194,7 +170,7 @@ class Ui_Main_Application_Window(object):
 "	font: 800 14pt \"Ericsson Hilda\";\n"
 "}")
         self.cli_preparation_btn.setCheckable(True)
-        
+
         self.buttons_horizontal_layout.addWidget(self.cli_preparation_btn)
 
         self.running_config_post_checks_btn = QPushButton(self.frame_for_buttons_and_their_status)
@@ -233,7 +209,7 @@ class Ui_Main_Application_Window(object):
 "	font: 800 14pt \"Ericsson Hilda\";\n"
 "}")
         self.running_config_post_checks_btn.setCheckable(True)
-        
+
         self.buttons_horizontal_layout.addWidget(self.running_config_post_checks_btn)
 
 
@@ -248,9 +224,7 @@ class Ui_Main_Application_Window(object):
         font3.setPointSize(14)
         font3.setBold(True)
         self.template_checks_label.setFont(font3)
-        self.template_checks_label.setStyleSheet(u"#template_checks_label{\n"
-                                                 f"color: {self.template_checks_label_color};\n"
-                                                 "}")
+        self.template_checks_label.setStyleSheet(u"#template_checks_label{ color: white; }")
         self.template_checks_label.setAlignment(Qt.AlignCenter)
 
         self.status_labels_horizontal_layout.addWidget(self.template_checks_label)
@@ -259,9 +233,7 @@ class Ui_Main_Application_Window(object):
         self.running_config_pre_checks_label.setObjectName(u"running_config_pre_checks_label")
         self.running_config_pre_checks_label.setMinimumSize(QSize(0, 25))
         self.running_config_pre_checks_label.setFont(font3)
-        self.running_config_pre_checks_label.setStyleSheet(u"#running_config_pre_checks_label{\n"
-                                                           f"color: {self.running_config_pre_checks_label_color}; \n"
-                                                           "}")
+        self.running_config_pre_checks_label.setStyleSheet(u"#running_config_pre_checks_label{ color: white; }")
         self.running_config_pre_checks_label.setAlignment(Qt.AlignCenter)
 
         self.status_labels_horizontal_layout.addWidget(self.running_config_pre_checks_label)
@@ -269,9 +241,7 @@ class Ui_Main_Application_Window(object):
         self.cli_preparation_status_label = QLabel(self.frame_for_buttons_and_their_status)
         self.cli_preparation_status_label.setObjectName(u"cli_preparation_status_label")
         self.cli_preparation_status_label.setFont(font3)
-        self.cli_preparation_status_label.setStyleSheet(u"#cli_preparation_status_label{ \n"
-                                                        f"color: {self.cli_preparation_status_label_color}; \n"
-                                                        "}")
+        self.cli_preparation_status_label.setStyleSheet(u"#cli_preparation_status_label{ color: white; }")
         self.cli_preparation_status_label.setAlignment(Qt.AlignCenter)
 
         self.status_labels_horizontal_layout.addWidget(self.cli_preparation_status_label)
@@ -279,9 +249,7 @@ class Ui_Main_Application_Window(object):
         self.running_config_post_checks_label = QLabel(self.frame_for_buttons_and_their_status)
         self.running_config_post_checks_label.setObjectName(u"running_config_post_checks_label")
         self.running_config_post_checks_label.setFont(font3)
-        self.running_config_post_checks_label.setStyleSheet(u"#running_config_post_checks_label{\n"
-                                                            f" color: {self.running_config_post_checks_label_color}; \n"
-                                                            "}")
+        self.running_config_post_checks_label.setStyleSheet(u"#running_config_post_checks_label{ color: white; }")
         self.running_config_post_checks_label.setAlignment(Qt.AlignCenter)
 
         self.status_labels_horizontal_layout.addWidget(self.running_config_post_checks_label)
@@ -354,7 +322,6 @@ class Ui_Main_Application_Window(object):
         self.sheet_creater_task_status_label.setFont(font4)
         self.sheet_creater_task_status_label.setStyleSheet(u"#sheet_creater_task_status_label{\n"
 "text-align:center;\n"
-f"color:{self.sheet_creater_task_status_label_color};\n"
 "}")
         self.sheet_creater_task_status_label.setAlignment(Qt.AlignCenter)
 
@@ -400,7 +367,7 @@ f"color:{self.sheet_creater_task_status_label_color};\n"
 "	font: 800 14pt \"Ericsson Hilda\";\n"
 "}")
         self.new_session_button_3.setCheckable(True)
-        self.cli_preparation_btn.setCheckable(True)
+
         self.verticalLayout_4.addWidget(self.new_session_button_3)
 
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Fixed)
@@ -500,13 +467,14 @@ f"color:{self.sheet_creater_task_status_label_color};\n"
 "}\n"
 "\n"
 "#vendor_details_selection_combobox::drop-down:button{\n"
-"border-radius:5px;\n"
+"border-top-radius:5px;\n"
+"border-bottom-radius:5px;\n"
 "	border-image: url(:/Main_Application_window/drop-downarrow.png);\n"
 "}\n"
 "\n"
 "#vendor_details_selection_combobox QAbstractItemView{\n"
 "outline:none;\n"
-"background:solid;\n"
+"background-style:solid;\n"
 "}\n"
 "\n"
 "#vendor_details_selection_combobox QListView{\n"
@@ -520,7 +488,7 @@ f"color:{self.sheet_creater_task_status_label_color};\n"
 "\n"
 "#vendor_details_selection_combobox QListView:item:selected{\n"
 "color:black;\n"
-"background:solid;\n"
+"background-style:solid;\n"
 "background-color: rgb(220, 220, 220);\n"
 "outline:none;}\n"
 "\n"
@@ -585,33 +553,24 @@ f"color:{self.sheet_creater_task_status_label_color};\n"
 
         QMetaObject.connectSlotsByName(Main_Application_Window)
     # setupUi
-        
+
     def retranslateUi(self, Main_Application_Window):
-        
-        # Using pixmap to set the background of the QWidget Main_Application_Window
-        pixmap = QPixmap(":/Main_Application_window/wp3610575-automation-wallpapers-1080x675-copy.png")
-        palette = QPalette()
-        palette.setBrush(QPalette.Window, pixmap)
-        Main_Application_Window.setPalette(palette)
-        
         Main_Application_Window.setWindowTitle(QCoreApplication.translate("Main_Application_Window", u"CLI Automation", None))
         self.groupBox.setTitle(QCoreApplication.translate("Main_Application_Window", u"MPBN Nokia CLI Automation", None))
         self.template_checks_btn.setText(QCoreApplication.translate("Main_Application_Window", u"Template Checks", None))
         self.running_config_pre_checks_btn.setText(QCoreApplication.translate("Main_Application_Window", u"Running Config Pre Checks", None))
         self.cli_preparation_btn.setText(QCoreApplication.translate("Main_Application_Window", u"CLI Preparation", None))
         self.running_config_post_checks_btn.setText(QCoreApplication.translate("Main_Application_Window", u"Running Config Post Checks", None))
-        self.template_checks_label.setText(QCoreApplication.translate("Main_Application_Window", f"{self.template_checks_label_text}", None))
-        self.running_config_pre_checks_label.setText(QCoreApplication.translate("Main_Application_Window", f"{self.running_config_pre_checks_label_text}", None))
-        self.cli_preparation_status_label.setText(QCoreApplication.translate("Main_Application_Window", f"{self.cli_preparation_status_label_text}", None))
-        self.running_config_post_checks_label.setText(QCoreApplication.translate("Main_Application_Window", f"{self.running_config_post_checks_label_text}", None))
+        self.template_checks_label.setText(QCoreApplication.translate("Main_Application_Window", u"Hello", None))
+        self.running_config_pre_checks_label.setText(QCoreApplication.translate("Main_Application_Window", u"Hello", None))
+        self.cli_preparation_status_label.setText(QCoreApplication.translate("Main_Application_Window", u"Hello", None))
+        self.running_config_post_checks_label.setText(QCoreApplication.translate("Main_Application_Window", u"Hello", None))
         self.sheet_creater_status_button_label.setText(QCoreApplication.translate("Main_Application_Window", u"Sheet Creater Task Status", None))
-        self.sheet_creater_task_status_label.setText(QCoreApplication.translate("Main_Application_Window", f"{self.sheet_creater_task_status_label_text}", None))
+        self.sheet_creater_task_status_label.setText(QCoreApplication.translate("Main_Application_Window", u"TextLabel", None))
         self.new_session_button_3.setText(QCoreApplication.translate("Main_Application_Window", u"New Session", None))
         self.table_view_label.setText(QCoreApplication.translate("Main_Application_Window", u"DataBase Table", None))
-        # self.vendor_details_selection_combobox.setItemText(0, QCoreApplication.translate("Main_Application_Window", u"New Item", None))
-        # self.vendor_details_selection_combobox.setItemText(1, QCoreApplication.translate("Main_Application_Window", u"New Item", None))
-        
-        self.vendor_details_selection_combobox.addItems(self.vendor_list)
+        self.vendor_details_selection_combobox.setItemText(0, QCoreApplication.translate("Main_Application_Window", u"New Item", None))
+        self.vendor_details_selection_combobox.setItemText(1, QCoreApplication.translate("Main_Application_Window", u"New Item", None))
 
         self.vendor_details_selection_combobox.setPlaceholderText(QCoreApplication.translate("Main_Application_Window", u"Select Vendor", None))
         self.selected_host_details_label.setText(QCoreApplication.translate("Main_Application_Window", u"Selected Host Details :", None))

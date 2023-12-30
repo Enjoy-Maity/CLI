@@ -77,6 +77,9 @@ background-color:rgb(190, 190, 190);
        <property name="text">
         <string>Yes</string>
        </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -123,6 +126,9 @@ background-color:rgb(190, 190, 190);
        </property>
        <property name="text">
         <string>No</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
