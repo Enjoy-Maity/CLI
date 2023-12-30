@@ -75,7 +75,7 @@ def pickle_checker(host_details_df: pd.DataFrame) -> list:
             creation_time_of_host_details_pickle_file = datetime.fromtimestamp(os.path.getctime(path_for_the_host_details_pickle))
             
             today = datetime.now()
-            if((today - creation_time_of_host_details_pickle_file).seconds//3600 >= 15):
+            if((today - creation_time_of_host_details_pickle_file).seconds//3600 >= 20):
                 logging.info("pickle file for Host Details found is older so creating the pickle file for the Host Details\n")
                 os.remove(path_for_the_host_details_pickle)
                 
@@ -553,6 +553,16 @@ def main_func(**kwargs) -> str:
         if(pickle_checker_result[0] == 'Unsuccessful'):
             logging.debug("Raising the Exception from the message gained in pickle_checker_result[1]")
             raise Exception(pickle_checker_result[1])
+        
+        logging.info(f"Adding the path of the selected host details in the host_details_text_file in AppData/Local folder")
+        username = ((os.popen('cmd.exe /C "echo %username%"')).read()).strip()
+        host_details_file_text = rf"C:\Users\{username}\AppData\Local\CLI_Automation\Host_details_Pickle_file\Host_details_Path.txt"
+        
+        with open(file=host_details_file_text, mode='w') as f:
+            f.write(host_details_file_name)
+            f.close()
+            
+        del f
         
         logging.info(f'Read the host details\n\n{host_details_df.to_markdown()}\n')
 

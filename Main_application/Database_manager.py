@@ -54,7 +54,7 @@ class Database_manager(Abstract_database_manager):
         self.table_name = "vendor_task_status"
         self.auto_database_remover()
     
-    def database_table_checker(self:Self):
+    def database_table_checker(self):
         self.conn = sqlite3.connect(self.db_path)
         command = "SELECT name FROM sqlite_master WHERE type = 'table';"
         
@@ -75,7 +75,7 @@ class Database_manager(Abstract_database_manager):
             self.conn.close()
             return self.status
 
-    def auto_database_remover(self:Self):
+    def auto_database_remover(self):
         """Auto deletes the database after a fixed time period
         """
         logging.debug("Checking the time for the auto database remover")
@@ -83,7 +83,7 @@ class Database_manager(Abstract_database_manager):
         self.current_hour = int(self.current_time.strftime("%H"))
         
         if(os.path.exists(self.db_path)):
-                creation_time = dataetime.fromtimestamp(os.path.getctime(self.db_path))
+                creation_time = datetime.fromtimestamp(os.path.getctime(self.db_path))
                 
                 if(self.current_hour >= 12):
                     if(((datetime.now() - creation_time).days >= 1) or (((datetime.now() - creation_time).seconds//3600) >= 20)):
@@ -91,7 +91,7 @@ class Database_manager(Abstract_database_manager):
                         self.table_creater()
         
         
-    def table_creater(self: Self):
+    def table_creater(self):
         """Creates the table for Vendor.
         """
         self.table_creater_status = self.database_table_checker()
@@ -110,7 +110,7 @@ class Database_manager(Abstract_database_manager):
             self.conn.close()
             
             
-    def data_adder(self:Self,vendor_list: list):
+    def data_adder(self,vendor_list: list):
         """Creates the rows for the unique vendors of vendor_list
 
         Args:
@@ -132,7 +132,7 @@ class Database_manager(Abstract_database_manager):
         
         self.conn.close()
     
-    def database_updater(self:Self, vendor: str, task: str, status: str):
+    def database_updater(self, vendor: str, task: str, status: str):
         """Updates the database for vendor with data for given task and status
 
         Args:
@@ -153,7 +153,7 @@ class Database_manager(Abstract_database_manager):
         logging.debug(f"Updated the vendor database for {vendor} for task => {task} with status => {status}")
         self.conn.close()
     
-    def data_remover(self:Self):
+    def data_remover(self):
         """ Dropping the rows from the entire table
         """
         command = f"DELETE FROM {self.table_name};"
@@ -168,7 +168,7 @@ class Database_manager(Abstract_database_manager):
         
         self.conn.close()
     
-    def data_fetcher(self:Self) -> pd.DataFrame:
+    def data_fetcher(self) -> pd.DataFrame:
         """ Fetches all the data and returns the dataframe of all the rows
         
         Returns

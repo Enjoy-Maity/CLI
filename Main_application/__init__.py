@@ -1,4 +1,5 @@
-__all__ =["Custom_Exception",
+__all__ =["GUI"
+          "Custom_Exception",
           "CustomThread",
           "file_lines_handler",
           "Running_Config_Checks",
