@@ -704,6 +704,12 @@ margin-left:20px;
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>file_browser_pushButton</tabstop>
+  <tabstop>sheet_creator_pushButton</tabstop>
+  <tabstop>submit_button_pushButton</tabstop>
+  <tabstop>file_browser_path_lineEdit</tabstop>
+ </tabstops>
  <resources>
   <include location="Application_GUI.qrc"/>
  </resources>

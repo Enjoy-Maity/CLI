@@ -406,12 +406,19 @@ class Ui_Main_Application_Window(object):
 "	alternate-background-color: rgb(210, 210, 210);\n"
 "border-radius:8px;\n"
 "}\n"
-"")
+"#task_database_tableview::QHeaderView{\n"
+"font: ;\n"
+"}")
         self.task_database_tableview.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.task_database_tableview.setDragDropMode(QAbstractItemView.InternalMove)
         self.task_database_tableview.setAlternatingRowColors(True)
         self.task_database_tableview.setSelectionMode(QAbstractItemView.NoSelection)
         self.task_database_tableview.setGridStyle(Qt.NoPen)
+        
+        self.task_database_tableview.verticalHeader().setVisible(False)
+        self.task_database_tableview.horizontalHeader().setStretchLastSection(True)
+        self.task_database_tableview.resizeColumnsToContents()
+
 
         self.table_verticalLayout.addWidget(self.task_database_tableview)
 

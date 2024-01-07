@@ -17,7 +17,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDialog, QGridLayout, QHBoxLayout,
     QPushButton, QSizePolicy, QTextEdit, QWidget)
-import GUI.Application_GUI_rc
+import Application_GUI_rc
 
 class Ui_surity_Dialog(object):
     def setupUi(self, surity_Dialog):
@@ -127,8 +127,8 @@ class Ui_surity_Dialog(object):
 "li.checked::marker { content: \"\\2612\"; }\n"
 "</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Ericsson Hilda'; font-size:12pt;\">Are you sure you want to create a </span><span style=\" font-family:'Ericsson Hilda'; font-size:12pt; font-weight:700;\">New Session</span><span style=\" font-family:'Ericsson Hilda'; font-size:12pt;\">?</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-bl"
-                        "ock-indent:0; text-indent:0px;\"><span style=\" font-family:'Ericsson Hilda'; font-size:12pt;\">Press &quot;</span><span style=\" font-family:'Ericsson Hilda'; font-size:12pt; font-weight:700;\">Yes</span><span style=\" font-family:'Ericsson Hilda'; font-size:12pt;\">&quot; for </span><span style=\" font-family:'Ericsson Hilda'; font-size:12pt; font-weight:700;\">New Session</span><span style=\" font-family:'Ericsson Hilda'; font-size:12pt;\">.</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Ericsson Hilda'; font-size:12pt;\">Press &quot;</span><span style=\" font-family:'Ericsson Hilda'; font-size:12pt; font-weight:700;\">No</span><span style=\" font-family:'Ericsson Hilda'; font-size:12pt;\">&quot; to go back.</span></p></body></html>", None))
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px"
+                        "; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:700;\">Note :- 'New Session' will overwrite the 'Existing Session' database!</span></p></body></html>", None))
     # retranslateUi
 

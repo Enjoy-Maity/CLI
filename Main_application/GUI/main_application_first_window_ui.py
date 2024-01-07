@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QGroupBox,
 import Application_GUI_rc
 
 class Ui_CLI_automation_main_application_first_window(object):
+        
     def setupUi(self, CLI_automation_main_application_first_window):
         if not CLI_automation_main_application_first_window.objectName():
             CLI_automation_main_application_first_window.setObjectName(u"CLI_automation_main_application_first_window")
@@ -418,7 +419,7 @@ class Ui_CLI_automation_main_application_first_window(object):
         self.file_browser_pushButton.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Browse", None))
         self.sheet_creator_pushButton.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Sheet Creater", None))
         self.submit_button_pushButton.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Submit", None))
-        self.sheet_creator_status_label.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Hello", None))
+        self.sheet_creator_status_label.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", "", None))
         self.label_6.setText(QCoreApplication.translate("CLI_automation_main_application_first_window", u"Note:- Kindly click on 'Submit' button after 'Successful' completion of 'Sheet Creator' Task", None))
     # retranslateUi
 

@@ -445,7 +445,13 @@ f"color:{self.sheet_creater_task_status_label_color};\n"
         self.task_database_tableview.setAlternatingRowColors(True)
         self.task_database_tableview.setSelectionMode(QAbstractItemView.NoSelection)
         self.task_database_tableview.setGridStyle(Qt.NoPen)
-
+        
+        self.task_database_tableview.horizontalHeader().setStretchLastSection(True)
+        self.task_database_tableview.resizeColumnsToContents()
+        self.task_database_tableview.resizeRowsToContents()
+        self.task_database_tableview.verticalHeader().setVisible(False)
+        # self.task_database_tableview.verticalHeader().setStretchLastSection(True)
+        
         self.table_verticalLayout.addWidget(self.task_database_tableview)
 
 

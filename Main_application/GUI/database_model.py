@@ -4,9 +4,10 @@ from PySide6.QtGui import QColor
 
 class DataModel(QAbstractTableModel):
     def __init__(self, data: pandas.DataFrame) -> None:
-        super().__init__()
+        QAbstractTableModel.__init__(self)
         self._data = data
         self._colors = ["#FF2222","#15C655"]
+        self._columns = list(self._data.columns)
     
     def data(self, index, role):
         if(index.isValid()):
@@ -18,12 +19,21 @@ class DataModel(QAbstractTableModel):
                 value = self._data.iloc[index.row(), index.column()]
                 
                 if(value == "Unsuccessful"):
+                    return QColor('rgb(255,255,255)')
+                
+                if(value == "Successful"):
+                    return QColor('rgb(255,255,255)')
+                
+            if(role == Qt.BackgroundRole):
+                value = self._data.iloc[index.row(), index.column()]
+                
+                if(value == "Unsuccessful"):
                     return QColor(self._colors[0])
                 
                 if(value == "Successful"):
                     return QColor(self._colors[1])
             
-            if(role == Qt.TextAlignementRole):
+            if(role == Qt.TextAlignmentRole):
                 return Qt.AlignVCenter + Qt.AlignHCenter
     
     def setData(self, index, value, role):
@@ -44,3 +54,11 @@ class DataModel(QAbstractTableModel):
             
             if(orientation == Qt.Vertical):
                 return str(self._data.index[section])
+        
+        if(role == Qt.ForegroundRole):
+                # value = self._data.iloc[index.row(), index.column()]
+                return QColor('rgb(0,0,0)')
+        
+        if(role == Qt.BackgroundRole):
+            return QColor('rgb(220,220,220)')
+        

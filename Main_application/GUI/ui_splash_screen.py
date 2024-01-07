@@ -18,9 +18,12 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QLabel,
     QProgressBar, QSizePolicy, QSpacerItem, QVBoxLayout,
     QWidget)
-import GUI.Application_GUI_rc
+import Application_GUI_rc
 
 class Ui_splash_screen(object):
+    def __init__(self):
+        self.label_3_text='loading......'
+    
     def setupUi(self, splash_screen):
         if not splash_screen.objectName():
             splash_screen.setObjectName(u"splash_screen")
@@ -76,7 +79,7 @@ class Ui_splash_screen(object):
 "border-radius:8px;\n"
 "text-align:center;\n"
 "color:rgb(2,2,2);\n"
-"}\n"
+"}\n"   
 "\n"
 "#progressBar::chunk{\n"
 "border-top-left-radius:8px;\n"
@@ -161,7 +164,7 @@ class Ui_splash_screen(object):
         
         
         splash_screen.setWindowTitle(QCoreApplication.translate("splash_screen", u"CLI Automation", None))
-        self.label_3.setText(QCoreApplication.translate("splash_screen", u"loading......", None))
+        self.label_3.setText(QCoreApplication.translate("splash_screen", self.label_3_text, None))
         self.progressBar.setFormat("")
         self.label.setText(QCoreApplication.translate("splash_screen", u"MPBN CLI Automation", None))
         self.label_2.setText(QCoreApplication.translate("splash_screen", u"Welcome!", None))
