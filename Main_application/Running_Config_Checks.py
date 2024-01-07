@@ -22,7 +22,7 @@ def host_details_pickle_checker() -> str:
     logging.captureWarnings(capture=True)
     try:
         _username = (os.popen(cmd='cmd.exe /C "echo %username%"').read()).strip()
-        _host_details_text_file_path = f"C:\\Users\\{username}\\AppData\\Local\\CLI_Automation\\host_details_file_path.txt"
+        _host_details_text_file_path = f"C:\\Users\\{_username}\\AppData\\Local\\CLI_Automation\\host_details_file_path.txt"
         with open(_host_details_text_file_path, 'r') as _f:
             host_details_file_path = _f.readline()
             _f.close()
