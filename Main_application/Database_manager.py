@@ -6,13 +6,7 @@ from pathlib import Path
 from datetime import datetime
 from abc import ABC,abstractmethod
 
-log_file = "C:\\Ericsson_Application_Logs\\CLI_Automation_Logs\\Database_manager.log"
-logging.basicConfig(filename=log_file,
-                             filemode="a",
-                             format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
-                             datefmt='%d-%b-%Y %I:%M:%S %p',
-                             encoding= "UTF-8",
-                             level=logging.DEBUG)
+
 
 class Abstract_database_manager(ABC):
     def __init__(self):
@@ -48,20 +42,34 @@ class Abstract_database_manager(ABC):
 
 class Database_manager(Abstract_database_manager):
     def __init__(self):
-        self.db_path = "C:\\Users\\emaienj\\AppData\\Local\\CLI_Automation\\Database\\CLI_Automation_Database.db"
+        # log_file = "C:\\Ericsson_Application_Logs\\CLI_Automation_Logs\\Main_Application.log"
+        # logging.basicConfig(filename=log_file,
+        #                      filemode="a",
+        #                      format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}): {'%(message)s'}",
+        #                      datefmt='%d-%b-%Y %I:%M:%S %p',
+        #                      encoding= "UTF-8",
+        #                      level=logging.DEBUG)
+        super().__init__()
+        username = (os.popen('cmd.exe /C "echo %username%"').read()).strip()
+        self.db_path = f"C:\\Users\\{username}\\AppData\\Local\\CLI_Automation\\Database\\CLI_Automation_Database.db"
         Path(os.path.dirname(self.db_path)).mkdir(exist_ok=True, parents=True)
         
         self.table_name = "vendor_task_status"
         self.auto_database_remover()
     
-    def database_table_checker(self):
+    def database_table_checker(self) -> bool:
+        """ Checks for the existence of 'vendor_task_status' table and returns bool value accordingly.
+
+        Returns:
+            bool: _description_ : 'True' if table exists and 'False' if table doesn't exist
+        """
         self.conn = sqlite3.connect(self.db_path)
         command = "SELECT name FROM sqlite_master WHERE type = 'table';"
         
         self.cursor = self.conn.cursor()
         self.table_list = self.cursor.execute(command).fetchall()
         
-        logging.debug(f"Got the list of tables from \'{self.db_path}\' => \n\'[{'\n'.join(self.table_list)}]\'")
+        logging.debug(f"Got the list of tables from \'{self.db_path}\' => \n\'[{'\n'.join(str(x) for x in self.table_list)}]\'")
         
         self.status = False
         if(self.table_name in self.cursor.fetchall()):
@@ -99,7 +107,11 @@ class Database_manager(Abstract_database_manager):
         if(not self.table_creater_status):
             self.conn = sqlite3.connect(self.db_path)
             self.cursor = self.conn.cursor()
-            command = f"CREATE TABLE {self.table_name} (Vendor TEXT, Template_Checks TEXT, Running_Config_Pre_Checks TEXT, CLI_Preparation TEXT ,Running_Config_Post_Checks TEXT);"
+            command = f"CREATE TABLE {self.table_name} (Vendor TEXT,\
+                                                        Template_Checks TEXT,\
+                                                        Running_Config_Pre_Checks TEXT,\
+                                                        CLI_Preparation TEXT,\
+                                                        Running_Config_Post_Checks TEXT);"
             
             logging.debug(f"Creating the table {self.table_name}\n")
             self.cursor.execute(command)
@@ -116,14 +128,18 @@ class Database_manager(Abstract_database_manager):
         Args:
             vendor_list (list): _description_ : contains the list of unique vendors mentioned in the selected host details
         """
-        self.table_creater()
+        if(self.database_table_checker()):
+            logging.debug("Creating Table as the table itself doesn't exist")
+            self.table_creater()
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
         
         logging.debug("We are creating empty vendor rows in the vendor database")
         i = 0
+        
+        command = f"INSERT INTO {self.table_name} (Vendor,Template_Checks,Running_Config_Pre_Checks,CLI_Preparation,Running_Config_Post_Checks) VALUES (?,'','','','');"
         while(i < len(vendor_list)):
-            self.cursor.execute(f"INSERT INTO {self.table_name} VALUES ({vendor_list[i]},'','','','');")
+            self.cursor.execute(command,(vendor_list[i],))
             i += 1
         
         self.conn.commit()
@@ -140,33 +156,22 @@ class Database_manager(Abstract_database_manager):
             task (str): _description_ : Task column for which the vendor data should be updated
             status (str): _description_ : Status which needs to be entered in the database
         """
+        logging.debug(f"Database Before Updating =>\n{self.data_fetcher().to_markdown()}")
+        
         logging.debug("Updating the vendor database")
         
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
         
-        command = f"UPDATE {self.table_name} SET {task} = {status} WHERE Vendor = {vendor};"
+        logging.debug(f"Updating \'{self.table_name}\', by setting \'{task}\' status => \'{status}\' where Vendor => \'{vendor}\'")
+        command = f"UPDATE {self.table_name} SET {task} = ? WHERE Vendor = ?;"
         
-        self.cursor.execute(command)
+        self.cursor.execute(command, [status,vendor])
         self.conn.commit()
         
         logging.debug(f"Updated the vendor database for {vendor} for task => {task} with status => {status}")
         self.conn.close()
     
-    def data_remover(self):
-        """ Dropping the rows from the entire table
-        """
-        command = f"DELETE FROM {self.table_name};"
-        
-        self.conn = sqlite3.connect(self.db_path)
-        self.cursor = self.conn.cursor()
-        
-        self.cursor.execute(command)
-        self.conn.commit()
-        
-        logging.debug(f"Deleted all the rows in the table {self.table_name}")
-        
-        self.conn.close()
     
     def data_fetcher(self) -> pd.DataFrame:
         """ Fetches all the data and returns the dataframe of all the rows
@@ -183,7 +188,7 @@ class Database_manager(Abstract_database_manager):
         
         result_data = self.cursor.execute(command).fetchall()
         
-        logging.debug(f"Got all the data from the database = > \n [{'\n'.join(result_data)}]\n")
+        logging.debug(f"Got all the data from the database = > \n [{'\n'.join(str(data) for data in result_data)}]\n")
         
         self.conn.close()
         
@@ -192,3 +197,20 @@ class Database_manager(Abstract_database_manager):
         logging.debug(f"Created the dataframe from the database records =>\n {result_dataframe.to_markdown()}")
         
         return result_dataframe
+    
+    def data_remover(self):
+        """ Dropping the rows from the entire table
+        """
+        if(len(self.data_fetcher()) > 0):
+            command = f"DELETE FROM {self.table_name};"
+            
+            self.conn = sqlite3.connect(self.db_path)
+            self.cursor = self.conn.cursor()
+            
+            self.cursor.execute(command)
+            self.conn.commit()
+            
+            logging.debug(f"Deleted all the rows in the table {self.table_name}")
+            
+            self.conn.close()
+        
