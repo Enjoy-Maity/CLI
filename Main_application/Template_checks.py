@@ -5,7 +5,9 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import traceback
-from tkinter import messagebox
+# from tkinter import messagebox
+from MessageBox import messagebox
+from PySide6.QtWidgets import QMessageBox
 from Custom_Exception import CustomException
 from datetime import datetime
 from CustomThread import CustomThread
@@ -43,6 +45,7 @@ def action_blank_check(*args) -> list:
         result = list()
         
         # dataframe.fillna("TempNA", inplace = True)
+        # Alternative for dataframe.fillna("TempNA", inplace = True)
         dataframe = dataframe.where(~dataframe.isna(),"TempNA")
         
         i = 0
@@ -56,17 +59,17 @@ def action_blank_check(*args) -> list:
     
     except AssertionError as e:
         logging.debug(f"Assertion Error====>\n{traceback.format_exc()}\n{e}")
-        messagebox.showerror('Wrong Data Type!',e)
+        messagebox().showerror('Wrong Data Type!',e)
 
 def main_func(**kwargs) -> str:
     """
         Performs the Initial General Template checks and then calls the module specific to the vendor to perform further Template checks.
 
         Arguments : (**kwargs) ===> provides a dictionary of arguments.
-            kwargs ===>  'filename' : str
-                            description =====> path for file containing 'Host Details'
-                         
-                         'vendor_selected' : str
+            kwargs ===> 'filename' : str
+                            description =====> file name required to get the parent directory
+
+                        'vendor_selected' : str
                             description =====> selected vendor by the user in GUI
         
         return flag
@@ -98,18 +101,19 @@ def main_func(**kwargs) -> str:
                                  encoding= "UTF-8",
                                  level=logging.DEBUG)
     logging.captureWarnings(capture=True)
-    filename = str(kwargs['filename'])     # File containing the host details
+    
+    filename = kwargs['filename']
     
     username = (os.popen('cmd.exe /C "echo %username%"').read()).strip()
     pickle_path = rf"C:\Users\{username}\AppData\Local\CLI_Automation\Host_details_Pickle_file\Host_details.pkl"
-    file_name = pd.read_pickle()
+    file_name = pd.read_pickle(filepath_or_buffer= pickle_path)
     logging.info("#######################################################<<Starting the Root Template Checks Process>>########################################################################")
 
     try:
         logging.debug("Checking whether the file uploaded by the user is an excel file or not")
-        assert ((len(file_name) > 0) and (file_name.strip().endswith('.xlsx'))), 'Please Select the Host details Excel Workbook!'
+        # assert ((len(file_name) > 0) and (file_name.strip().endswith('.xlsx'))), 'Please Select the Host details Excel Workbook!'
         
-        parent_folder = os.path.dirname(file_name)
+        parent_folder = os.path.dirname(filename)
         input_design_file_name = "{}_Design_Input_Sheet.xlsx"
 
         logging.info("Reading the file selected by the user")
@@ -166,16 +170,16 @@ def main_func(**kwargs) -> str:
 
         if((len(host_details_not_present_in_the_workbook) > 0) and 
            (len(host_details_present_in_workbook_but_not_in_host_details) > 0)):
-            response = messagebox.askyesno("Wrong Data Input!",f"Host Details not found in {input_design_file_name.format(vendor_selected)} workbook:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nand\n\n extra Host IP details found :\n\n{', '.join(host_details_present_in_workbook_but_not_in_host_details)}\n\nDo You want to proceed?",icon = 'warning')
+            response = messagebox().askyesno("Wrong Data Input!",f"Host Details not found in {input_design_file_name.format(vendor_selected)} workbook:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nand\n\n extra Host IP details found :\n\n{', '.join(host_details_present_in_workbook_but_not_in_host_details)}\n\nDo You want to proceed?",icon = 'warning')
         
         else:
             if(len(host_details_not_present_in_the_workbook) > 0):
-                response = messagebox.askyesno("Host Details Missing!",f"Host Details IPs Missing in {input_design_file_name.format(vendor_selected)}:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",icon = 'warning')
+                response = messagebox().askyesno("Host Details Missing!",f"Host Details IPs Missing in {input_design_file_name.format(vendor_selected)}:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",icon = 'warning')
             
             if(len(host_details_present_in_workbook_but_not_in_host_details) > 0):
-                response = messagebox.askyesno("Extra Host Details Found!",f"Extra Host IP details found in {input_design_file_name.format(vendor_selected)} but not present in uploaded Host Details:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",icon = 'warning')
+                response = messagebox().askyesno("Extra Host Details Found!",f"Extra Host IP details found in {input_design_file_name.format(vendor_selected)} but not present in uploaded Host Details:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",icon = 'warning')
 
-        if((response != None) and (not response)):
+        if((response != None) and (response == QMessageBox.Yes)):
             selected_vendor_book_excel_file.close()
             del selected_vendor_book_excel_file
             # host_details_excelfile.close()
@@ -214,7 +218,7 @@ def main_func(**kwargs) -> str:
         except Exception as e:
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-            messagebox.showerror("Exception Occurred!",e)
+            messagebox().showerror("Exception Occurred!",e)
 
         logging.info("Checking whether there is any worksheet, which contains no data for any of the sections")
 
@@ -341,7 +345,7 @@ def main_func(**kwargs) -> str:
         except Exception as e:
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-            messagebox.showerror("Exception Occurred!",e)
+            messagebox().showerror("Exception Occurred!",e)
 
         else:
             # logging.info(f"Deleting host_details_excelfile")
@@ -384,17 +388,17 @@ def main_func(**kwargs) -> str:
     except AssertionError as e:
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\ntitle = {e.title}\nmessage = {e.message}")
-        messagebox.showerror("Wrong Input File",e)
+        messagebox().showerror("Wrong Input File",e)
 
 
     except Exception as e:
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-        messagebox.showerror("Exception Occurred!",e)
+        messagebox().showerror("Exception Occurred!",e)
     
     finally:
         logging.info(f"Returning {flag =}")
         logging.shutdown()
         return flag
 
-# main_func(filename=r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Nokia_Design Input_Template.xlsx", vendor_selected = 'Nokia')
+# main_func(vendor_selected = 'Nokia')
