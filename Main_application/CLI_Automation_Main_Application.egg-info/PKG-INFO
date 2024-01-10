@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: CLI-Automation-Main-Application
+Version: 1.0.0a1
+Summary: CLI Automation
+Author: Enjoy Maity
+Author-email: enjoy.maity@ericsson.com
+
+Automation Tool for CLI Generation

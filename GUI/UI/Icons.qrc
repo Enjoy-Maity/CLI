@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="Main_Application_UI">
+    <file>../Images/MPBN PLANNING TASK_3_3.png</file>
+    <file>../Images/ericsson-blue-icon-logo.ico</file>
+  </qresource>
+</RCC>
