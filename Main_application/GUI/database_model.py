@@ -1,6 +1,6 @@
 import pandas
 from PySide6.QtCore import QAbstractTableModel, Qt
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QLinearGradient, QBrush
 
 
 class DataModel(QAbstractTableModel):
@@ -20,10 +20,12 @@ class DataModel(QAbstractTableModel):
                 value = self._data.iloc[index.row(), index.column()]
 
                 if value == "Unsuccessful":
-                    return QColor('rgb(255,255,255)')
+                    return self.create_gradient_brush()
+                    # return QColor('rgb(255,255,255)')
 
                 if value == "Successful":
-                    return QColor('rgb(255,255,255)')
+                    return self.create_gradient_brush()
+                    # return QColor('rgb(255,255,255)')
 
             if role == Qt.BackgroundRole:
                 value = self._data.iloc[index.row(), index.column()]
@@ -48,6 +50,15 @@ class DataModel(QAbstractTableModel):
     def columnCount(self, index):
         return int(self._data.shape[1])
 
+    @staticmethod
+    def create_gradient_brush() -> QBrush:
+        _gradient = QLinearGradient(1.0, 30.0, 1000.0, 230.0)
+        _gradient.setColorAt(0.0, QColor('rgb(11, 141, 255)'))
+        _gradient.setColorAt(1.0, QColor('rgb(238, 238, 238)'))
+        _brush = QBrush(_gradient)
+        # print(_brush.gradient())
+        return _brush
+
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
@@ -58,7 +69,7 @@ class DataModel(QAbstractTableModel):
 
         if role == Qt.ForegroundRole:
             # value = self._data.iloc[index.row(), index.column()]
-            return QColor('rgb(0,0,0)')
+            return QColor('rgb(255, 255, 255)')
 
         if role == Qt.BackgroundRole:
-            return QColor('rgb(220,220,220)')
+            return QColor('rgb(11, 141, 255)')

@@ -1,5 +1,5 @@
-# from tkinter import messagebox
-from MessageBox import messagebox
+from tkinter import messagebox
+# from MessageBox import messagebox
 
 
 class CustomException(Exception):
@@ -7,7 +7,7 @@ class CustomException(Exception):
         self.title = title
         self.message = message
         super().__init__(self.title, self.message)
-        messagebox().showerror(self.title, self.message)
+        messagebox.showerror(self.title, self.message)
 
 
 class CustomWarning(Exception):
@@ -15,4 +15,4 @@ class CustomWarning(Exception):
         self.title = title
         self.message = message
         super().__init__(self.title, self.message)
-        messagebox().showwarning(self.title, self.message)
+        messagebox.showwarning(self.title, self.message)

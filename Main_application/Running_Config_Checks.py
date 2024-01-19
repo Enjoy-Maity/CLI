@@ -6,20 +6,20 @@ import os
 from datetime import datetime
 from Custom_Exception import CustomException
 from pathlib import Path
-from MessageBox import messagebox
+from tkinter import messagebox
 
 flag = ''
 log_file = ''
 
 
 def host_details_pickle_checker() -> str:
-    logging.basicConfig(filename=log_file,
-                        filemode="a",
-                        format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/hostnames_to_config_backup_file_mapping): {'%(message)s'}",
-                        datefmt='%d-%b-%Y %I:%M:%S %p',
-                        encoding="UTF-8",
-                        level=logging.DEBUG)
-    logging.captureWarnings(capture=True)
+    # logging.basicConfig(filename=log_file,
+    #                     filemode="a",
+    #                     format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/hostnames_to_config_backup_file_mapping): {'%(message)s'}",
+    #                     datefmt='%d-%b-%Y %I:%M:%S %p',
+    #                     encoding="UTF-8",
+    #                     level=logging.DEBUG)
+    # logging.captureWarnings(capture=True)
     try:
         _username = (os.popen(cmd='cmd.exe /C "echo %username%"').read()).strip()
         _host_details_text_file_path = f"C:\\Users\\{_username}\\AppData\\Local\\CLI_Automation\\host_details_file_path.txt"
@@ -32,7 +32,7 @@ def host_details_pickle_checker() -> str:
 
     except Exception as e:
         logging.error(f"Exception Occurred\nTitle=>{type(e)}\n\t{e}")
-        messagebox().showerror(title=f"{type(e)}",
+        messagebox.showerror(title=f"{type(e)}",
                                message=str(e))
         return ""
 
@@ -59,13 +59,13 @@ def hostnames_to_config_backup_file_mapping(list_of_filenames: list, list_of_hos
 
     """
 
-    logging.basicConfig(filename=log_file,
-                        filemode="a",
-                        format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/hostnames_to_config_backup_file_mapping): {'%(message)s'}",
-                        datefmt='%d-%b-%Y %I:%M:%S %p',
-                        encoding="UTF-8",
-                        level=logging.DEBUG)
-    logging.captureWarnings(capture=True)
+    # logging.basicConfig(filename=log_file,
+    #                     filemode="a",
+    #                     format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/hostnames_to_config_backup_file_mapping): {'%(message)s'}",
+    #                     datefmt='%d-%b-%Y %I:%M:%S %p',
+    #                     encoding="UTF-8",
+    #                     level=logging.DEBUG)
+    # logging.captureWarnings(capture=True)
 
     error_file_for_host_name_not_found = []
     result_dictionary = {}
@@ -85,7 +85,7 @@ def hostnames_to_config_backup_file_mapping(list_of_filenames: list, list_of_hos
                 result_dictionary[selected_hostname] = list_of_filepaths[j]
             j += 1
 
-        if not selected_hostname in result_dictionary.keys():
+        if selected_hostname not in result_dictionary.keys():
             missing_config_backup_files_mapping.append(selected_hostname)
 
         i += 1
@@ -202,10 +202,12 @@ def running_config_checks(**kwargs) -> str:
                                                                                                                    '.txt')))]
 
         logging.info(
-            f"Files found in \'Pre_Running_Config_Backup\' == \'{path_for_node_checks_pre_files_folder}\' ==>\n{'\n'.join(list_of_files_in_running_config_backup_folder)}\n")
+            f"Files found in \'Pre_Running_Config_Backup\' == \'{path_for_node_checks_pre_files_folder}\' ==>\n{'\n'.join(list_of_files_in_running_config_backup_folder)}\n"
+        )
 
         logging.debug(
-            f"Finding the array containing hostnames from the filtered \'Host Details\' file ====>\n{temp_df.to_markdown()}\n")
+            f"Finding the array containing hostnames from the filtered \'Host Details\' file ====>\n{temp_df.to_markdown()}\n"
+        )
         array_of_unique_hostnames = temp_df['Host_Name'].unique()
 
         ip_hostname_mapping = dict(zip(temp_df['Host_IP'], temp_df['Host_Name']))
@@ -236,7 +238,7 @@ def running_config_checks(**kwargs) -> str:
 
         if flag != 'Unsuccessful':
             flag = 'Successful'
-            messagebox().showinfo(title="Task Successfully Completed!",
+            messagebox.showinfo(title="Task Successfully Completed!",
                                   message=f"Running Config Checks Task Successfully completed for {vendor_selected}")
 
     except CustomException as e:
@@ -249,7 +251,7 @@ def running_config_checks(**kwargs) -> str:
             f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n"
         )
         flag = 'Unsuccessful'
-        messagebox().showerror("Exception Occurred!", str(e))
+        messagebox.showerror("Exception Occurred!", str(e))
 
     finally:
         del host_details_df

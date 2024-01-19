@@ -4,7 +4,9 @@ import pandas
 # import sys
 from PySide6.QtCore import QCoreApplication
 from GUI.database_model import DataModel
-from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QHeaderView
+# from PySide6.QtGui import QBrush, QLinearGradient, QColor, QPalette
 from GUI.ui_Main_Application import Ui_Main_Application_Window
 
 
@@ -200,6 +202,35 @@ class App_Main_Window(QWidget):
 
         self.table_model = DataModel(self.data)
         self.main_window_ui.task_database_tableview.setModel(self.table_model)
-
+        self.main_window_ui.task_database_tableview.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.main_window_ui.task_database_tableview.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        self.main_window_ui.task_database_tableview.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
+        # palette = QPalette()
+        # palette.setBrush(QPalette.Window, cr= Qt.BackgroundRole, brush=self.create_gradient_brush())
+        # self.main_window_ui.task_database_tableview.horizontalHeader().setBackgroundRole(palette)
+        # print(self.main_window_ui.task_database_tableview.horizontalHeader().palette())
         # self.main_window_ui.task_database_tableview.resizeRowsToContents()
         # self.main_window_ui.task_database_tableview.verticalHeader().setStretchLastSection(True)
+        self.main_window_ui.task_database_tableview.setStyleSheet(u"#task_database_tableview{\n"
+                                                                  "color:black;\n"
+                                                                  "	background-color: rgb(190, 190, 190);\n"
+                                                                  "	alternate-background-color: rgb(210, 210, 210);\n"
+                                                                  "border-radius:8px;\n"
+                                                                  "gridline-color: rgb(0,0,0);\n"
+                                                                  "border:1px solid;\n"
+                                                                  "font:10pt 'Ericsson Hilda';\n"
+                                                                  "}\n"
+                                                                  "QHeaderView::section{\n"
+                                                                  "color:black;\n"
+                                                                  "background-color:rgb(221, 211, 255);\n"
+                                                                  "border: 1px solid;\n"
+                                                                  "border-collapse:collapse;"
+                                                                  "font:700 12pt 'Ericsson Hilda'"
+                                                                  "}\n"
+                                                                  "QHeaderView::section:first{\n"
+                                                                  "border-top-left-radius:8px;\n"
+                                                                  "}\n"
+                                                                  "QHeaderView::section:last{\n"
+                                                                  "border-top-right-radius:8px;\n"
+                                                                  "}")
+        self.main_window_ui.task_database_tableview.setShowGrid(True)                       # Shows the gridlines in table

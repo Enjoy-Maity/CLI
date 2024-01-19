@@ -4,15 +4,101 @@ import os
 import pickle
 import traceback
 from pathlib import Path
-
+import numpy as np
 import pandas as pd
 
 from Main_application.CustomThread import CustomThread
 from Main_application.Custom_Exception import CustomException
-from Main_application.MessageBox import messagebox
+from tkinter import messagebox
 
 flag = ''
 section_dictionary = {}
+
+
+def error_message_dict_filter(dictionary: dict) -> dict:
+    """
+    Filters the dictionary for removing empty dict or None values.
+    :param dictionary: dictionary containing the error structure
+    :return: result_dictionary : dict : cleaned dictionary
+    """
+    result_dictionary = {}
+
+    if (dictionary is not None) and (isinstance(dictionary, dict)):
+        # the structure of the dictionary is
+        # {node: {
+        #               section: {
+        #                           reason: [list of Serial No.s] }}}
+        if len(dictionary) > 0:
+            logging.info(f"Length of the dictionary found greater than 0 ==>{len(dictionary)}\n")
+            node_array = np.array(
+                list(
+                    dictionary.keys()
+                )
+            )
+            i = 0
+            while i < node_array.size:
+                node = node_array[i]
+                if (dictionary[node] is not None) and (isinstance(dictionary[node], dict)):
+                    if len(dictionary[node]) > 0:
+                        sections_array = np.array(
+                            list(dictionary[node].keys())
+                        )
+
+                        logging.info(
+                            f"Got the section_array for node: {node}\n\t{sections_array}\n"
+                        )
+
+                        j = 0
+                        while j < sections_array.size:
+                            section = sections_array[j]
+                            if (dictionary[node][section] is not None) and (isinstance(dictionary[node][section], dict)):
+                                if len(dictionary[node][section]) > 0:
+                                    reason_array = np.array(
+                                        list(dictionary[node][section].keys())
+                                    )
+
+                                    logging.info(
+                                        f"Got the array of reasons for node {node} =>\n\tfor section {section}\n\t\t ==>{reason_array}\n"
+                                    )
+
+                                    k = 0
+                                    while k < reason_array.size:
+                                        reason = reason_array[k]
+                                        if (dictionary[node][section][reason] is not None) and (isinstance(dictionary[node][section][reason], (list, tuple))):
+                                            if len(dictionary[node][section][reason]) > 0:
+                                                if node not in result_dictionary:
+                                                    result_dictionary[node] = {}
+                                                    if section not in result_dictionary[node]:
+                                                        result_dictionary[node][section] = {}
+                                                        result_dictionary[node][section][reason] = dictionary[node][section][reason]
+                                                    else:
+                                                        result_dictionary[node][section][reason] = dictionary[node][section][reason]
+
+                                                else:
+                                                    if section not in result_dictionary[node]:
+                                                        result_dictionary[node][section] = {}
+                                                        result_dictionary[node][section][reason] = dictionary[node][section][reason]
+                                                    else:
+                                                        result_dictionary[node][section][reason] = dictionary[node][section][reason]
+
+                                        k += 1
+
+                            j += 1
+
+                i += 1
+
+    logging.info(
+        "Created the final result dictionary as => {\n" +
+        f"\t{'\n\t'.join(
+            [f'{node}: \n{'\n\t\t'.join(
+                [f'{section}: \n{'\n\t\t\t'.join(
+                    [f'{reason}: {reason_list}' for reason, reason_list in reasons.items()]
+                )}' for section, reasons in value.items()]
+            )}' for node, value in result_dictionary.items()]
+        )}" +
+        "}"
+    )
+    return result_dictionary
 
 
 def section_wise_input(dictionary: dict, ip_node: str) -> dict:
@@ -23,14 +109,16 @@ def section_wise_input(dictionary: dict, ip_node: str) -> dict:
             dictionary ===> dict
                 description =====> {'Section Name' : dataframe containing data for the Section}
                                     'Section Name' ======> Section name, Example -> VPLS-1, VPLS-2, Layer3, etc.
-                                    dataframe      ======> Dataframe containing the data in the ip node sheet pertaining to corresponding section key.
+                                    dataframe      ======> Dataframe containing the data in the ip node sheet pertaining to the corresponding section key.
             
             ip_node ===> str
                 description =====> node ip for which the dictionary is passed as argument.
         
         return thread_result_dictionary
             thread_result_dictionary =====> dict
-                description =====> {'Section Name' : [list of 'S.No.' where there is any problem in template checks in any of the section] } 
+                description =====> {
+                                        'Section Name': [list of 'S.No.' where there is any problem in template checks in any of the section]
+                                    }
                                         or
                                     empty dictionary ===> {}
     """
@@ -61,12 +149,12 @@ def section_wise_input(dictionary: dict, ip_node: str) -> dict:
         except ImportError as e:
             temp_flag = 'Unsuccessful'
             logging.error(f"ImportError Occurred!======>\n\n{traceback.format_exc()}{e}")
-            # messagebox().showerror("Exception Occurred!",e)
+            messagebox.showerror("Exception Occurred!",(e))
 
         except Exception as e:
             temp_flag = 'Unsuccessful'
             logging.error(f"Exception Occurred!======>\n\n{traceback.format_exc()}{e}")
-            # messagebox().showerror("Exception Occurred!",e)
+            messagebox.showerror("Exception Occurred!",str(e))
 
     thread_result_dictionary = {}
     i = 0
@@ -90,7 +178,8 @@ def nokia_main_func(**kwargs) -> str:
         
         return flag
             flag : str
-                description =====> contains 'Unsuccessful' or 'Successful' string corresponding the status of execution completion
+                description =====> contains 'Successful' string corresponding the status of execution completion
+
     
     """
 
@@ -181,14 +270,24 @@ def nokia_main_func(**kwargs) -> str:
                     }
                 }
             """
+            error_message_dict = error_message_dict_filter(dictionary=error_message_dict)
+            error_message = ''
+            logging.info(
+                "Created the path for error folder for message to be written if needed"
+            )
+
+            error_folder = os.path.join(os.path.join(parent_folder, "Error_Folder"), "Design_Input_Checks_Results")
+            Path(error_folder).mkdir(exist_ok=True, parents=True)
+
+            logging.debug(
+                f"Creating the folder for Template checks namely for Nokia template checks\n{error_folder}\n if needed\n"
+            )
+            error_file = os.path.join(error_folder, "Nokia_Nodes_Design_Input_Checks_Error.txt")
 
             if len(error_message_dict) > 0:
-                logging.info(f"Got the error message =>{'{\n'+'\n\t'.join([f'{key} : {value}' for key, value in error_message_dict.items()])+'\n\t}'}\n")
-                error_folder = os.path.join(os.path.join(parent_folder, "Error_Folder"), "Design_Input_Checks_Results")
-                Path(error_folder).mkdir(exist_ok=True, parents=True)
-
-                logging.debug(f"Creating the folder for Template checks namely for Nokia template checks\n{error_folder}")
-                error_file = os.path.join(error_folder, "Nokia_Nodes_Design_Input_Checks_Error.txt")
+                logging.info(
+                    f"Got the error message =>{'{\n' + '\n\t'.join([f'{key} : {value}' for key, value in error_message_dict.items()]) + '\n\t}'}\n"
+                )
 
                 """
                     error_message = "<================<<Errors Found in Template checks of "Nokia" Vendor Design Input sheet workbook>>================>
@@ -199,36 +298,40 @@ def nokia_main_func(**kwargs) -> str:
                                     'Section'
                                     .......................................'"
                 """
-                logging.debug(f"Got the error_message_dict =====>{error_message_dict}\n")
+                logging.debug(
+                    f"Got the error_message_dict =====>{error_message_dict}\n"
+                )
                 error_message = "<================<<Design Input Errors Observed in Below Uploaded Nodes for \"Nokia\" Vendor>>================>"
 
                 node_ips = list(error_message_dict.keys())
 
-                logging.debug(f"Node ips with errors ======>\n{node_ips}")
+                logging.debug(
+                    f"Node ips with errors ======>\n{node_ips}"
+                )
 
                 i = 0
                 while i < len(node_ips):
-                    if isinstance(error_message_dict[node_ips[i]], dict):
-                        sections = list(error_message_dict[node_ips[i]].keys())
-                        error_message = f"{error_message}\nNode IP : \"{node_ips[i]}\"\n"
+                    node = node_ips[i]
+                    sections = list(error_message_dict[node].keys())
+                    if len(sections) > 0:
+                        error_message = f"{error_message}\nNode IP : \'{node}\'\n"
                         j = 0
                         while j < len(sections):
-                            if isinstance(error_message_dict[node_ips[i]][sections[j]], dict):
-                                error_message = f"{error_message}\n\tSection : \'{sections[j]}\'"
-                                reasons = list(error_message_dict[node_ips[i]][sections[j]].keys())
-                                k = 0
-                                while k < len(reasons):
-                                    reason = reasons[k]
-                                    sr_no_list = error_message_dict[node_ips[i]][sections[j]][reason]
+                            error_message = f"{error_message}\n\tSection : \'{sections[j]}\'"
+                            reasons = list(error_message_dict[node_ips[i]][sections[j]].keys())
+                            k = 0
+                            while k < len(reasons):
+                                reason = reasons[k]
+                                sr_no_list = error_message_dict[node_ips[i]][sections[j]][reason]
 
-                                    if reason.endswith(")"):
-                                        error_message = f"{error_message}\n\t\t{k + 1}.) {reason} ==>> {', '.join(str(element) for element in sr_no_list)}"
+                                if reason.endswith(")"):
+                                    error_message = f"{error_message}\n\t\t{k + 1}.) {reason} ==>> {', '.join(str(element) for element in sr_no_list)}"
 
-                                    else:
-                                        error_message = f"{error_message}\n\t\t{k + 1}.) {reason} for \'S.No.\' ==>> ({', '.join(str(int(element)) for element in sr_no_list)})"
-                                    k += 1
+                                else:
+                                    error_message = f"{error_message}\n\t\t{k + 1}.) {reason} for \'S.No.\' ==>> ({', '.join(str(int(element)) for element in sr_no_list)})"
+                                k += 1
 
-                                error_message = f"{error_message}\n"
+                            error_message = f"{error_message}\n"
                             j += 1
                         error_message = f"{error_message}\n"
 
@@ -249,12 +352,12 @@ def nokia_main_func(**kwargs) -> str:
         except AssertionError as e:
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\ntitle = {e.title}\nmessage = {e.message}")
-            messagebox().showerror("Wrong Input File", str(e))
+            messagebox.showerror("Wrong Input File", str(e))
 
         except Exception as e:
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-            messagebox().showerror("Exception Occurred!", str(e))
+            messagebox.showerror("Exception Occurred!", str(e))
 
         if flag != 'Unsuccessful':
             flag = 'Successful'
@@ -267,18 +370,18 @@ def nokia_main_func(**kwargs) -> str:
     except AssertionError as e:
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\ntitle = {e.title}\nmessage = {e.message}")
-        messagebox().showerror("Wrong Input File", str(e))
+        messagebox.showerror("Wrong Input File", str(e))
 
     except Exception as e:
         flag = 'Unsuccessful'
         logging.error(
             f"{traceback.format_exc()}\n\nException:==>{e}"
         )
-        messagebox().showerror("Exception Occurred!", str(e))
+        messagebox.showerror("Exception Occurred!", str(e))
 
     finally:
         logging.info(f"Returning {flag =}")
-        # logging.shutdown()
+        logging.shutdown()
         return flag
 
 # nokia_main_func(log_file = r"C:/Ericsson_Application_Logs/CLI_Automation_Logs/Test_File.log", parent_folder = r"C:/Users/emaienj/Downloads/VPLS_CLI_Design_Documents/VPLS_CLI_Design_Documents")

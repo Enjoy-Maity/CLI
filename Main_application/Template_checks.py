@@ -5,15 +5,70 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import traceback
-# from tkinter import messagebox
-from MessageBox import messagebox
-from PySide6.QtWidgets import QMessageBox
+from tkinter import messagebox
 from Custom_Exception import CustomException
 from datetime import datetime
 from CustomThread import CustomThread
 from Section_splitter import section_splitter
 
+
 flag = ''
+selected_vendor_book_excel_file = None
+node_to_section_dictionary = None
+
+
+def error_message_filter(dictionary: dict) -> dict:
+    """
+    Filters the dictionary for removing empty dict or None values.
+    :param dictionary: dictionary containing the error message dictionary
+    :return: result_dictionary (dict): dictionary containing the cleaned dictionary for result dictionary
+    """
+    result_dictionary = {}
+    # here the structure is
+    # {
+    #       node: {
+    #               section: []
+    #           }
+    #      }
+
+    if (dictionary is not None) and (isinstance(dictionary, dict)):
+        if len(dictionary) > 0:
+            nodes_list = list(dictionary.keys())
+            i = 0
+            while i < len(nodes_list):
+                node = nodes_list[i]
+                if (dictionary[node] is not None) and (isinstance(dictionary[node], dict)):
+                    if len(dictionary[node]) > 0:
+                        sections_list = list(dictionary[node].keys())
+                        j = 0
+                        while j < len(sections_list):
+                            section = sections_list[j]
+                            if (dictionary[node][section] is not None) and (isinstance(dictionary[node][section], (list, tuple))):
+                                if len(dictionary[node][section]) > 0:
+                                    if node not in result_dictionary:
+                                        result_dictionary[node] = {}
+                                        if section not in result_dictionary[node]:
+                                            result_dictionary[node][section] = {}
+                                            result_dictionary[node][section] = dictionary[node][section]
+                                        else:
+                                            result_dictionary[node][section] = dictionary[node][section]
+
+                                    else:
+                                        if section not in result_dictionary[node]:
+                                            result_dictionary[node][section] = {}
+                                            result_dictionary[node][section] = dictionary[node][section]
+                                        else:
+                                            result_dictionary[node][section] = dictionary[node][section]
+                            j += 1
+                i += 1
+
+    logging.info(
+        "Got the cleaned result_dictionary ==> {\n" +
+        f"{'\n\t'.join([f'{node}: {
+                '\n\t\t'.join([f'{reason}: {reason_list}' for reason, reason_list in result_dictionary.items()])}' for node, value in result_dictionary.items()])}" +
+        "}"
+    )
+    return result_dictionary
 
 
 def pickling_func(dictionary: dict, vendor_selected: str) -> None:
@@ -57,14 +112,14 @@ def action_blank_check(*args) -> list:
 
     except AssertionError as e:
         logging.debug(f"Assertion Error====>\n{traceback.format_exc()}\n{e}")
-        messagebox().showerror('Wrong Data Type!', str(e))
+        messagebox.showerror('Wrong Data Type!', str(e))
 
 
 def main_func(**kwargs) -> str:
     """
         Performs the Initial General Template checks and then calls the module specific to the vendor to perform further Template checks.
 
-        Arguments : (**kwargs) ===> provides a dictionary of arguments.
+        Arguments: (**kwargs) ===> provides a dictionary of arguments.
             kwargs ===> 'filename' : str
                             description =====> file name required to get the parent directory
 
@@ -72,8 +127,8 @@ def main_func(**kwargs) -> str:
                             description =====> selected vendor by the user in GUI
         
         return flag
-            flag : str
-                description ===> contains 'Unsuccessful' or 'Successful' string corresponding the status of execution completion
+            flag: str
+                description ===> contains 'Unsuccessful' or 'Successful' string corresponding to the status of execution completion
     """
 
     log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
@@ -91,7 +146,7 @@ def main_func(**kwargs) -> str:
     file_name = pd.read_pickle(filepath_or_buffer=pickle_path)
     logging.info("#######################################################<<Starting the Root Template Checks Process>>########################################################################")
 
-    global flag
+    global flag, selected_vendor_book_excel_file, node_to_section_dictionary
     try:
         logging.debug("Checking whether the file uploaded by the user is an excel file or not")
         # assert ((len(file_name) > 0) and (file_name.strip().endswith('.xlsx'))), 'Please Select the Host details Excel Workbook!'
@@ -126,7 +181,7 @@ def main_func(**kwargs) -> str:
         logging.debug(f"Looping through selected vendor {vendor_selected} design input workbook sheet-names")
 
         selected_vendor_book_excel_file = pd.ExcelFile(os.path.join(os.path.join(parent_folder, "Design_Input_Sheets"),
-                                                        input_design_file_name.format(vendor_selected.strip())))
+                                                                    input_design_file_name.format(vendor_selected.strip())))
         selected_vendor_book_excel_sheetnames = selected_vendor_book_excel_file.sheet_names
 
         logging.debug(f"Sheets Found in the {input_design_file_name.format(vendor_selected)} are :\n\t{'\n\t'.join(selected_vendor_book_excel_sheetnames)}")
@@ -158,23 +213,24 @@ def main_func(**kwargs) -> str:
 
         if ((len(host_details_not_present_in_the_workbook) > 0) and
                 (len(host_details_present_in_workbook_but_not_in_host_details) > 0)):
-            response = messagebox().askyesno("Wrong Data Input!",
-                                             f"Host Details not found in {input_design_file_name.format(vendor_selected)} workbook:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nand\n\n extra Host IP details found :\n\n{', '.join(host_details_present_in_workbook_but_not_in_host_details)}\n\nDo You want to proceed?",
-                                             )
+            response = messagebox.askyesno(title= "Wrong Data Input!",
+                                           message= f"Host Details not found in {input_design_file_name.format(vendor_selected)} workbook:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nand\n\n extra Host IP details found :\n\n{', '.join(host_details_present_in_workbook_but_not_in_host_details)}\n\nDo You want to proceed?",
+                                           icon= 'warning')
 
         else:
             if len(host_details_not_present_in_the_workbook) > 0:
-                response = messagebox().askyesno("Host Details Missing!",
-                                                 f"Host Details IPs Missing in {input_design_file_name.format(vendor_selected)}:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?")
+                response = messagebox.askyesno(title= "Host Details Missing!",
+                                               message= f"Host Details IPs Missing in {input_design_file_name.format(vendor_selected)}:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",
+                                               icon = 'warning')
 
             if len(host_details_present_in_workbook_but_not_in_host_details) > 0:
-                response = messagebox().askyesno("Extra Host Details Found!",
-                                                 f"Extra Host IP details found in {input_design_file_name.format(vendor_selected)} but not present in uploaded Host Details:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",
-                                                 )
+                response = messagebox.askyesno(title= "Extra Host Details Found!",
+                                               message= f"Extra Host IP details found in {input_design_file_name.format(vendor_selected)} but not present in uploaded Host Details:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",
+                                               icon = 'warning' )
 
-        if (response is not None) and (response == QMessageBox.StandardButton.No):
-            selected_vendor_book_excel_file.close()
-            del selected_vendor_book_excel_file
+        if (response is not None) and (not response):
+            # selected_vendor_book_excel_file.close()
+            # del selected_vendor_book_excel_file
             # host_details_excelfile.close()
             # del selected_vendor_book_excel_file
 
@@ -211,7 +267,7 @@ def main_func(**kwargs) -> str:
         except Exception as e:
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-            messagebox().showerror("Exception Occurred!", str(e))
+            messagebox.showerror("Exception Occurred!", str(e))
 
         logging.info("Checking whether there is any worksheet, which contains no data for any of the sections")
 
@@ -276,7 +332,7 @@ def main_func(**kwargs) -> str:
                     try:
                         if len(thread_return_list[k]) != 0:
                             section_dictionary_for_message[selected_section] = thread_return_list[k]
-                    except:
+                    except Exception:
                         if thread_return_list[k] != None:
                             section_dictionary_for_message[selected_section] = thread_return_list[k]
                     k += 1
@@ -287,6 +343,8 @@ def main_func(**kwargs) -> str:
 
                 i += 1
 
+            dictionary_for_message = error_message_filter(dictionary=dictionary_for_message)
+
             error_folder = os.path.join(os.path.join(parent_folder, "Error_Folder"), "Design_Input_Checks_Results")
             logging.info(f"Created '{error_folder}' if not existed, if existed did not raised an exception")
 
@@ -296,24 +354,27 @@ def main_func(**kwargs) -> str:
             logging.info("Creating the Error File path for writing into the exceptions")
             error_file = os.path.join(error_folder, f"{vendor_selected.strip()}_Nodes_Design_Input_Checks_Error.txt")
 
+            message_to_be_written = ''
+
             if len(dictionary_for_message) > 0:
                 dictionary_for_message_keys_list = list(dictionary_for_message.keys())
 
-                message_to_be_written = f"General Check Issues:\n\nIssues have been found for below '{vendor_selected}' nodes for mentioned Sr.Nos on {datetime.now().strftime('%d-%b-%Y %H:%M')} ({datetime.now().strftime('%A')})\n\n"
-                i = 0
-                while i < len(dictionary_for_message.keys()):
-                    node_selected = dictionary_for_message_keys_list[i]
-                    sections_in_dictionary_for_message = list(dictionary_for_message[node_selected].keys())
+                if len(dictionary_for_message_keys_list) > 0:
+                    message_to_be_written = f"General Check Issues:\n\nIssues have been found for below '{vendor_selected}' nodes for mentioned Sr.Nos on {datetime.now().strftime('%d-%b-%Y %H:%M')} ({datetime.now().strftime('%A')})\n\n"
+                    i = 0
+                    while i < len(dictionary_for_message_keys_list):
+                        node_selected = dictionary_for_message_keys_list[i]
+                        sections_in_dictionary_for_message = list(dictionary_for_message[node_selected].keys())
 
-                    message_to_be_written = f"{message_to_be_written}Node:- '{node_selected}'\n"
-                    j = 0
-                    while j < len(sections_in_dictionary_for_message):
-                        section_selected = sections_in_dictionary_for_message[j]
-                        message_to_be_written = f"{message_to_be_written}\tSection: '{section_selected}':- Action details are missing for Sr.No: ({','.join(str(element) for element in dictionary_for_message[node_selected][section_selected])})\n"
-                        j += 1
+                        message_to_be_written = f"{message_to_be_written}Node:- '{node_selected}'\n"
+                        j = 0
+                        while j < len(sections_in_dictionary_for_message):
+                            section_selected = sections_in_dictionary_for_message[j]
+                            message_to_be_written = f"{message_to_be_written}\tSection: '{section_selected}':- Action details are missing for Sr.No: ({','.join(str(element) for element in dictionary_for_message[node_selected][section_selected])})\n"
+                            j += 1
 
-                    message_to_be_written = f"{message_to_be_written}\n\n"
-                    i += 1
+                        message_to_be_written = f"{message_to_be_written}\n\n"
+                        i += 1
 
                 with open(error_file, 'w') as f:
                     f.write(message_to_be_written)
@@ -330,13 +391,13 @@ def main_func(**kwargs) -> str:
             # global flag;
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntitle = {e.title}\nmessage = {e.message}")
-            messagebox().showerror(title=e.title,
+            messagebox.showerror(title=e.title,
                                    message=e.message)
 
         except Exception as e:
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-            messagebox().showerror("Exception Occurred!", str(e))
+            messagebox.showerror("Exception Occurred!", str(e))
 
         else:
             # logging.info(f"Deleting host_details_excelfile")
@@ -347,22 +408,22 @@ def main_func(**kwargs) -> str:
             pickling_func(dictionary=node_to_section_dictionary,
                           vendor_selected=vendor_selected)
 
-            logging.info("Going to perform template checks on 'Nokia' Design Template")
             if vendor_selected.upper() == 'NOKIA':
+                logging.info("Going to perform template checks on 'Nokia' Design Template")
                 from Nokia.Nokia_Template_Checks import nokia_main_func
                 flag = nokia_main_func(log_file=log_file,
                                        parent_folder=parent_folder)
 
-            logging.info("Going to perform template checks on 'Cisco' Design Template")
             if vendor_selected.upper() == 'CISCO':
+                logging.info("Going to perform template checks on 'Cisco' Design Template")
                 pass
 
-            logging.info("Going to perform template checks on 'Huawei' Design Template")
             if vendor_selected.upper() == 'HUAWEI':
+                logging.info("Going to perform template checks on 'Huawei' Design Template")
                 pass
 
-            logging.info("Going to perform template checks on 'Ericsson' Design Template")
             if vendor_selected.upper() == 'ERICSSON':
+                logging.info("Going to perform template checks on 'Ericsson' Design Template")
                 pass
 
         if flag == '':
@@ -379,14 +440,17 @@ def main_func(**kwargs) -> str:
     except AssertionError as e:
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\ntitle = {e.title}\nmessage = {e.message}")
-        messagebox().showerror("Wrong Input File", str(e))
+        messagebox.showerror("Wrong Input File", str(e))
 
     except Exception as e:
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-        messagebox().showerror("Exception Occurred!", str(e))
+        messagebox.showerror("Exception Occurred!", str(e))
 
     finally:
+        logging.info("Closing the Design input sheet workbook")
+        selected_vendor_book_excel_file.close()
+        del selected_vendor_book_excel_file
         logging.info(f"Returning {flag =}")
         logging.shutdown()
         return flag

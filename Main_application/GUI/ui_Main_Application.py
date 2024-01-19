@@ -440,9 +440,20 @@ class Ui_Main_Application_Window(object):
         self.task_database_tableview.setSelectionMode(QAbstractItemView.NoSelection)
         self.task_database_tableview.setGridStyle(Qt.NoPen)
 
+        # self.task_database_tableview.setColumnWidth(0, 50)
+        # self.task_database_tableview.setColumnWidth(1, 20)
+        # self.task_database_tableview.setColumnWidth(2, 200)
+        # self.task_database_tableview.setColumnWidth(3, 200)
+        # self.task_database_tableview.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        # self.task_database_tableview.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        # self.task_database_tableview.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
         self.task_database_tableview.horizontalHeader().setStretchLastSection(True)
-        self.task_database_tableview.resizeColumnsToContents()
-        self.task_database_tableview.resizeRowsToContents()
+        # self.task_database_tableview.verticalHeader().setStretchLastSection(True)  # Stretches the last row
+        # self.task_database_tableview.resizeColumnsToContents()
+        # self.task_database_tableview.resizeRowsToContents()
+        # _table_view_horizontal_width = self.task_database_tableview.verticalHeader().length()
+        # print("_table_view_horizontal_width = ", _table_view_horizontal_width)
+
         self.task_database_tableview.verticalHeader().setVisible(False)
         # self.task_database_tableview.verticalHeader().setStretchLastSection(True)
 

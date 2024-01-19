@@ -1,6 +1,6 @@
 import sys
-from pyinstaller_setuptools import setup
-from setuptools import find_packages
+# from pyinstaller_setuptools import setup
+from setuptools import find_packages, setup
 
 if sys.platform == 'win32':
     base = 'Win32GUI'
@@ -24,6 +24,9 @@ setup(name="CLI_Automation_Main_Application",
                   'GUI.ui_Main_Application',
                   'GUI.ui_main_application_first_window',
                   'GUI.ui_new_session_surity_check',
+                  'GUI.custom_message_box',
+                  'GUI.ui_ask_or_no',
+                  'GUI.messagebox_general',
                   'Template_checks',
                   'Sheet_Creater',
                   'MessageBox',

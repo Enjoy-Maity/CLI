@@ -9,7 +9,6 @@ Main_application/CustomThread.py
 Main_application/Custom_Exception.py
 Main_application/Database_manager.py
 Main_application/Main_Gui.py
-Main_application/MessageBox.py
 Main_application/Running_Config_Checks.py
 Main_application/Section_splitter.py
 Main_application/Sheet_creater.py
@@ -28,14 +27,11 @@ Main_application/GUI/app_start_dialog.py
 Main_application/GUI/database_model.py
 Main_application/GUI/main_application_first_window_ui.py
 Main_application/GUI/new_session_surity_check_ui.py
-Main_application/GUI/splash_screen_ui.py
-Main_application/GUI/splash_screen_window.py
 Main_application/GUI/temp_splash_screen.py
 Main_application/GUI/ui_Main_Application.py
 Main_application/GUI/ui_app_start_dialog_box.py
 Main_application/GUI/ui_main_application_first_window.py
 Main_application/GUI/ui_new_session_surity_check.py
-Main_application/GUI/ui_splash_screen.py
 Main_application/Nokia/Nokia_Running_Config_Checks.py
 Main_application/Nokia/Nokia_Template_Checks.py
 Main_application/Nokia/__init__.py

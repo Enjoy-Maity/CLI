@@ -1,39 +1,32 @@
+import logging
 import os
-import sys
-import time
 import pickle
 import sqlite3
-import logging
+import sys
+import time
 import traceback
-import pandas
-import openpyxl
+from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from abc import ABC, abstractmethod
 
-# Importing from PySide6
-from PySide6.QtWidgets import QApplication, QMessageBox
-from PySide6.QtGui import QIcon, QShortcut, QKeySequence
-from PySide6.QtCore import Qt
-
-# Importing the GUI Classes
-from Database_manager import Database_manager
-from GUI.temp_splash_screen import Splash_screen
-from GUI.app_main_application_first_window import App_main_application_first_window
-from GUI.app_Main_Window import App_Main_Window
-from GUI.app_new_session_surity_check import App_new_session_surity_check
-from GUI.app_start_dialog import App_start_dialog
-import GUI.Application_GUI_rc
-from GUI.database_model import DataModel
-
-# Importing Ui components
-from GUI.ui_app_start_dialog_box import Ui_application_start_dialog
-from GUI.ui_main_application_first_window import Ui_CLI_automation_main_application_first_window
-from GUI.ui_Main_Application import Ui_Main_Application_Window
-from GUI.ui_new_session_surity_check import Ui_surity_Dialog
-
+import pandas
+from Main_application.CustomThread import CustomQthread
 # Importing the custom exception
 from Custom_Exception import CustomException
+# Importing the GUI Classes
+from Database_manager import Database_manager
+from GUI.app_Main_Window import App_Main_Window
+from GUI.app_main_application_first_window import App_main_application_first_window
+from GUI.app_new_session_surity_check import App_new_session_surity_check
+from GUI.app_start_dialog import App_start_dialog
+from GUI.temp_splash_screen import Splash_screen
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QShortcut, QKeySequence
+# Importing from PySide6
+from PySide6.QtWidgets import QApplication, QMessageBox
+
+
+# Importing Ui components
 
 
 class Abstract_Main_GUI(ABC):
@@ -43,6 +36,10 @@ class Abstract_Main_GUI(ABC):
 
     @abstractmethod
     def log_file_checker(self):
+        pass
+
+    @abstractmethod
+    def old_session_files_remover(self):
         pass
 
     @abstractmethod
@@ -152,6 +149,11 @@ class Abstract_Main_GUI(ABC):
 
 class Main_Gui(Abstract_Main_GUI, ABC):
     def __init__(self):
+        self._sheet_creater_task_status = None
+        self._running_config_pre_checks_task = None
+        self._running_config_pre_checks_task_status = None
+        self._template_checks_task_status = None
+        self.data = None
         self.start_dialog_window = None
         self.app_main_window = None
         self.app = None
@@ -163,6 +165,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         self.app_first_window = None
         self.log_file = None
         self.log_file_checker()
+        self._thread = None
 
         logging.basicConfig(filename=self.log_file,
                             filemode="a",
@@ -223,7 +226,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
             _log_file_getmtime = datetime.fromtimestamp(os.path.getmtime(self.log_file))
 
             _log_file_getmtime_timedelta_var = datetime.now() - _log_file_getmtime
-            _log_file_getmtime_timedelta_var_hour = int(_log_file_getmtime_timedelta_var.days*24 + (_log_file_getmtime_timedelta_var.seconds//3600))
+            _log_file_getmtime_timedelta_var_hour = int(_log_file_getmtime_timedelta_var.days * 24 + (_log_file_getmtime_timedelta_var.seconds // 3600))
             _current_hour = int(datetime.now().strftime("%H"))
             if _current_hour > 12:
                 if (int(_log_file_getmtime_timedelta_var.days) >= 1) or (_log_file_getmtime_timedelta_var_hour >= 20):
@@ -231,6 +234,70 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
                     with open(self.log_file, 'w') as _f:
                         _f.close()
+
+    # Method for handling the qthread results
+    def qthread_result_handler(self, result: str) -> None:
+        """
+        Handles task result status setting to the task variables 
+        
+        :param result: string containing the status of the task
+        :return: None 
+        """
+        # print(self.task_running)
+        # print(self._thread.isRunning())
+        # print(f"{(self.task_running == 'Running Config Pre Checks') =}")
+        if self.task_running == 'Sheet Creater':
+            self._template_checks_task_status = result
+            self.task_running = ''
+            logging.debug(
+                f"Got the template_checks task status as {self._template_checks_task_status} for vendor {self.vendor_selected()}"
+            )
+
+            if self._thread.isRunning():
+                self._thread.exit()
+
+            if result == 'Successful':
+                self.information_message(title="    Task Successfully Completed!",
+                                         message=f" Template Checks Task successfully completed for {self.vendor_selected()}")
+
+            self.label_and_database_updater(task='Running Config Pre Checks',
+                                            status=self._template_checks_task_status)
+
+        if self.task_running == 'Template Checks':
+            self._template_checks_task_status = result
+            self.task_running = ''
+            logging.debug(
+                f"Got the template_checks task status as {self._template_checks_task_status} for vendor {self.vendor_selected()}"
+            )
+
+            if self._thread.isRunning():
+                self._thread.exit()
+
+            if result == 'Successful':
+                self.information_message(title="    Task Successfully Completed!",
+                                         message=f" Template Checks Task successfully completed for {self.vendor_selected()}")
+
+            self.label_and_database_updater(task='Running Config Pre Checks',
+                                            status=self._template_checks_task_status)
+
+        if self.task_running == 'Running Config Pre Checks':
+            self._running_config_pre_checks_task = result
+            print(f'{self._running_config_pre_checks_task =}')
+            self.task_running = ''
+            logging.debug(
+                f"Got the running_config_pre_checks task status as {self._running_config_pre_checks_task_status} for vendor {self.vendor_selected()}"
+            )
+
+            if self._thread.isRunning():
+                self._thread.exit()
+
+            if result == 'Successful':
+                self.information_message(title="    Task Successfully Completed!",
+                                         message=f"Running Config Pre Checks Task successfully completed for {self.vendor_selected()}")
+
+            self.label_and_database_updater(task='Running Config Pre Checks',
+                                            status=self._running_config_pre_checks_task)
+            # print("line264")
 
     # Method for raising error messages
     def critical_message(self, title: str, message: str) -> None:
@@ -244,7 +311,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
         _message = QMessageBox()
         _message.setText(message)
-        _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
+        # _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
         _message.setWindowTitle(title)
         _message.setIcon(QMessageBox.Icon.Critical)
         _message.setStandardButtons(QMessageBox.StandardButton.Ok)
@@ -264,7 +331,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         message = str(message)
         _message = QMessageBox()
         _message.setText(str(message))
-        _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
+        # _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
         _message.setWindowTitle(title)
         _message.setIcon(QMessageBox.Icon.Warning)
         _message.setStandardButtons(QMessageBox.StandardButton.Ok)
@@ -284,7 +351,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         message = str(message)
         _message = QMessageBox()
         _message.setText(str(message))
-        _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
+        # _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
         _message.setWindowTitle(title)
         _message.setIcon(QMessageBox.Icon.Information)
         _message.setStandardButtons(QMessageBox.StandardButton.Ok)
@@ -324,8 +391,8 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         """
 
         _db_getmtime = datetime.fromtimestamp(os.path.getmtime(filename=self.db_path))
-        _timedelta_var = datetime.now()-_db_getmtime
-        _timedelta_var_hour = (_timedelta_var.days*24 + _timedelta_var.seconds)//3600
+        _timedelta_var = datetime.now() - _db_getmtime
+        _timedelta_var_hour = (_timedelta_var.days * 24 + _timedelta_var.seconds) // 3600
         logging.debug(f"db getmtime =>{_timedelta_var =}\n\
                         {_timedelta_var_hour = } Hours\n")
 
@@ -340,6 +407,34 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
         else:
             return True
+
+    # Method for removing the old session files
+    def old_session_files_remover(self):
+        _old_session_folders = [
+            rf'C:\\Users\\{self.username}\\AppData\\Local\\CLI_Automation\\Host_details_Pickle_file',
+            rf'C:\\Users\\{self.username}\\AppData\\Local\\CLI_Automation\\Vendor_pickles'
+        ]
+        i = 0
+        while i < len(_old_session_folders):
+            _selected_folder = _old_session_folders[i]
+            if os.path.exists(_selected_folder):
+                _list_of_files = os.listdir(_selected_folder)
+                logging.info(f"Removing the files inside folder {_old_session_folders[i]}")
+                k = 0
+                while k < len(_list_of_files):
+                    _selected_file = _list_of_files[k]
+                    if os.path.exists(os.path.join(_selected_folder, _selected_file)):
+                        logging.info(f"Removing selected file \'{_selected_file}\'")
+                        os.remove(
+                            os.path.join(_selected_folder, _selected_file)
+                        )
+                    k += 1
+            i += 1
+
+        _host_details_saved_file_path = rf"C:\\Users\\{self.username}\\AppData\\Local\\CLI_Automation\\host_details_path.txt"
+        if os.path.exists(_host_details_saved_file_path):
+            logging.info(f"Removing {_host_details_saved_file_path}")
+            os.remove(_host_details_saved_file_path)
 
     # Method for updating the labels and updating the database to be loaded
     def label_and_database_updater(self, task: str, status: str) -> None:
@@ -451,7 +546,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
                 else:
                     logging.info(f"Calling the vendor list grabber along with data -->\n {_excel_file.to_markdown()}")
-                    self.vendor_list_grabber(data=_excel_file)
+                    self.vendor_list_grabber(_excel_file)
 
                     if len(self.vendor_list) == 0:
                         self.critical_message(title="Empty Vendor List!",
@@ -478,40 +573,52 @@ class Main_Gui(Abstract_Main_GUI, ABC):
     # Method for Sheet Creator Task
     def sheet_creater_task(self) -> None:
         if self.task_running == '':
-            _sheet_creator_task_status = ''
-
-            logging.debug("Setting the Task_Running variable to \'Sheet Creater\'")
-            self.task_running = 'Sheet Creater'
-
             logging.debug(f"Setting the status of the Sheet Creater Task Label to \'In Progress\'")
             self.label_and_database_updater(task='Sheet Creater',
                                             status="In Progress")
+
+            logging.debug("Setting the Task_Running variable to \'Sheet Creater\'")
+            self.task_running = 'Sheet Creater'
+            self._sheet_creater_task_status = 'In Progress'
+
             try:
                 self.host_details_path = self.app_first_window.host_details_file
                 if len(self.app_first_window.host_details_file) == 0:
                     logging.debug("Raising Error Message as there is no path given in the self.host_details_path")
                     self.critical_message(title="Host Details File Not Selected!",
                                           message="Kindly select the \'Host Details\' file first and then try again!")
-                    _sheet_creator_task_status = "Unsuccessful"
+                    self._sheet_creater_task_status = "Unsuccessful"
 
                 else:
                     from Sheet_creater import main_func
-                    _sheet_creator_task_status = main_func(file_name=self.app_first_window.host_details_file)
-
-                    logging.debug(f"Got the Status for Sheet Creater task as {_sheet_creator_task_status} ")
+                    # self._sheet_creater_task_status = main_func(file_name=self.app_first_window.host_details_file)
+                    #
+                    # logging.debug(f"Got the Status for Sheet Creater task as {_sheet_creator_task_status} ")
+                    self._thread = CustomQthread(target=main_func,
+                                                 kwargs={
+                                                     'file_name': self.app_first_window.host_details_file
+                                                 })
+                    logging.info(f'Created the CustomQThread for Sheet Creater Task')
+                    self._thread.finished_signal.connect(self.qthread_result_handler)
+                    logging.info(f"Starting the Sheet Creater Task CustomQThread")
+                    self._thread.start()
 
             except PermissionError as e:
                 logging.error(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
-                _sheet_creator_task_status = 'Unsuccessful'
+                self._sheet_creater_task_status = 'Unsuccessful'
+                self.label_and_database_updater(task='Sheet Creater',
+                                                status=self._sheet_creater_task_status)
 
             except Exception as e:
                 logging.error(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
-                _sheet_creator_task_status = 'Unsuccessful'
-
-            finally:
-                self.task_running = ''
+                self._sheet_creater_task_status = 'Unsuccessful'
                 self.label_and_database_updater(task='Sheet Creater',
-                                                status=_sheet_creator_task_status)
+                                                status=self._sheet_creater_task_status)
+
+            # finally:
+            #     self.task_running = ''
+            #     self.label_and_database_updater(task='Sheet Creater',
+            #                                     status=self._sheet_creater_task_status)
 
         else:
             self.warning_message(title="Task Already Running!",
@@ -521,19 +628,18 @@ class Main_Gui(Abstract_Main_GUI, ABC):
     # Method for Template Checks Task
     def template_checks_task(self) -> None:
         if self.task_running == '':
-            _template_checks_task_status = self.app_main_window.main_window_ui.template_checks_label.text()
+            self.task_running = 'Template Checks'
+            self._template_checks_task_status = 'In Progress'
+            self.label_and_database_updater(task='Template Checks',
+                                            status=self._template_checks_task_status)
 
-            if _template_checks_task_status == 'Successful':
+            if self._template_checks_task_status == 'Successful':
                 logging.debug(
                     f"User clicked on the Template Checks Button even though it was successfully completed for {self.app_main_window.current_vendor('')}"
                 )
                 self.warning_message(title="Task Already Successfully Completed!",
                                      message="Template Checks Task is already successfully completed!")
             else:
-                _template_checks_task_status = ''
-                logging.debug("Setting the template task status to In Progress")
-                self.label_and_database_updater(task="Template Checks",
-                                                status="In Progress")
                 try:
                     _username = (os.popen(cmd=r'cmd.exe /C "echo %username%"').read()).strip()
 
@@ -555,30 +661,50 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                     del _f
 
                     from Template_checks import main_func
-                    _template_checks_task_status = main_func(filename=_filename.strip(),
-                                                             vendor_selected=self.vendor_selected())
+                    _vendor_selected = self.vendor_selected()
+                    # self._template_checks_task_status = main_func(filename=_filename.strip(),
+                    #                                               vendor_selected=self.vendor_selected())
 
-                    if _template_checks_task_status == 'Successful':
-                        self.information_message(title="Task Successfully Completed!",
-                                                 message=f" Template Checks Task successfully completed {self.vendor_selected()}")
+                    self._thread = CustomQthread(target=main_func,
+                                                 kwargs={'filename': _filename.strip(),
+                                                         'vendor_selected': _vendor_selected})
+                    logging.info(f'Created the CustomQThread for Template Checks for {_vendor_selected}')
+                    self._thread.finished_signal.connect(self.qthread_result_handler)
+
+                    logging.info(f"Starting the Template Checks CustomQThread for {_vendor_selected}")
+                    self._thread.start()
 
                 except CustomException as e:
                     logging.error(f"Raised CustomException =>\n\tTitle ==> {e.title}\n\tMessage ==> {e.message}")
-                    _template_checks_task_status = 'Unsuccessful'
+
+                    if (len(self.vendor_selected()) > 0) and (self.vendor_selected().strip() != 'Select Vendor'):
+                        self._template_checks_task_status = 'Unsuccessful'
+                        self.label_and_database_updater(task='Template Checks',
+                                                        status=self._template_checks_task_status)
+
+                    else:
+                        self._template_checks_task_status = ''
+                        self.label_and_database_updater(task='Template Checks',
+                                                        status=self._template_checks_task_status)
 
                 except FileNotFoundError as e:
                     logging.error(f"{traceback.format_exc()}\nTitle --> File Not Found")
                     self.critical_message(title="FileNotFound Error!", message=str(e))
-                    _template_checks_task_status = 'Unsuccessful'
+                    self._template_checks_task_status = 'Unsuccessful'
+                    self.label_and_database_updater(task='Template Checks',
+                                                    status=self._template_checks_task_status)
 
                 except Exception as e:
                     logging.error(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
                     self.critical_message(title="Exception Occurred!", message=str(e))
-                    _template_checks_task_status = 'Unsuccessful'
-
-                finally:
+                    self._template_checks_task_status = 'Unsuccessful'
                     self.label_and_database_updater(task='Template Checks',
-                                                    status=_template_checks_task_status)
+                                                    status=self._template_checks_task_status)
+
+                # finally:
+                #     self.task_running = ''
+                #     self.label_and_database_updater(task='Template Checks',
+                #                                     status=self._template_checks_task_status)
 
         else:
             self.warning_message(title="Task Already Running!",
@@ -588,24 +714,71 @@ class Main_Gui(Abstract_Main_GUI, ABC):
     # Method for Running Config Pre Checks Task
     def running_config_pre_checks_task(self) -> None:
         if self.task_running == '':
-            _running_config_pre_checks_task = ''
+            self._running_config_pre_checks_task_status = 'In Progress'
+            self.label_and_database_updater(task='Running Config Pre Checks',
+                                            status=self._running_config_pre_checks_task_status)
+
+            self.task_running = 'Running Config Pre Checks'
 
             try:
-                from Running_Config_Checks import running_config_checks
-                _running_config_pre_checks_task = running_config_checks(vendor_selected=self.vendor_selected())
+                if (len(self.vendor_selected()) == 0) or (self.vendor_selected().strip() == 'Select Vendor'):
+                    raise CustomException(title='Vendor Not Selected!',
+                                          message='Kindly Select the Vendor before proceeding!')
+
+                if self.app_main_window.main_window_ui.template_checks_label.text().strip() != 'Successful':
+                    raise CustomException(title='Template Checks Not Performed Successfully!',
+                                          message=f"Kindly perform the Template Checks for \'{self.vendor_selected()}\' first!" +
+                                                  "\nThen Try Again!")
+
+                else:
+                    from Running_Config_Checks import running_config_checks
+                    _vendor_selected = self.vendor_selected()
+                    # temp_thread = CustomThread(target=running_config_checks, kwargs={'vendor_selected': self.vendor_selected()})
+                    # temp_thread.daemon = True
+                    # temp_thread.start()
+                    # self._running_config_pre_checks_task_status = temp_thread.join()
+                    #
+                    # print(f"line 676 {self.task_running =}")
+                    self._thread = CustomQthread(target=running_config_checks,
+                                                 kwargs={'vendor_selected': _vendor_selected})
+                    logging.info(f'Created the CustomQThread for Template Checks for {_vendor_selected}')
+                    self._thread.finished_signal.connect(self.qthread_result_handler)
+
+                    # _thread.finished.connect(_thread.deleteLater)
+                    logging.info(f"Starting the Running Config Checks Pre CustomQThread for {_vendor_selected}")
+                    self._thread.start()
+
+                    # self._running_config_pre_checks_task_status = running_config_checks(vendor_selected= _vendor_selected)
+
+            except CustomException as e:
+                logging.error(f"{traceback.format_exc()}\nTitle --> {e.title}!\nMessage --> {e.message}\n")
+
+                if (len(self.vendor_selected()) > 0) and (self.vendor_selected().strip() != 'Select Vendor'):
+                    self._running_config_pre_checks_task_status = 'Unsuccessful'
+                    self.label_and_database_updater(task='Running Config Pre Checks',
+                                                    status=self._running_config_pre_checks_task_status)
+
+                else:
+                    self._running_config_pre_checks_task_status = ''
+                    self.label_and_database_updater(task='Running Config Pre Checks',
+                                                    status=self._running_config_pre_checks_task_status)
 
             except Exception as e:
-                logging.debug(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
+                logging.error(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
                 self.critical_message(title="Exception Occurred!",
                                       message=str(e))
-                _running_config_pre_checks_task = 'Unsuccessful'
-
-            finally:
-                logging.debug(
-                    f"Got the running_config_pre_checks task status as {_running_config_pre_checks_task} for vendor {self.vendor_selected()}"
-                )
+                self._running_config_pre_checks_task_status = 'Unsuccessful'
                 self.label_and_database_updater(task='Running Config Pre Checks',
-                                                status=_running_config_pre_checks_task)
+                                                status=self._running_config_pre_checks_task_status)
+
+            # finally:
+            # self.task_running = ''
+            # logging.debug(
+            #     f"Got the running_config_pre_checks task status as {self._running_config_pre_checks_task_status} for vendor {self.vendor_selected()}"
+            # )
+            #
+            # self.label_and_database_updater(task='Running Config Pre Checks',
+            #                                 status=self._running_config_pre_checks_task_status)
 
         else:
             self.warning_message(title="Task Already Running!",
@@ -614,16 +787,29 @@ class Main_Gui(Abstract_Main_GUI, ABC):
     # Method for CLI Preparation
     def cli_preparation_task(self) -> None:
         if self.task_running == '':
-            self.vendor = self.app_main_window.current_vendor("")
+            self.vendor = self.vendor_selected()
             if ((isinstance(self.vendor, str)) and (len(self.vendor) > 0)) and (self.vendor.strip() != 'Select Vendor'):
-                _cli_preparation_task_status = ''
+                _cli_preparation_task_status = 'In Progress'
+                self.label_and_database_updater(task='CLI Preparation',
+                                                status=_cli_preparation_task_status)
+
+                self.task_running = 'CLI Preparation Task'
 
                 try:
-                    if self.vendor is not None:
-                        pass
+                    if (len(self.vendor_selected()) == 0) or (self.vendor_selected().strip() == 'Select Vendor'):
+                        raise CustomException('Vendor Not Selected!', 'Kindly Select the Vendor before proceeding!')
                     else:
                         from .CLI_preparation import main_func
                         _cli_preparation_task_status = main_func(file_name=self.app_first_window)
+
+                except CustomException as e:
+                    logging.error(f"{traceback.format_exc()}\nTitle --> {e.title}!\nMessage --> {e.message}\n")
+
+                    if (len(self.vendor_selected()) > 0) and (self.vendor_selected().strip() != 'Select Vendor'):
+                        _cli_preparation_task_status = 'Unsuccessful'
+
+                    else:
+                        _cli_preparation_task_status = ''
 
                 except Exception as e:
                     logging.debug(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
@@ -635,7 +821,8 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                                                     status=_cli_preparation_task_status)
 
             else:
-                self.critical_message(title="")
+                self.critical_message(title='Vendor Not Selected!',
+                                      message='Kindly Select the Vendor before proceeding!')
 
         else:
             self.warning_message(title="Task Already Running!",
@@ -692,8 +879,16 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         Returns:
             vendor_list(list): _description_ : list containing the unique list of vendors
         """
+        # logging.info(
+        #     f"Got the data as :-\n{data.to_markdown()}"
+        # )
+        # _vendor_series = data['Vendor']
 
-        self.vendor_list = list(data['Vendor'].dropna().unique())
+        # logging.info(
+        #     f"Got the Vendor Series as \n{_vendor_series.to_markdown()}"
+        # )
+        self.data = data
+        self.vendor_list = list(self.data['Vendor'].dropna().unique())
 
         return self.vendor_list
 
@@ -716,6 +911,8 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         if self._database_manager.database_table_checker():
             self._database_manager.auto_database_remover()
             self._database_manager.data_remover()
+
+        self.old_session_files_remover()
 
     # Method for Handling New Session
     def new_session(self):
@@ -805,7 +1002,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
             _host_details_pickle_getmtime = datetime.fromtimestamp(os.path.getmtime(self.host_details_pickle_file))
             _timedelta_var = datetime.now() - _host_details_pickle_getmtime
-            _timedelta_var_hour = (_timedelta_var.days*24 + _timedelta_var.seconds)//3600
+            _timedelta_var_hour = (_timedelta_var.days * 24 + _timedelta_var.seconds) // 3600
             if (int(_timedelta_var.days) >= 1) or (_timedelta_var_hour >= 20):
                 return False
 
@@ -853,7 +1050,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                     del _f
 
                     logging.info("Calling the combobox_data_items_adder to add the vendor list")
-                    self.vendor_list_grabber(data=_file)
+                    self.vendor_list_grabber(_file)
 
                     if len(self.vendor_list) == 0:
                         self.critical_message(title="Vendor List Empty",
@@ -958,7 +1155,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                 del _f
 
                 logging.info("Calling the combobox_data_items_adder to add the vendor list")
-                self.vendor_list_grabber(data=_file)
+                self.vendor_list_grabber(_file)
 
                 if len(self.vendor_list) == 0:
                     self.critical_message(title="Vendor List Empty",

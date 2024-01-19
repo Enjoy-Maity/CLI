@@ -7,6 +7,12 @@
     <file>ericsson-blue-icon-logo.ico</file>
     <file>CLI_Automation_Test_1.png</file>
   </qresource>
+  <qresource prefix="messagebox_icons">
+    <file>error.png</file>
+    <file>information.png</file>
+    <file>question.png</file>
+    <file>warning.png</file>
+  </qresource>
   <qresource prefix="vendors_list">
     <file>huawei-1.png</file>
     <file>cicso-systems-seeklogo.com.png</file>

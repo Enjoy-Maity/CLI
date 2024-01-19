@@ -102,19 +102,20 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
             i += 1
         logging.debug(f"Entered the entries for 'Blank VPLS Name' for node ip {ip_node} for VPLS 2 ==>\n{result_dictionary}\n\n")
 
-        temp_df = df_add[df_add.duplicated(subset=['VPLS ID'], keep=False)]
-        if len(temp_df) > 0:
-            logging.debug(f"Found duplicate VPLS IDs for VPLS-2 for node_ip ({ip_node})==>\n{temp_df.to_markdown()}\n\n")
-            reason = 'Same VPLS ID found ==> for VPLS IDs(S.Nos.)'
-            from Nokia.Nokia_Section_Template_Checks.VPLS_1_tc import same_vpls_id_found_error_message_generator
-            result_dictionary[reason] = same_vpls_id_found_error_message_generator(dataframe=temp_df, common_vpls_ids=temp_df['VPLS ID'].unique().astype(int))
-            del temp_df
+        # temp_df = df_add[df_add.duplicated(subset=['VPLS ID'], keep=False)]
+        # if len(temp_df) > 0:
+        #     logging.debug(f"Found duplicate VPLS IDs for VPLS-2 for node_ip ({ip_node})==>\n{temp_df.to_markdown()}\n\n")
+        #     reason = 'Same VPLS ID found ==> for VPLS IDs(S.Nos.)'
+        #     from Nokia.Nokia_Section_Template_Checks.VPLS_1_tc import same_vpls_id_found_error_message_generator
+        #     result_dictionary[reason] = same_vpls_id_found_error_message_generator(dataframe=temp_df, common_vpls_ids=temp_df['VPLS ID'].unique().astype(int))
+        #     del temp_df
 
     # reason = 'VPLS ID of Action \'Add\' present in Action \'Modify/Delete\''
     # reason = 'Same VPLS ID found'
 
     reason = 'Same VPLS ID found ==> for VPLS IDs(S.Nos.)'
-    if len(df_add) > 0:
+
+    if (len(df_delete_modify) > 0) and (len(df_add) > 0):
         df_add_unique_VPLS_IDs = df_add['VPLS ID'].unique()
 
         if "TempNA" in df_add_unique_VPLS_IDs:
@@ -123,7 +124,6 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
 
         logging.debug(f"df_add_unique_VPLS_IDs for node_ip({ip_node}) for VPLS-2 ==>\n{df_add_unique_VPLS_IDs}\n\n")
 
-    if len(df_delete_modify) > 0:
         df_delete_modify_VPLS_IDs = df_delete_modify['VPLS ID'].unique()
 
         if "TempNA" in df_delete_modify_VPLS_IDs:
@@ -132,23 +132,23 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
 
         logging.debug(f"df_delete_modify_VPLS_IDs for node_ip({ip_node}) for VPLS-2 ==>\n{df_delete_modify_VPLS_IDs}\n\n")
 
-    logging.debug(f"Finding the set-intersection for the df_add and df_delete for node_ip ({ip_node}) for VPLS-2 {np.intersect1d(df_add_unique_VPLS_IDs, df_delete_modify_VPLS_IDs).astype(int)}")
-    set_intersection_between_Add_and_Modify_Delete_dfs = np.intersect1d(df_add_unique_VPLS_IDs, df_delete_modify_VPLS_IDs).astype(int)
+        logging.debug(f"Finding the set-intersection for the df_add and df_delete for node_ip ({ip_node}) for VPLS-2 {np.intersect1d(df_add_unique_VPLS_IDs, df_delete_modify_VPLS_IDs).astype(int)}")
+        set_intersection_between_Add_and_Modify_Delete_dfs = np.intersect1d(df_add_unique_VPLS_IDs, df_delete_modify_VPLS_IDs).astype(int)
 
-    if set_intersection_between_Add_and_Modify_Delete_dfs.size > 0:
-        # reason = f"{reason} ==> for VPLS IDs : ({', '.join([str(int(elements)) for elements in set_intersection_between_Add_and_Modify_Delete_dfs])})"
+        if set_intersection_between_Add_and_Modify_Delete_dfs.size > 0:
+            # reason = f"{reason} ==> for VPLS IDs : ({', '.join([str(int(elements)) for elements in set_intersection_between_Add_and_Modify_Delete_dfs])})"
 
-        logging.debug(f"{df_add[df_add['VPLS ID'].isin(list(set_intersection_between_Add_and_Modify_Delete_dfs))]}")
+            logging.debug(f"{df_add[df_add['VPLS ID'].isin(list(set_intersection_between_Add_and_Modify_Delete_dfs))]}")
 
-        logging.debug(
-            f"Got the filtered data from intersection between add and modify_delete dfs in VPLS-1 for node ip ('{ip_node}') ==> \n{df[df['VPLS ID'].isin(list(set_intersection_between_Add_and_Modify_Delete_dfs))].to_markdown()}\n")
-        # result_dictionary[reason] = list((df[df['VPLS ID'].isin(list(set_intersection_between_Add_and_Modify_Delete_dfs))])['S.No.'])
+            logging.debug(
+                f"Got the filtered data from intersection between add and modify_delete dfs in VPLS-1 for node ip ('{ip_node}') ==> \n{df[df['VPLS ID'].isin(list(set_intersection_between_Add_and_Modify_Delete_dfs))].to_markdown()}\n")
+            # result_dictionary[reason] = list((df[df['VPLS ID'].isin(list(set_intersection_between_Add_and_Modify_Delete_dfs))])['S.No.'])
 
-        # Importing function from the VPLS_1 module for same_vpls_id_found_error_message_generator
-        from Nokia.Nokia_Section_Template_Checks.VPLS_1_tc import same_vpls_id_found_error_message_generator
-        result_dictionary[reason] = same_vpls_id_found_error_message_generator(dataframe=df, common_vpls_ids=set_intersection_between_Add_and_Modify_Delete_dfs)
+            # Importing function from the VPLS_1 module for same_vpls_id_found_error_message_generator
+            from Nokia.Nokia_Section_Template_Checks.VPLS_1_tc import same_vpls_id_found_error_message_generator
+            result_dictionary[reason] = same_vpls_id_found_error_message_generator(dataframe=df, common_vpls_ids=set_intersection_between_Add_and_Modify_Delete_dfs)
 
-        logging.debug(f"Entered the  entries for 'Common VPLS IDs in Add and Modify/Delete Actions' for node ip {ip_node} for VPLS-2 ==>\n{result_dictionary}\n\n")
+            logging.debug(f"Entered the  entries for 'Common VPLS IDs in Add and Modify/Delete Actions' for node ip {ip_node} for VPLS-2 ==>\n{result_dictionary}\n\n")
 
     logging.debug(f"Checking whether there is any entry for the 'VSD Controller Mapping' empty or not for VPLS-2 of node ip {ip_node}\n\n")
     i = 0

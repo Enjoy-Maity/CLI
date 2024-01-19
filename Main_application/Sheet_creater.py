@@ -13,7 +13,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Side, Border, PatternFill, Alignment
 from openpyxl.styles.colors import Color
 from openpyxl.worksheet.datavalidation import DataValidation
-from MessageBox import messagebox
+from tkinter import messagebox
 
 # log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
 # Path(log_file_path).mkdir(parents=True,exist_ok=True)
@@ -27,6 +27,7 @@ from MessageBox import messagebox
 # logging.captureWarnings(capture=True)
 
 flag = ''
+file_reader = ''
 
 
 def pickle_checker(host_details_df: pd.DataFrame) -> list:
@@ -112,14 +113,14 @@ def pickle_checker(host_details_df: pd.DataFrame) -> list:
                         f"comparison between the uploaded host details and pickled host_details ==>\n{temp_result_df.to_markdown()}\n")
 
                     if len(temp_result_df) > 0:
-                        messagebox().showinfo("Updated Host Details Information",
+                        messagebox.showinfo("Updated Host Details Information",
                                               f"New Host IP/s entry found in latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nNew Host IPs :- {', '.join(str(element) for element in temp_result_df['other'])}")
                         host_details_df.to_pickle(path=path_for_the_host_details_pickle,
                                                   compression=None,
                                                   protocol=pickle.HIGHEST_PROTOCOL)
 
                     else:
-                        messagebox().showinfo("Updated Host Details Information",
+                        messagebox.showinfo("Updated Host Details Information",
                                               "You have uploaded same \'Host Details\'!")
 
                     result = ['Successful', None]
@@ -133,7 +134,7 @@ def pickle_checker(host_details_df: pd.DataFrame) -> list:
                         temp_delta = np.setdiff1d(ar1=uploaded_host_details_df_host_ip,
                                                   ar2=previous_host_details_pickle_to_df_host_ip)
 
-                        messagebox().showinfo("Updated Host Details Information",
+                        messagebox.showinfo("Updated Host Details Information",
                                               f"New Host IP/s entry found in latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nNew Host IPs :- {', '.join(temp_delta.astype(dtype=str))}")
                         host_details_df.to_pickle(path=path_for_the_host_details_pickle,
                                                   compression=None,
@@ -143,7 +144,7 @@ def pickle_checker(host_details_df: pd.DataFrame) -> list:
                         temp_delta = np.setdiff1d(ar1=previous_host_details_pickle_to_df_host_ip,
                                                   ar2=uploaded_host_details_df_host_ip)
 
-                        messagebox().showinfo("Updated Host Details Information",
+                        messagebox.showinfo("Updated Host Details Information",
                                               f"Few Host IPs entry have been removed from latest uploaded \'Host Details\', Please Cross-Check before proceeding further!\nRemoved Host IPs :- {', '.join(temp_delta.astype(dtype=str))}")
                         host_details_df.to_pickle(path=path_for_the_host_details_pickle,
                                                   compression=None,
@@ -188,7 +189,7 @@ def mpbn_node_login_file_creater(**kwargs) -> None:
     logging.debug(
         f"Created the path for creation of \'MPBN_Node_Login.xlsx\' ==> {path_for_user_mpbn_activity_nodes}\n")
 
-    if (Path(path_for_user_mpbn_activity_nodes).exists() == False):
+    if not Path(path_for_user_mpbn_activity_nodes).exists():
         logging.debug(f"\'MPBN_Node_Login.xlsx\'File not found, so creating the file")
         wkbk = Workbook()
         wkbk.save(path_for_user_mpbn_activity_nodes)
@@ -365,13 +366,13 @@ def file_path_saver(*args) -> None:
 
 
 def sheet_creater(**kwargs) -> str:
-    logging.basicConfig(filename=log_file,
-                        filemode="a",
-                        format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/sheet_creater): {'%(message)s'}",
-                        datefmt='%d-%b-%Y %I:%M:%S %p',
-                        encoding="UTF-8",
-                        level=logging.DEBUG)
-    logging.captureWarnings(capture=True)
+    # logging.basicConfig(filename=log_file,
+    #                     filemode="a",
+    #                     format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: (Main-application/{'%(module)s'}/sheet_creater): {'%(message)s'}",
+    #                     datefmt='%d-%b-%Y %I:%M:%S %p',
+    #                     encoding="UTF-8",
+    #                     level=logging.DEBUG)
+    # logging.captureWarnings(capture=True)
 
     try:
         logging.info(f"Starting the Sheet Creater for {os.path.basename(kwargs['file'])}")
@@ -522,7 +523,7 @@ def sheet_creater(**kwargs) -> str:
     except Exception as e:
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-        messagebox().showerror("Exception Occurred!", str(e))
+        messagebox.showerror("Exception Occurred!", str(e))
 
 
 def file_creater(**kwargs) -> None:
@@ -556,7 +557,7 @@ def main_func(**kwargs) -> str:
     """
     log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
     Path(log_file_path).mkdir(parents=True, exist_ok=True)
-    global log_file
+    global log_file, file_reader
     log_file = os.path.join(log_file_path, "Sheet_Creation_Task.log")
 
     today = datetime.now()
@@ -630,10 +631,10 @@ def main_func(**kwargs) -> str:
         #     nan_test = any(pd.isna(element) for element in unique_host_ips)            
         blank_Sr_no_list = []
         # If nan_test is true
-        if (nan_test):
+        if nan_test:
             i = 0
-            while (i < len(host_details_df)):
-                if (pd.isna(host_details_df.iloc[i]['Host_IP'])):
+            while i < len(host_details_df):
+                if pd.isna(host_details_df.iloc[i]['Host_IP']):
                     blank_Sr_no_list.append(host_details_df.iloc[i]['Sr.No'])
                 i += 1
 
@@ -827,7 +828,7 @@ def main_func(**kwargs) -> str:
 
                 if not 'Standard Template' in temp_reader.sheet_names:
                     del temp_reader
-                    messagebox().showwarning("Template Sheet Missing!",
+                    messagebox.showwarning("Template Sheet Missing!",
                                              f"'Standard Template' worksheet missing in {file_to_be_selected.format(unique_vendors_in_host_details[i])}, Kindly Check and Try Again!")
                     continue
 
@@ -861,13 +862,18 @@ def main_func(**kwargs) -> str:
             # global flag;
             flag = 'Unsuccessful'
             logging.error(
-                f"{traceback.format_exc()}\n\nraised CustomException==>\ntiltle = {e.title}\nmessage = {e.message}")
+                f"{traceback.format_exc()}\n\nraised CustomException==>\ntitle = {e.title}\nmessage = {e.message}")
+
+        except PermissionError as e:
+            flag = 'Unsuccessful'
+            logging.error(f"{traceback.format_exc()}\n\nException:==>\n\tTitle ===> {type(e)} \n\tMessage ==>{e}")
+            messagebox.showerror("Permission Error!", str(e))
 
         except Exception as e:
             # global flag;
             flag = 'Unsuccessful'
-            logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-            messagebox().showerror("Exception Occurred!", e)
+            logging.error(f"{traceback.format_exc()}\n\nException:==>\n\tTitle ===> {type(e)} \n\tMessage ==>{e}")
+            messagebox.showerror("Exception Occurred!", str(e))
 
         if flag != 'Unsuccessful':
             logging.debug(
@@ -880,7 +886,7 @@ def main_func(**kwargs) -> str:
             file_path_saver(host_details_file_name)
 
             logging.info("Setting the flag status to 'Successful'")
-            messagebox().showinfo(title="Task Successfully Completed!",
+            messagebox.showinfo(title="Task Successfully Completed!",
                                   message="Sheet Creater Task Completed Successfully!")
             flag = 'Successful'
 
@@ -892,7 +898,7 @@ def main_func(**kwargs) -> str:
     except Exception as e:
         flag = 'Unsuccessful'
         logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-        messagebox().showerror("Exception Occurred!", str(e))
+        messagebox.showerror("Exception Occurred!", str(e))
 
     finally:
 
@@ -902,6 +908,7 @@ def main_func(**kwargs) -> str:
 
         logging.info(f"Returning Flag\n\n\t{flag=}")
         logging.shutdown()
+
         return flag
 
 # print(main_func(file_name = r"C:\Users\emaienj\Downloads\VPLS_CLI_Design_Documents\VPLS_CLI_Design_Documents\Host_Details.xlsx"))
