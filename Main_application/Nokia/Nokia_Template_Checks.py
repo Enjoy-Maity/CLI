@@ -6,7 +6,7 @@ import traceback
 from pathlib import Path
 import numpy as np
 import pandas as pd
-
+from threading import Event
 from Main_application.CustomThread import CustomThread
 from Main_application.Custom_Exception import CustomException
 from tkinter import messagebox
@@ -142,19 +142,19 @@ def section_wise_input(dictionary: dict, ip_node: str) -> dict:
                 # Creating Thread to call the main_func() of the module corresponding to selected iteration section.
                 thread_dictionary[sections[i]] = CustomThread(target=module_to_be_called.main_func,
                                                               args=(dictionary[sections[i]], ip_node))
-                thread_dictionary[sections[i]].daemon = True
+                # thread_dictionary[sections[i]].daemon = True
                 thread_dictionary[sections[i]].start()
             i += 1
 
         except ImportError as e:
             temp_flag = 'Unsuccessful'
             logging.error(f"ImportError Occurred!======>\n\n{traceback.format_exc()}{e}")
-            messagebox.showerror("Exception Occurred!",(e))
+            messagebox.showerror("Exception Occurred!", str(e))
 
         except Exception as e:
             temp_flag = 'Unsuccessful'
             logging.error(f"Exception Occurred!======>\n\n{traceback.format_exc()}{e}")
-            messagebox.showerror("Exception Occurred!",str(e))
+            messagebox.showerror("Exception Occurred!", str(e))
 
     thread_result_dictionary = {}
     i = 0
@@ -231,7 +231,7 @@ def nokia_main_func(**kwargs) -> str:
             while i < len(ip_nodes):
                 thread_dictionary[ip_nodes[i]] = CustomThread(target=section_wise_input,
                                                               args=(vendor_design_input_data[ip_nodes[i]], ip_nodes[i]))
-                thread_dictionary[ip_nodes[i]].daemon = True
+                # thread_dictionary[ip_nodes[i]].daemon = True
                 thread_dictionary[ip_nodes[i]].start()
                 i += 1
 

@@ -21,7 +21,7 @@ from GUI.app_new_session_surity_check import App_new_session_surity_check
 from GUI.app_start_dialog import App_start_dialog
 from GUI.temp_splash_screen import Splash_screen
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QShortcut, QKeySequence
+from PySide6.QtGui import QShortcut, QKeySequence, QIcon
 # Importing from PySide6
 from PySide6.QtWidgets import QApplication, QMessageBox
 
@@ -149,6 +149,8 @@ class Abstract_Main_GUI(ABC):
 
 class Main_Gui(Abstract_Main_GUI, ABC):
     def __init__(self):
+        self.end_timer = None
+        self.start_timer = None
         self._sheet_creater_task_status = None
         self._running_config_pre_checks_task = None
         self._running_config_pre_checks_task_status = None
@@ -243,14 +245,12 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         :param result: string containing the status of the task
         :return: None 
         """
-        # print(self.task_running)
-        # print(self._thread.isRunning())
-        # print(f"{(self.task_running == 'Running Config Pre Checks') =}")
+
         if self.task_running == 'Sheet Creater':
-            self._template_checks_task_status = result
+            self._sheet_creater_task_status = result
             self.task_running = ''
             logging.debug(
-                f"Got the template_checks task status as {self._template_checks_task_status} for vendor {self.vendor_selected()}"
+                f"Got the sheet_creater task status as {self._sheet_creater_task_status}!!"
             )
 
             if self._thread.isRunning():
@@ -258,10 +258,10 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
             if result == 'Successful':
                 self.information_message(title="    Task Successfully Completed!",
-                                         message=f" Template Checks Task successfully completed for {self.vendor_selected()}")
+                                         message=f" Sheet Creater Task successfully completed!!")
 
-            self.label_and_database_updater(task='Running Config Pre Checks',
-                                            status=self._template_checks_task_status)
+            self.label_and_database_updater(task='Sheet Creater',
+                                            status=self._sheet_creater_task_status)
 
         if self.task_running == 'Template Checks':
             self._template_checks_task_status = result
@@ -277,10 +277,12 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                 self.information_message(title="    Task Successfully Completed!",
                                          message=f" Template Checks Task successfully completed for {self.vendor_selected()}")
 
-            self.label_and_database_updater(task='Running Config Pre Checks',
+            self.label_and_database_updater(task='Template Checks',
                                             status=self._template_checks_task_status)
 
         if self.task_running == 'Running Config Pre Checks':
+            self.end_timer = time.time()
+            print((self.end_timer-self.start_timer), ' seconds')
             self._running_config_pre_checks_task = result
             print(f'{self._running_config_pre_checks_task =}')
             self.task_running = ''
@@ -311,12 +313,12 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
         _message = QMessageBox()
         _message.setText(message)
-        # _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
+        _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
         _message.setWindowTitle(title)
         _message.setIcon(QMessageBox.Icon.Critical)
         _message.setStandardButtons(QMessageBox.StandardButton.Ok)
         _message.setDefaultButton(QMessageBox.StandardButton.Ok)
-        # _message.buttonClicked.connect(_message.close)
+        _message.buttonClicked.connect(_message.close)
 
         _message.exec()
 
@@ -331,12 +333,12 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         message = str(message)
         _message = QMessageBox()
         _message.setText(str(message))
-        # _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
+        _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
         _message.setWindowTitle(title)
         _message.setIcon(QMessageBox.Icon.Warning)
         _message.setStandardButtons(QMessageBox.StandardButton.Ok)
         _message.setDefaultButton(QMessageBox.StandardButton.Ok)
-        # _message.buttonClicked.connect(_message.close)
+        _message.buttonClicked.connect(_message.close)
 
         _message.exec()
 
@@ -351,12 +353,12 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         message = str(message)
         _message = QMessageBox()
         _message.setText(str(message))
-        # _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
+        _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
         _message.setWindowTitle(title)
         _message.setIcon(QMessageBox.Icon.Information)
         _message.setStandardButtons(QMessageBox.StandardButton.Ok)
         _message.setDefaultButton(QMessageBox.StandardButton.Ok)
-        # _message.buttonClicked.connect(_message.close)
+        _message.buttonClicked.connect(_message.close)
 
         _message.exec()
 
@@ -574,12 +576,13 @@ class Main_Gui(Abstract_Main_GUI, ABC):
     def sheet_creater_task(self) -> None:
         if self.task_running == '':
             logging.debug(f"Setting the status of the Sheet Creater Task Label to \'In Progress\'")
-            self.label_and_database_updater(task='Sheet Creater',
-                                            status="In Progress")
-
-            logging.debug("Setting the Task_Running variable to \'Sheet Creater\'")
             self.task_running = 'Sheet Creater'
             self._sheet_creater_task_status = 'In Progress'
+            self.label_and_database_updater(task='Sheet Creater',
+                                            status=self._sheet_creater_task_status)
+
+            logging.debug("Setting the Task_Running variable to \'Sheet Creater\'")
+
 
             try:
                 self.host_details_path = self.app_first_window.host_details_file
@@ -628,19 +631,22 @@ class Main_Gui(Abstract_Main_GUI, ABC):
     # Method for Template Checks Task
     def template_checks_task(self) -> None:
         if self.task_running == '':
-            self.task_running = 'Template Checks'
-            self._template_checks_task_status = 'In Progress'
-            self.label_and_database_updater(task='Template Checks',
-                                            status=self._template_checks_task_status)
+            if self.app_main_window.main_window_ui.template_checks_label.text() != 'Successful':
+                self.task_running = 'Template Checks'
+                self._template_checks_task_status = 'In Progress'
+                self.label_and_database_updater(task='Template Checks',
+                                                status=self._template_checks_task_status)
 
-            if self._template_checks_task_status == 'Successful':
-                logging.debug(
-                    f"User clicked on the Template Checks Button even though it was successfully completed for {self.app_main_window.current_vendor('')}"
-                )
-                self.warning_message(title="Task Already Successfully Completed!",
-                                     message="Template Checks Task is already successfully completed!")
-            else:
+                # if self._template_checks_task_status == 'Successful':
+                #     logging.debug(
+                #         f"User clicked on the Template Checks Button even though it was successfully completed for {self.app_main_window.current_vendor('')}"
+                #     )
+                #     self.warning_message(title="Task Already Successfully Completed!",
+                #                          message="Template Checks Task is already successfully completed!")
+                # else:
+
                 try:
+                    # self.start_time = time.
                     _username = (os.popen(cmd=r'cmd.exe /C "echo %username%"').read()).strip()
 
                     _app_data_local_saved_host_details_path = f"C:\\Users\\{_username}\\AppData\\Local\\CLI_Automation\\host_details_file_path.txt"
@@ -706,6 +712,9 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                 #     self.label_and_database_updater(task='Template Checks',
                 #                                     status=self._template_checks_task_status)
 
+            else:
+                self.warning_message(title='Task Already Successfully Completed!',
+                                     message=f'Template Checks Task for \'{self.vendor_selected()}\' has already been successfully completed!!')
         else:
             self.warning_message(title="Task Already Running!",
                                  message=f"{self.task_running} is already running! Please Wait for the completion of "
@@ -714,72 +723,77 @@ class Main_Gui(Abstract_Main_GUI, ABC):
     # Method for Running Config Pre Checks Task
     def running_config_pre_checks_task(self) -> None:
         if self.task_running == '':
-            self._running_config_pre_checks_task_status = 'In Progress'
-            self.label_and_database_updater(task='Running Config Pre Checks',
-                                            status=self._running_config_pre_checks_task_status)
+            if self.app_main_window.main_window_ui.running_config_pre_checks_label.text().strip() != 'Successful':
+                self._running_config_pre_checks_task_status = 'In Progress'
+                self.label_and_database_updater(task='Running Config Pre Checks',
+                                                status=self._running_config_pre_checks_task_status)
 
-            self.task_running = 'Running Config Pre Checks'
+                self.task_running = 'Running Config Pre Checks'
 
-            try:
-                if (len(self.vendor_selected()) == 0) or (self.vendor_selected().strip() == 'Select Vendor'):
-                    raise CustomException(title='Vendor Not Selected!',
-                                          message='Kindly Select the Vendor before proceeding!')
+                try:
+                    self.start_timer = time.time()
+                    if (len(self.vendor_selected()) == 0) or (self.vendor_selected().strip() == 'Select Vendor'):
+                        raise CustomException(title='Vendor Not Selected!',
+                                              message='Kindly Select the Vendor before proceeding!')
 
-                if self.app_main_window.main_window_ui.template_checks_label.text().strip() != 'Successful':
-                    raise CustomException(title='Template Checks Not Performed Successfully!',
-                                          message=f"Kindly perform the Template Checks for \'{self.vendor_selected()}\' first!" +
-                                                  "\nThen Try Again!")
+                    if self.app_main_window.main_window_ui.template_checks_label.text().strip() != 'Successful':
+                        raise CustomException(title='Template Checks Not Performed Successfully!',
+                                              message=f"Kindly perform the Template Checks for \'{self.vendor_selected()}\' first!" +
+                                                      "\nThen Try Again!")
 
-                else:
-                    from Running_Config_Checks import running_config_checks
-                    _vendor_selected = self.vendor_selected()
-                    # temp_thread = CustomThread(target=running_config_checks, kwargs={'vendor_selected': self.vendor_selected()})
-                    # temp_thread.daemon = True
-                    # temp_thread.start()
-                    # self._running_config_pre_checks_task_status = temp_thread.join()
-                    #
-                    # print(f"line 676 {self.task_running =}")
-                    self._thread = CustomQthread(target=running_config_checks,
-                                                 kwargs={'vendor_selected': _vendor_selected})
-                    logging.info(f'Created the CustomQThread for Template Checks for {_vendor_selected}')
-                    self._thread.finished_signal.connect(self.qthread_result_handler)
+                    else:
+                        from Running_Config_Checks import running_config_checks
+                        _vendor_selected = self.vendor_selected()
+                        # temp_thread = CustomThread(target=running_config_checks, kwargs={'vendor_selected': self.vendor_selected()})
+                        # temp_thread.daemon = True
+                        # temp_thread.start()
+                        # self._running_config_pre_checks_task_status = temp_thread.join()
+                        #
+                        # print(f"line 676 {self.task_running =}")
+                        self._thread = CustomQthread(target=running_config_checks,
+                                                     kwargs={'vendor_selected': _vendor_selected})
+                        logging.info(f'Created the CustomQThread for Template Checks for {_vendor_selected}')
+                        self._thread.finished_signal.connect(self.qthread_result_handler)
 
-                    # _thread.finished.connect(_thread.deleteLater)
-                    logging.info(f"Starting the Running Config Checks Pre CustomQThread for {_vendor_selected}")
-                    self._thread.start()
 
-                    # self._running_config_pre_checks_task_status = running_config_checks(vendor_selected= _vendor_selected)
+                        # _thread.finished.connect(_thread.deleteLater)
+                        logging.info(f"Starting the Running Config Checks Pre CustomQThread for {_vendor_selected}")
+                        self._thread.start()
 
-            except CustomException as e:
-                logging.error(f"{traceback.format_exc()}\nTitle --> {e.title}!\nMessage --> {e.message}\n")
+                        # self._running_config_pre_checks_task_status = running_config_checks(vendor_selected= _vendor_selected)
 
-                if (len(self.vendor_selected()) > 0) and (self.vendor_selected().strip() != 'Select Vendor'):
+                except CustomException as e:
+                    logging.error(f"{traceback.format_exc()}\nTitle --> {e.title}!\nMessage --> {e.message}\n")
+
+                    if (len(self.vendor_selected()) > 0) and (self.vendor_selected().strip() != 'Select Vendor'):
+                        self._running_config_pre_checks_task_status = 'Unsuccessful'
+                        self.label_and_database_updater(task='Running Config Pre Checks',
+                                                        status=self._running_config_pre_checks_task_status)
+
+                    else:
+                        self._running_config_pre_checks_task_status = ''
+                        self.label_and_database_updater(task='Running Config Pre Checks',
+                                                        status=self._running_config_pre_checks_task_status)
+
+                except Exception as e:
+                    logging.error(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
+                    self.critical_message(title="Exception Occurred!",
+                                          message=str(e))
                     self._running_config_pre_checks_task_status = 'Unsuccessful'
                     self.label_and_database_updater(task='Running Config Pre Checks',
                                                     status=self._running_config_pre_checks_task_status)
 
-                else:
-                    self._running_config_pre_checks_task_status = ''
-                    self.label_and_database_updater(task='Running Config Pre Checks',
-                                                    status=self._running_config_pre_checks_task_status)
-
-            except Exception as e:
-                logging.error(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
-                self.critical_message(title="Exception Occurred!",
-                                      message=str(e))
-                self._running_config_pre_checks_task_status = 'Unsuccessful'
-                self.label_and_database_updater(task='Running Config Pre Checks',
-                                                status=self._running_config_pre_checks_task_status)
-
-            # finally:
-            # self.task_running = ''
-            # logging.debug(
-            #     f"Got the running_config_pre_checks task status as {self._running_config_pre_checks_task_status} for vendor {self.vendor_selected()}"
-            # )
-            #
-            # self.label_and_database_updater(task='Running Config Pre Checks',
-            #                                 status=self._running_config_pre_checks_task_status)
-
+                # finally:
+                # self.task_running = ''
+                # logging.debug(
+                #     f"Got the running_config_pre_checks task status as {self._running_config_pre_checks_task_status} for vendor {self.vendor_selected()}"
+                # )
+                #
+                # self.label_and_database_updater(task='Running Config Pre Checks',
+                #                                 status=self._running_config_pre_checks_task_status)
+            else:
+                self.warning_message(title='Task Already Successfully Completed!',
+                                     message=f'Running Config Pre Checks Task for \'{self.vendor_selected()}\' has already been successfully completed!!')
         else:
             self.warning_message(title="Task Already Running!",
                                  message=f"{self.task_running} is already running! Please Wait for the completion of task execution!")

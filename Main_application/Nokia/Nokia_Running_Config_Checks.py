@@ -8,7 +8,7 @@ import time
 import numpy as np
 import pickle
 from pathlib import Path
-
+from threading import Event
 from tkinter import messagebox
 
 from Main_application.CustomThread import CustomThread
@@ -222,37 +222,54 @@ def section_running_config_checks(dictionary, ip_node, running_config_backup_fil
 
     sections = list(dictionary.keys())
     thread_dictionary = {}
-    i = 0
-    while i < len(sections):
-        try:
-            if (len(dictionary[sections[i]]) > 0) and (sections[i] in section_dictionary.keys()):
-                # Creating a variable to call the module according to section selected in particular iteration
-                module_to_be_called = section_dictionary[sections[i]]
-
-                # Creating Thread to call the main_func() of the module corresponding to selected iteration section.
-                thread_dictionary[sections[i]] = CustomThread(target=module_to_be_called.main_func,
-                                                              args=(dictionary[sections[i]], ip_node, running_config_backup_file_lines))
-                thread_dictionary[sections[i]].daemon = True
-                thread_dictionary[sections[i]].start()
-            i += 1
-
-        except ImportError as e:
-            temp_flag = 'Unsuccessful'
-            logging.error(f"ImportError Occurred!======>\n\n{traceback.format_exc()}{e}")
-            # messagebox.showerror("Exception Occurred!",e)
-
-        except Exception as e:
-            temp_flag = 'Unsuccessful'
-            logging.error(f"Exception Occurred!======>\n\n{traceback.format_exc()}{e}")
-            # messagebox.showerror("Exception Occurred!",e)
+    logging.info(f"Setting an event to wait until the thread is completed")
+    # event = Event()
+    # i = 0
+    # while i < len(sections):
+    #     try:
+    #         if (len(dictionary[sections[i]]) > 0) and (sections[i] in section_dictionary.keys()):
+    #             # Creating a variable to call the module according to section selected in particular iteration
+    #             module_to_be_called = section_dictionary[sections[i]]
+    #
+    #             # Creating Thread to call the main_func() of the module corresponding to selected iteration section.
+    #             thread_dictionary[sections[i]] = CustomThread(target=module_to_be_called.main_func,
+    #                                                           args=(dictionary[sections[i]], ip_node, running_config_backup_file_lines))
+    #             # thread_dictionary[sections[i]].daemon = True
+    #             thread_dictionary[sections[i]].start()
+    #         i += 1
+    #
+    #     except ImportError as e:
+    #         temp_flag = 'Unsuccessful'
+    #         logging.error(f"ImportError Occurred!======>\n\n{traceback.format_exc()}{e}")
+    #         # messagebox.showerror("Exception Occurred!",e)
+    #
+    #     except Exception as e:
+    #         temp_flag = 'Unsuccessful'
+    #         logging.error(f"Exception Occurred!======>\n\n{traceback.format_exc()}{e}")
+    #         # messagebox.showerror("Exception Occurred!",e)
+    #
+    # thread_result_dictionary = {}
+    #
+    # event.set()
+    #
+    # i = 0
+    # while i < len(sections):
+    #     if sections[i] in section_dictionary.keys():
+    #         thread_result_dictionary[sections[i]] = thread_dictionary[sections[i]].join()
+    #     i += 1
 
     thread_result_dictionary = {}
-
     i = 0
     while i < len(sections):
-        if sections[i] in section_dictionary.keys():
-            thread_result_dictionary[sections[i]] = thread_dictionary[sections[i]].join()
+        if (len(dictionary[sections[i]]) > 0) and (sections[i] in section_dictionary.keys()):
+            # Creating a variable to call the module according to section selected in particular iteration
+            module_to_be_called = section_dictionary[sections[i]]
+
+            # Creating Thread to call the main_func() of the module corresponding to selected iteration section.
+            thread_result_dictionary[sections[i]] = module_to_be_called.main_func(dictionary[sections[i]], ip_node, running_config_backup_file_lines)
+
         i += 1
+    logging.info(f"Got the thread_result_dictionary as \n{thread_result_dictionary} ")
 
     return thread_result_dictionary
 
@@ -316,6 +333,39 @@ def main_func(**kwargs):
 
         thread_dictionary = {}
 
+        # i = 0
+        # while i < len(ip_hostname_mapping_ips):
+        #     selected_ip = ip_hostname_mapping_ips[i]
+        #     file_to_be_open = file_mapping_dictionary[ip_hostname_mapping[selected_ip]]
+        #
+        #     with open(file_to_be_open, "r") as f:
+        #         running_config_backup_file_lines = f.readlines()
+        #         f.close()
+        #
+        #     thread_dictionary[selected_ip] = CustomThread(target=section_running_config_checks,
+        #                                                   args=(nokia_design_input_data[selected_ip],
+        #                                                         selected_ip,
+        #                                                         running_config_backup_file_lines))
+        #     # thread_dictionary[selected_ip].daemon = True
+        #     thread_dictionary[selected_ip].start()
+        #     i += 1
+
+        logging.debug("Completed Creation of IP Node Threads")
+
+        # main_func_event = Event()
+        #
+        # thread_result_dictionary = {}
+        # i = 0
+        # while i < len(ip_hostname_mapping_ips):
+        #     selected_ip = ip_hostname_mapping_ips[i]
+        #     thread_result_dictionary[selected_ip] = thread_dictionary[selected_ip].join()
+        #     logging.info(f"Got the result_dictionary for {selected_ip}\n{thread_result_dictionary[selected_ip]}")
+        #     # time.sleep(0.4)
+        #     i += 1
+        #
+        # main_func_event.set()
+
+        thread_result_dictionary = {}
         i = 0
         while i < len(ip_hostname_mapping_ips):
             selected_ip = ip_hostname_mapping_ips[i]
@@ -325,29 +375,13 @@ def main_func(**kwargs):
                 running_config_backup_file_lines = f.readlines()
                 f.close()
 
-            thread_dictionary[selected_ip] = CustomThread(target=section_running_config_checks,
-                                                          args=(nokia_design_input_data[selected_ip],
-                                                                selected_ip,
-                                                                running_config_backup_file_lines))
-            thread_dictionary[selected_ip].daemon = True
-            thread_dictionary[selected_ip].start()
-            i += 1
-
-        logging.debug("Completed Creation of IP Node Threads")
-
-        logging.debug("Stopping all the threads and getting their results")
-
-        thread_result_dictionary = {}
-        i = 0
-        while i < len(ip_hostname_mapping_ips):
-            selected_ip = ip_hostname_mapping_ips[i]
-            thread_result_dictionary[selected_ip] = thread_dictionary[selected_ip].join()
-            logging.info(f"Got the result_dictionary for {selected_ip}\n{thread_result_dictionary[selected_ip]}")
-            time.sleep(0.4)
+            thread_result_dictionary[ip_hostname_mapping_ips[i]] = section_running_config_checks(nokia_design_input_data[selected_ip],
+                                                                                                 selected_ip,
+                                                                                                 running_config_backup_file_lines)
             i += 1
 
         error_message_dict = {}
-
+        logging.debug("Stopping all the threads and getting their results")
         logging.debug("Checking the thread result")
         i = 0
         while i < len(ip_hostname_mapping_ips):
@@ -402,7 +436,7 @@ def main_func(**kwargs):
 
         if len(error_message) > 0:
             node_ips = list(error_message_dict.keys())
-            error_message_to_show = f"Section-wise Wrong Input observed in uploaded 'Design Input Sheet' for node ips :\n\n({', '.join(node_ips)})\n\nPlease Check the Error Input File \'Nokia_Nodes_Running_Config_Checks_Error.txt\' for further details!"
+            error_message_to_show = f"Section-wise Wrong Input observed in uploaded 'Design Input Sheet' for below node ips :\n\n({', '.join(node_ips)})\n\nPlease Check the Error Input File \'Nokia_Nodes_Running_Config_Checks_Error.txt\' for further details!"
             logging.info("Raising CustomException for informing user about the wrong inputs on Nokia Design Input Sheet")
 
             flag = 'Unsuccessful'

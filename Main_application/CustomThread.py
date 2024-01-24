@@ -1,6 +1,8 @@
 # Importing Thread Class
 from threading import Thread
 from Custom_Exception import CustomException
+import logging
+from tkinter import messagebox
 from PySide6.QtCore import QThread, Signal
 
 
@@ -18,10 +20,15 @@ class CustomThread(Thread):
         self._returnValue = None  # variable returning value after executing
 
     def run(self):
+        # try:
         if self._target is not None:
             self._returnValue = self._target(*self._args, **self._kwargs)
+        # except Exception as e:
+        #     logging.error(f"Got Exception '{type(e)}' in {str(e)}")
+        #     messagebox.showerror(title=str(type(e)),
+        #                          message=str(e))
 
-    def join(self) -> object:
+    def join(self) -> object | int | float | str | list | dict | set | tuple:
         Thread.join(self)
         return self._returnValue
 

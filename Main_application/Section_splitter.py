@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import logging
 import traceback
-from MessageBox import messagebox
+# from MessageBox import messagebox
+from tkinter import messagebox
 
 
 def section_splitter(dataframe: pd.DataFrame, method_called: str):
@@ -56,7 +57,7 @@ def section_splitter(dataframe: pd.DataFrame, method_called: str):
                 while j < len(dataframe):
                     # If either we have reached the last row of the dataframe or encountered another row with special section string
                     # we are breaking the loop
-                    if ((j + 2) < len(dataframe)) and (str(dataframe.iloc[j + 2, 0]).strip().__contains__(string_to_be_found)):
+                    if (j < len(dataframe)) and (str(dataframe.iloc[j, 0]).strip().__contains__(string_to_be_found)):
                         break
 
                     else:
@@ -92,4 +93,4 @@ def section_splitter(dataframe: pd.DataFrame, method_called: str):
 
     except Exception as e:
         logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
-        messagebox().showerror("Exception Occurred!", str(e))
+        messagebox.showerror("Exception Occurred!", str(e))

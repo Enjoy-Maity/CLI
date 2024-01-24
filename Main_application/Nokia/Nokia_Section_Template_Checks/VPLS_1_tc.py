@@ -81,6 +81,13 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
     if len(df) > 0:
         reason = ''
 
+        # df_columns = list(df.columns)
+        #
+        # if 'MPBN Node Type ( Router/Switch )' in df_columns:
+        #     reason = 'MPBN Node Type missing'
+        #     if df.iloc[0, df.columns.get_loc('MPBN Node Type ( Router/Switch )')] == 'TempNA':
+        #         result_dictionary[reason] = [int(df.iloc[0, df.columns.get_loc('S.No.')])]
+
         i = 0
         while i < len(df):
             if df.iloc[i, df.columns.get_loc('VPLS ID')] == "TempNA":
@@ -170,6 +177,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
                 f"Got the filtered data from intersection between add and modify_delete dfs in VPLS-1 for node ip ('{ip_node}') ==> \n{df[df['VPLS ID'].isin(list(set_intersection_between_Add_and_Modify_Delete_dfs))].to_markdown()}\n")
 
             logging.debug(f"Entered the enteries for 'Common VPLS IDs in Add and Modify/Delete Actions' for node ip {ip_node} for VPLS-1 ==>\n{result_dictionary}\n\n")
+
 
     logging.debug(f"The result_dictionary for node_ip({ip_node}) for VPLS-1 ==>\n {result_dictionary}")
 

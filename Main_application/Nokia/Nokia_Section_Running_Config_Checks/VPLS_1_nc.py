@@ -1,10 +1,12 @@
 import logging
+import traceback
+
 import pandas as pd
 import re
 
 from CustomThread import CustomThread
 from file_lines_handler import File_lines_handler as flh
-from MessageBox import messagebox
+from tkinter import messagebox
 
 service_file_lines_list_block = []
 port_details_file_lines_list_block = []
@@ -14,7 +16,9 @@ sdp_starting_start_lines = []
 sdp_existence_status_dictionary = {}
 sap_lag_starting_lines_from_service_lines_chunk = []
 sap_starting_lines_from_service_lines_chunk = []
-exception_raised = False
+
+
+# exception_raised = False
 
 
 def sap_without_lag_add_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
@@ -39,15 +43,28 @@ def sap_without_lag_add_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: 
     global sap_starting_lines_from_service_lines_chunk
     global port_details_file_lines_list_block
 
+    compiled_pattern = re.compile(pattern=r"[sap,\s,lag]+([esat\-,esat \-,\s,\d,/)]+)")
+
+    logging.info(f'sap_starting_lines_from_service_lines_chunk=>\n{'\n'.join(sap_starting_lines_from_service_lines_chunk)}')
     sap_without_lag_add_dataframe_checks_result_dictionary = {}
 
-    reason = "Port-Detail not found or configured as access and wrong Sap entry found in template"
-    reason2 = "Given Sap entry clash found"
+    reason = "Port-Detail not found or configured as access. So, wrong Sap entry found in template"
+    reason2 = "Given Sap entry (without LAG) clash found"
 
     if (isinstance(port_details_file_lines_list_block, list)) and (isinstance(sap_starting_lines_from_service_lines_chunk, list)):
         i = 0
         while i < len(dataframe):
-            selected_port_details_input_from_dataframe = (dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")]).split()[1]
+            # selected_port_details_input_from_dataframe = (dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")]).split()[1]
+            selected_port_details_input_from_dataframe = str(dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")])
+            pattern_extract = re.search(compiled_pattern, selected_port_details_input_from_dataframe)
+
+            selected_port_details_input_from_dataframe = re.sub(pattern= r"\s", repl= "", string= pattern_extract.group(1))
+
+            if len(selected_port_details_input_from_dataframe) == 0:
+                sap_without_lag_add_dataframe_checks_result_dictionary[reason] = int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")])
+                continue
+
+            logging.info(f"{ip_node}: - {selected_port_details_input_from_dataframe = }")
             selected_detail_input_from_dataframe = dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")]
 
             port_status = False
@@ -98,6 +115,7 @@ def sap_without_lag_add_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: 
                 continue
 
             not_selected_port_details_input_from_dataframe_found_status = False
+            logging.info(f"{ip_node}: - Checking for {selected_detail_input_from_dataframe =}")
             k = 0
             while k < len(sap_starting_lines_from_service_lines_chunk):
                 if sap_starting_lines_from_service_lines_chunk[k].strip().startswith(selected_detail_input_from_dataframe):
@@ -142,13 +160,25 @@ def sap_without_lag_delete_dataframe_checks_func(dataframe: pd.DataFrame, ip_nod
     global sap_starting_lines_from_service_lines_chunk
     global port_details_file_lines_list_block
 
-    reason = "Given Sap Entry Not Found"
-    reason2 = "Port-Detail not found or configured as access and wrong Sap entry found"
+    compiled_pattern = re.compile(pattern= r"[sap,\s,lag]+([esat\-,esat \-,\s,\d,/)]+)")
+
+    reason = "Given Sap Entry (without LAG) Not Found"
+    reason2 = "Port-Detail not found or configured as access. So, wrong Sap entry found"
 
     if (isinstance(port_details_file_lines_list_block, list)) and (isinstance(sap_starting_lines_from_service_lines_chunk, list)):
         i = 0
         while i < len(dataframe):
-            selected_port_details_from_dataframe_input = (dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")]).split()[1]
+            # selected_port_details_from_dataframe_input = (dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")]).strip().split()[1].strip().split(':')[0]
+
+            selected_port_details_from_dataframe_input = str(dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")])
+            pattern_extract = re.search(compiled_pattern, selected_port_details_from_dataframe_input)
+
+            selected_port_details_from_dataframe_input = re.sub(pattern=r"\s", repl="", string=pattern_extract.group(1))
+
+            if len(selected_port_details_from_dataframe_input) == 0:
+                sap_without_lag_delete_dataframe_checks_result_dictionary[reason2] = int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")])
+                continue
+
             selected_sap_details_from_dataframe_input = dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")].strip()
             selected_port_status = False
             selected_port_mode_status = ""
@@ -213,7 +243,7 @@ def sap_without_lag_delete_dataframe_checks_func(dataframe: pd.DataFrame, ip_nod
                 k += 1
 
             if not selected_sap_details_from_dataframe_input_found:
-                if reason2 not in sap_without_lag_delete_dataframe_checks_result_dictionary:
+                if reason not in sap_without_lag_delete_dataframe_checks_result_dictionary:
                     sap_without_lag_delete_dataframe_checks_result_dictionary[reason] = []
                     sap_without_lag_delete_dataframe_checks_result_dictionary[reason].append(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")])
 
@@ -248,48 +278,79 @@ def lag_add_action_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: str) 
     lag_add_action_check_result_dictionary = {}
     global lag_details_file_lines_list_block
     global sap_lag_starting_lines_from_service_lines_chunk
+
+    if isinstance(sap_lag_starting_lines_from_service_lines_chunk, list):
+        logging.info(f"{ip_node}: -sap_lag_starting_lines_from_service_lines_chunk ==> \n{'\n'.join(sap_lag_starting_lines_from_service_lines_chunk)}")
     # print(lag_details_file_lines_list_block)
 
     logging.info(f"starting checks for Add Section lag details check for VPLS-1 of {ip_node}")
     compiled_pattern = re.compile(pattern=r"\d+")
 
-    reason = "Lag not found or configured as access and wrong Sap entry found in input template"
-    reason2 = "Given Sap entry clash found"
+    reason = "Lag not found or configured as access. So, wrong Sap entry found in input template"
+    reason2 = "Given Sap entry (with LAG) clash found"
 
-    if (isinstance(lag_details_file_lines_list_block, list)) and (isinstance(sap_lag_starting_lines_from_service_lines_chunk, list)):
-        i = 0
-        while i < len(dataframe):
-            selected_sap_lag_variable = dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")]
-            lag_in_selected_variable = re.findall(pattern=compiled_pattern,
-                                                  string=selected_sap_lag_variable)[0]
-            logging.info(f"{ip_node}:-  got the lag selected as \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc(r"VPLS ID")]}\'")
-            lag_status = False
-            lag_mode_status = ""
+    i = 0
+    while i < len(dataframe):
+        selected_sap_lag_variable = dataframe.iloc[i, dataframe.columns.get_loc("Sap/Lag")]
+        lag_in_selected_variable = re.findall(pattern=compiled_pattern,
+                                              string=selected_sap_lag_variable)[0]
+        logging.info(f"{ip_node}:-  got the lag selected as \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc(r"VPLS ID")]}\'")
+        lag_status = False
+        lag_mode_status = ""
 
-            logging.info(f"{ip_node}:- Starting loop")
-            lag_status_index = 0
-            j = 0
-            while j < len(lag_details_file_lines_list_block):
-                if lag_details_file_lines_list_block[j].strip().startswith(f"lag {lag_in_selected_variable}"):
-                    logging.info(f"{ip_node}:- lag found for \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc(r"VPLS ID")]}\'")
-                    lag_status = True
-                    lag_status_index = j
+        logging.info(f"{ip_node}:- Starting loop")
+        lag_status_index = 0
+        j = 0
+        while j < len(lag_details_file_lines_list_block):
+            if lag_details_file_lines_list_block[j].strip().startswith(f"lag {lag_in_selected_variable}"):
+                logging.info(f"{ip_node}:- lag found for \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc(r"VPLS ID")]}\'")
+                lag_status = True
+                lag_status_index = j
 
-                if lag_status and (j > lag_status_index):
-                    if lag_details_file_lines_list_block[j].startswith(f"mode"):
-                        lag_mode_status = lag_details_file_lines_list_block[j].split()[1].strip()
-                        logging.info(
-                            f"{ip_node}:- lag status mode found \'{lag_mode_status}\' for \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")]}\'")
+            if lag_status and (j > lag_status_index):
+                if lag_details_file_lines_list_block[j].startswith(f"mode"):
+                    lag_mode_status = lag_details_file_lines_list_block[j].split()[1].strip()
+                    logging.info(
+                        f"{ip_node}:- lag status mode found \'{lag_mode_status}\' for \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")]}\'")
 
-                    if lag_details_file_lines_list_block[j].lower() == 'exit':
-                        break
+                if lag_details_file_lines_list_block[j].lower() == 'exit':
+                    break
 
-                j += 1
+            j += 1
 
-            if not lag_status:
-                logging.info(f"{ip_node}: - lag \'{lag_in_selected_variable}\' not found for {dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")]}")
-                logging.info(f"{ip_node}: - {lag_add_action_check_result_dictionary.keys()}")
-                logging.info(f"{ip_node}: - {(reason not in lag_add_action_check_result_dictionary) =}")
+        if not lag_status:
+            logging.info(f"{ip_node}: - lag \'{lag_in_selected_variable}\' not found for {dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")]}")
+            logging.info(f"{ip_node}: - {lag_add_action_check_result_dictionary.keys() =}")
+            logging.info(f"{ip_node}: - {(reason not in lag_add_action_check_result_dictionary) =}")
+            if reason not in lag_add_action_check_result_dictionary:
+                lag_add_action_check_result_dictionary[reason] = []
+                lag_add_action_check_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+
+            else:
+                lag_add_action_check_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+
+            i += 1
+
+            continue
+
+        if lag_status and (lag_mode_status == "access"):
+            if selected_sap_lag_variable.__contains__(":"):
+                if len(selected_sap_lag_variable.split(":")[1].strip()) == 0:
+                    logging.info(
+                        f"{ip_node}:- wrong sap_lag entry found for 'access' mode found \'{selected_sap_lag_variable}\' for \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc(r"VPLS ID")]}\'")
+                    if reason not in lag_add_action_check_result_dictionary:
+                        lag_add_action_check_result_dictionary[reason] = []
+                        lag_add_action_check_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+
+                    else:
+                        lag_add_action_check_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+
+                    i += 1
+
+                    continue
+            else:
+                logging.info(
+                    f"{ip_node}:- wrong sap_lag entry found for 'access' mode found \'{selected_sap_lag_variable}\' without \'vpls details\'\nfor \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc(r"VPLS ID")]}\'")
                 if reason not in lag_add_action_check_result_dictionary:
                     lag_add_action_check_result_dictionary[reason] = []
                     lag_add_action_check_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
@@ -301,57 +362,29 @@ def lag_add_action_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: str) 
 
                 continue
 
-            if lag_status and (lag_mode_status == "access"):
-                if selected_sap_lag_variable.__contains__(":"):
-                    if len(selected_sap_lag_variable.split(":")[1].strip()) == 0:
-                        logging.info(
-                            f"{ip_node}:- wrong sap_lag entry found for 'access' mode found \'{selected_sap_lag_variable}\' for \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc(r"VPLS ID")]}\'")
-                        if reason not in lag_add_action_check_result_dictionary:
-                            lag_add_action_check_result_dictionary[reason] = []
-                            lag_add_action_check_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+        selected_sap_lag_variable_founding_status = False
+        logging.info(f"{ip_node}: - Finding {selected_sap_lag_variable} in sap_lag_starting_lines_from_service_lines_chunk")
 
-                        else:
-                            lag_add_action_check_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+        k = 0
+        while k < len(sap_lag_starting_lines_from_service_lines_chunk):
+            if sap_lag_starting_lines_from_service_lines_chunk[k].startswith(selected_sap_lag_variable):
+                logging.info(f'{ip_node}: - Setting selected sap founding status value as False for \'{dataframe.iloc[i, dataframe.columns.get_loc('VPLS ID')]}\'\n')
+                selected_sap_lag_variable_founding_status = True
+                break
+            k += 1
 
-                        i += 1
+        if selected_sap_lag_variable_founding_status:
+            logging.info(f'{ip_node}: - selected sap founded  for \'{dataframe.iloc[i, dataframe.columns.get_loc('VPLS ID')]}\'\nSo, adding to result dictionary\n')
+            if reason2 not in lag_add_action_check_result_dictionary:
+                lag_add_action_check_result_dictionary[reason2] = []
+                lag_add_action_check_result_dictionary[reason2].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
 
-                        continue
-                else:
-                    logging.info(
-                        f"{ip_node}:- wrong sap_lag entry found for 'access' mode found \'{selected_sap_lag_variable}\' without \'vpls details\'\nfor \'{lag_in_selected_variable}\' for vpls_id \'{dataframe.iloc[i, dataframe.columns.get_loc(r"VPLS ID")]}\'")
-                    if reason not in lag_add_action_check_result_dictionary:
-                        lag_add_action_check_result_dictionary[reason] = []
-                        lag_add_action_check_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
-
-                    else:
-                        lag_add_action_check_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
-
-                    i += 1
-
-                    continue
-
-            selected_sap_lag_variable_founding_status = False
-
-            k = 0
-            while k < len(sap_lag_starting_lines_from_service_lines_chunk):
-                if sap_lag_starting_lines_from_service_lines_chunk[k].startswith(selected_sap_lag_variable):
-                    logging.info(f'{ip_node}: - Setting selected sap founding status value as True for \'{dataframe.iloc[i, dataframe.columns.get_loc('VPLS ID')]}\'\n')
-                    selected_sap_lag_variable_founding_status = True
-                    break
-                k += 1
-
-            if not selected_sap_lag_variable_founding_status:
-                logging.info(f'{ip_node}: - selected sap not founded  for \'{dataframe.iloc[i, dataframe.columns.get_loc('VPLS ID')]}\'\nSo, adding to result dictionary\n')
-                if reason2 not in lag_add_action_check_result_dictionary:
-                    lag_add_action_check_result_dictionary[reason2] = []
-                    lag_add_action_check_result_dictionary[reason2].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
-
-                else:
-                    lag_add_action_check_result_dictionary[reason2].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
-            logging.info(
-                f"{ip_node}: - got the lag_add_action_check_result_dictionary as {lag_add_action_check_result_dictionary} for iteration {i}"
-            )
-            i += 1
+            else:
+                lag_add_action_check_result_dictionary[reason2].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+        logging.info(
+            f"{ip_node}: - got the lag_add_action_check_result_dictionary as {lag_add_action_check_result_dictionary} for iteration {i}"
+        )
+        i += 1
 
     logging.debug(f"Returning lag_add_action_check_result_dictionary from lag_add_action_dataframe_checks_func for VPLS-1 for ip_node ==> {ip_node}\n{lag_add_action_check_result_dictionary}\n")
 
@@ -359,7 +392,7 @@ def lag_add_action_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: str) 
 
 
 def lag_delete_action_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
-    """Performs the checks for lag section on Sequence Add action dataframe
+    """Performs the checks for lag section on Sequence Delete action dataframe
 
     Args:
         dataframe (pd.DataFrame): _description_ : dataframe containing the input details for which the checks are needed
@@ -380,7 +413,7 @@ def lag_delete_action_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: st
     global lag_details_file_lines_list_block
     global sap_lag_starting_lines_from_service_lines_chunk
     # print(lag_details_file_lines_list_block)
-    reason = "Given Sap Entry Not Found"
+    reason = "Given Sap Entry (with LAG) Not Found"
     reason2 = "LAG Entry Not Found"
 
     compiled_pattern = re.compile(pattern=r"\d+")
@@ -493,7 +526,7 @@ def sdp_checks_add_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict
     global sdp_starting_start_lines
     global mesh_sdp_lines_start_lines
 
-    reason = "Given 'S:Add' Mesh-SDP clash found"
+    reason = "Given Mesh-SDP clash found"
     # reason2 = ""
 
     compiled_digits_pattern = re.compile(pattern=r"\d+")
@@ -535,6 +568,8 @@ def sdp_checks_add_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict
 
             i += 1
 
+    logging.info(f"{ip_node}: -\n{'\n'.join([f'{key} : {value}' for key, value in sdp_existence_status_dictionary.items()])}")
+
     logging.debug(
         f"Returning the result_dictionary from sdp_checks_add_dataframe_func for ip_node \'{ip_node}\':\n\'{'\n'.join([f'{key}:{value}' for key, value in sdp_checks_add_dataframe_result_dictionary.items()])}")
     return sdp_checks_add_dataframe_result_dictionary
@@ -562,7 +597,7 @@ def sdp_checks_delete_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> d
     global sdp_starting_start_lines
     global mesh_sdp_lines_start_lines
 
-    reason = "Given 'S:Delete' Mesh-SDP not found"
+    reason = "Given Mesh-SDP not found"
 
     compiled_digits_pattern = re.compile(pattern=r"\d+")
 
@@ -658,44 +693,94 @@ def add_action_checks(dataframe: pd.DataFrame, running_config_backup_file_lines:
     logging.debug(f"got the dataframe for ip_node {ip_node} =>\n{dataframe.to_markdown()}")
     add_action_checks_result_dictionary = {}
 
-    reason = "Action:Add VPLS ID Clash found"
-    i = 0
-    while i < len(dataframe):
-        vpls_id_to_be_searched = int(str(dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")]).strip())
-        j = 0
-        while j < len(vpls_id_starter_lines_filter):
+    reason = "Action:Add, VPLS ID Clash found"
+    reason2 = "VPLS Name Clash found"
 
-            if vpls_id_starter_lines_filter[j].startswith(f"vpls {vpls_id_to_be_searched} "):
-                logging.info(f"Clash found for {vpls_id_to_be_searched} for \'ADD\' action for ip node \'{ip_node}\'")
-                if reason not in add_action_checks_result_dictionary:
-                    add_action_checks_result_dictionary[reason] = []
-                    add_action_checks_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+    if str(dataframe.iloc[0, dataframe.columns.get_loc('MPBN Node Type ( Router/Switch )')]).strip().lower() == 'router':
+        # print(ip_node, "inside router condition")
+        i = 0
+        while i < len(dataframe):
+            vpls_id_to_be_searched = ''
+            vpls_name_to_be_searched = str(dataframe.iloc[i, dataframe.columns.get_loc("VPLS Name")])
+            vpls_id_status = False
+            vpls_name_status = False
 
-                else:
-                    add_action_checks_result_dictionary[reason].append(dataframe)
-                break
-            j += 1
-        i += 1
+            if isinstance(dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")], (int | float)):
+                vpls_id_to_be_searched = int(dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")])
+            else:
+                vpls_id_to_be_searched = int(str(dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")]).strip())
 
-    reason2 = "Action:Add VPLS Name Clash found"
-    service_name_lines_filter_list = flh().file_lines_starter_filter(file_lines_list=running_config_backup_file_lines,
-                                                                     start_word="service-name ")
+            j = 0
+            while j < len(vpls_id_starter_lines_filter):
 
-    i = 0
-    while i < len(dataframe):
-        vpls_name_to_be_searched = str(dataframe.iloc[i, dataframe.columns.get_loc("VPLS Name")])
-        j = 0
-        while j < len(service_name_lines_filter_list):
-            if vpls_id_starter_lines_filter[j].startswith(f"service-name \"{vpls_name_to_be_searched}\""):
-                if reason2 not in add_action_checks_result_dictionary:
-                    add_action_checks_result_dictionary[reason2] = []
-                    add_action_checks_result_dictionary[reason2].append(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")])
+                if vpls_id_starter_lines_filter[j].startswith(f"vpls {vpls_id_to_be_searched} "):
+                    logging.info(f"Clash found for {vpls_id_to_be_searched} for \'ADD\' action for ip node \'{ip_node}\'")
+                    vpls_id_status = True
+                    if reason not in add_action_checks_result_dictionary:
+                        add_action_checks_result_dictionary[reason] = []
+                        add_action_checks_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
 
-                else:
-                    add_action_checks_result_dictionary[reason2].append(dataframe)
-                break
-            j += 1
-        i += 1
+                    else:
+                        add_action_checks_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+
+                if vpls_id_starter_lines_filter[j].__contains__(vpls_name_to_be_searched):
+                    logging.info(f"Clash found for {vpls_name_to_be_searched} for \'ADD\' action for ip node \'{ip_node}\'")
+                    vpls_name_status = True
+                    if reason2 not in add_action_checks_result_dictionary:
+                        add_action_checks_result_dictionary[reason2] = []
+                        add_action_checks_result_dictionary[reason2].append(int(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')]))
+
+                    else:
+                        add_action_checks_result_dictionary[reason2].append(int(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')]))
+
+                if vpls_id_status or vpls_name_status:
+                    break
+
+                j += 1
+            i += 1
+
+    if str(dataframe.iloc[0, dataframe.columns.get_loc('MPBN Node Type ( Router/Switch )')]).strip().lower() == 'switch':
+        # print("Inside Switch condition")
+        service_name_lines_filter_list = flh().file_lines_starter_filter(file_lines_list=running_config_backup_file_lines,
+                                                                         start_word="service-name ")
+        logging.debug(f"service name lines filter list\n{'\n'.join(service_name_lines_filter_list)}")
+
+        i = 0
+        while i < len(dataframe):
+            vpls_id_to_be_searched = ''
+            vpls_name_to_be_searched = str(dataframe.iloc[i, dataframe.columns.get_loc("VPLS Name")])
+
+            if isinstance(dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")], (int | float)):
+                vpls_id_to_be_searched = int(dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")])
+            else:
+                vpls_id_to_be_searched = int(str(dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")]).strip())
+
+            j = 0
+            while j < len(vpls_id_starter_lines_filter):
+                if vpls_id_starter_lines_filter[j].startswith(f"vpls {vpls_id_to_be_searched} "):
+                    logging.info(f"Clash found for {vpls_id_to_be_searched} for \'ADD\' action for ip node \'{ip_node}\'")
+                    if reason not in add_action_checks_result_dictionary:
+                        add_action_checks_result_dictionary[reason] = []
+                        add_action_checks_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+
+                    else:
+                        add_action_checks_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+                    break
+                j += 1
+
+            j = 0
+            while j < len(service_name_lines_filter_list):
+                if service_name_lines_filter_list[j].startswith(f"service-name \"{vpls_name_to_be_searched}\""):
+                    logging.info(f"Clash found for {vpls_name_to_be_searched} for \'ADD\' action for ip node \'{ip_node}\'")
+                    if reason2 not in add_action_checks_result_dictionary:
+                        add_action_checks_result_dictionary[reason2] = []
+                        add_action_checks_result_dictionary[reason2].append(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")])
+
+                    else:
+                        add_action_checks_result_dictionary[reason2].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+                    break
+                j += 1
+            i += 1
 
     logging.debug(
         f"Returning the result_dictionary from add_action_checks for ip_node \'{ip_node}\' :\n\'{'\n'.join([f'{key}:{value}' for key, value in add_action_checks_result_dictionary.items()])}")
@@ -739,7 +824,11 @@ def modify_delete_action_checks(dataframe: pd.DataFrame, running_config_backup_f
 
     modify_delete_action_checks_result_dictionary = {}
 
-    reason = "Action:Modify/Delete VPLS ID not found"
+    if str(ip_node).endswith('93'):
+        logging.info(f"{ip_node}: -vpls_id_starter_lines_filter =>\n{'\n'.join(vpls_id_starter_lines_filter)}")
+
+    reason = "Action:Modify, VPLS ID not found"
+
     i = 0
     while i < len(dataframe):
         vpls_id_to_be_searched = int(dataframe.iloc[i, dataframe.columns.get_loc("VPLS ID")])
@@ -754,10 +843,10 @@ def modify_delete_action_checks(dataframe: pd.DataFrame, running_config_backup_f
         if not flag:
             if reason not in modify_delete_action_checks_result_dictionary:
                 modify_delete_action_checks_result_dictionary[reason] = []
-                modify_delete_action_checks_result_dictionary[reason].append(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")])
+                modify_delete_action_checks_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
 
             else:
-                modify_delete_action_checks_result_dictionary[reason].append(dataframe)
+                modify_delete_action_checks_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
         i += 1
 
     if len(modify_delete_action_checks_result_dictionary) > 0:
@@ -817,8 +906,8 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
     sdp_starting_start_lines = []
     sdp_existence_status_dictionary = {}
 
-    global exception_raised
-    exception_raised = False
+    # global exception_raised
+    # exception_raised = False
 
     global sap_lag_starting_lines_from_service_lines_chunk
     sap_lag_starting_lines_from_service_lines_chunk = []
@@ -840,13 +929,13 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
 
     vpls_id_starter_lines_filter = flh().file_lines_starter_filter(file_lines_list=running_config_backup_file_lines,
                                                                    start_word="vpls")
-    logging.info(f"Got the vpls_id_starter_lines_filter for \"{ip_node}\"")
+    logging.info(f"Got the vpls_id_starter_lines_filter for \"{ip_node}\"=>\n{'\n'.join(vpls_id_starter_lines_filter)}")
 
     service_file_lines_list_block_thread = CustomThread(target=flh().file_lines_chunk_divisor,
                                                         args=(running_config_backup_file_lines,
                                                               'echo \"Service Configuration\"',
                                                               r'^echo\s([a-z,A-Z,\s,\"]\w+)\sConfiguration\"$'))
-    service_file_lines_list_block_thread.daemon = True
+    # service_file_lines_list_block_thread.daemon = True
     service_file_lines_list_block_thread.start()
     # service_file_lines_list_block = flh().file_lines_chunk_divisor(file_lines_list=running_config_backup_file_lines,
     #                                                                start_string='echo \"Service Configuration\"',
@@ -858,7 +947,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
                                                              args=(running_config_backup_file_lines,
                                                                    'echo \"Port Configuration\"',
                                                                    r'^echo\s([a-z,A-Z,\s,\"]\w+)\sConfiguration"$'))
-    port_details_file_lines_list_block_thread.daemon = True
+    # port_details_file_lines_list_block_thread.daemon = True
     port_details_file_lines_list_block_thread.start()
     # port_details_file_lines_list_block = flh().file_lines_chunk_divisor(file_lines_list=running_config_backup_file_lines,
     #                                                                     start_string='echo \"Port Configuration\"',
@@ -870,7 +959,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
                                                             args=(running_config_backup_file_lines,
                                                                   'echo \"LAG Configuration\"',
                                                                   r'^echo\s([a-z,A-Z,\s,\"]\w+)\sConfiguration"$'))
-    lag_details_file_lines_list_block_thread.daemon = True
+    # lag_details_file_lines_list_block_thread.daemon = True
     lag_details_file_lines_list_block_thread.start()
     # lag_details_file_lines_list_block = flh().file_lines_chunk_divisor(file_lines_list=running_config_backup_file_lines,
     #                                                                    start_string='echo \"LAG Configuration\"',
@@ -885,17 +974,19 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
     mesh_sdp_lines_start_lines_thread = CustomThread(target=flh().file_lines_starter_filter,
                                                      args=(service_file_lines_list_block,
                                                            "mesh-sdp "))
-    mesh_sdp_lines_start_lines_thread.daemon = True
+    # mesh_sdp_lines_start_lines_thread.daemon = True
     mesh_sdp_lines_start_lines_thread.start()
 
     sdp_starting_start_lines_thread = CustomThread(target=flh().file_lines_starter_filter,
                                                    args=(service_file_lines_list_block,
                                                          "sdp "))
-    sdp_starting_start_lines_thread.daemon = True
+    # sdp_starting_start_lines_thread.daemon = True
     sdp_starting_start_lines_thread.start()
 
     mesh_sdp_lines_start_lines = mesh_sdp_lines_start_lines_thread.join()
-    logging.debug(f"Created file lines filter with lines starting with 'mesh-sdp' for ip_node \'{ip_node}\' with len==>\n{len(mesh_sdp_lines_start_lines)}\n")
+
+    if isinstance(mesh_sdp_lines_start_lines, list):
+        logging.debug(f"Created file lines filter with lines starting with 'mesh-sdp' for ip_node \'{ip_node}\' with len==>\n{len(mesh_sdp_lines_start_lines)}\n")
 
     sdp_starting_start_lines = sdp_starting_start_lines_thread.join()
 
@@ -905,7 +996,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
     # flh().file_lines_starter_filter(file_lines_list=service_file_lines_list_block,
     #                                                                               start_word="sap lag-"))
     logging.debug(f"Creating the file_lines_chunk for sap_lag for VPLS-1 for ip_node ==> {ip_node}")
-    sap_lag_starting_lines_from_service_lines_chunk_thread.daemon = True
+    # sap_lag_starting_lines_from_service_lines_chunk_thread.daemon = True
     sap_lag_starting_lines_from_service_lines_chunk_thread.start()
 
     sap_starting_lines_from_service_lines_chunk_thread = CustomThread(target=flh().file_lines_starter_filter,
@@ -914,7 +1005,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
     # flh().file_lines_starter_filter(file_lines_list=service_file_lines_list_block,
     #                                                                                           start_word="sap ")
 
-    sap_starting_lines_from_service_lines_chunk_thread.daemon = True
+    # sap_starting_lines_from_service_lines_chunk_thread.daemon = True
     sap_starting_lines_from_service_lines_chunk_thread.start()
 
     sap_lag_starting_lines_from_service_lines_chunk = sap_lag_starting_lines_from_service_lines_chunk_thread.join()
@@ -1009,12 +1100,12 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
         )
 
         sap_without_lag_dataframe = dataframe.loc[
-            ((~dataframe["Sap/Lag"].str.strip().str.startswith("TempNA")) & (dataframe["Sap/Lag"].str.strip().str.contains(r"^sap([-,\d,\s,\w]+)/([\d,\s])/([\d,\s])([:,\d,\s]*)$")))]
-        sap_without_lag_add_dataframe = sap_without_lag_dataframe.loc[(sap_without_lag_dataframe["Sequence"]).str.strip().str.endswith("add")]
+            (~dataframe["Sap/Lag"].str.strip().str.startswith("TempNA")) & (dataframe["Sap/Lag"].str.match(r"(\s*)sap([-,\d,\s,\w]+)/([\d,\s])/([\d,\s])([:,\d,\s]*)$"))]
+        sap_without_lag_add_dataframe = sap_without_lag_dataframe.loc[(sap_without_lag_dataframe["Sequence"]).str.strip().str.lower().str.endswith("add")]
         logging.info(
             f"Got the sap_without_lag_add_dataframe for ip \'{ip_node}\'\n{sap_without_lag_add_dataframe.to_markdown()}"
         )
-        sap_without_lag_delete_dataframe = sap_without_lag_dataframe.loc[sap_without_lag_dataframe["Sequence"].str.strip().str.endswith("delete")]
+        sap_without_lag_delete_dataframe = sap_without_lag_dataframe.loc[sap_without_lag_dataframe["Sequence"].str.strip().str.lower().str.endswith("delete")]
         logging.info(
             f"Got the sap_without_lag_delete_dataframe for ip \'{ip_node}\'\n{sap_without_lag_delete_dataframe.to_markdown()}"
         )
@@ -1200,29 +1291,29 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
         #                 result_dictionary.update(temp_var)
 
     except Exception as e:
-        exception_raised = True
-        logging.error("Exeption Occured!==>\n Title ==> {type/}")
+        # exception_raised = True
+        logging.error(f"{traceback.format_exc()}\nException Occurred!==>\n Title ==> {type(e)}\n Message ==> {str(e)}")
+        title = str(type(e))
+        message = str(e)
+        messagebox.showerror(title=title,
+                             message=message)
         result_dictionary = {}
-
 
     finally:
         # print(ip_node)
         # print(result_dictionary)
-        if not exception_raised:
-            if len(result_dictionary) > 0:
-                for key, values in result_dictionary.items():
-                    result_dictionary[key] = sorted(list(set(values)))
+        if len(result_dictionary) > 0:
+            logging.info(f"Got the result dictionary for node {ip_node} \n {result_dictionary}")
+            for key, values in result_dictionary.items():
+                result_dictionary[key] = sorted(list(set(values)))
 
-                logging.debug(f"Returning the result dictionary from VPLS_1_nc for ip_node \'{ip_node}\' ===>\n {'\n'.join([f'{key} : {value}' for key, value in result_dictionary.items()])}\n")
+            logging.debug(f"Returning the result dictionary from VPLS_1_nc for ip_node \'{ip_node}\' ===>\n {'\n'.join([f'{key} : {value}' for key, value in result_dictionary.items()])}\n")
 
-            else:
-                result_dictionary = {}
-                logging.debug(
-                    "Returning an empty dictionary."
-                )
-        if exception_raised:
-            return
-
+        else:
+            result_dictionary = {}
+            logging.debug(
+                "Returning an empty dictionary."
+            )
         logging.shutdown()
 
         return result_dictionary
