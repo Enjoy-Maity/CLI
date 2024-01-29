@@ -5,7 +5,7 @@ import pandas as pd
 import re
 
 from CustomThread import CustomThread
-from file_lines_handler import File_lines_handler as flh
+from Main_application.file_lines_handler import File_lines_handler as flh
 from tkinter import messagebox
 
 service_file_lines_list_block = []
@@ -44,6 +44,7 @@ def sap_without_lag_add_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: 
     global port_details_file_lines_list_block
 
     compiled_pattern = re.compile(pattern=r"[sap,\s,lag]+([esat\-,esat \-,\s,\d,/)]+)")
+    second_compiled_pattern = re.compile
 
     logging.info(f'sap_starting_lines_from_service_lines_chunk=>\n{'\n'.join(sap_starting_lines_from_service_lines_chunk)}')
     sap_without_lag_add_dataframe_checks_result_dictionary = {}

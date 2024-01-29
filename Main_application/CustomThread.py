@@ -32,6 +32,44 @@ class CustomThread(Thread):
         Thread.join(self)
         return self._returnValue
 
+class WorkerProcess:
+    def wrapper_method(self, *args):
+        self._args =  args
+        self._kwargs = {}
+        self._neo_args = ()
+        self.return_value = None
+        
+        if len(self._args) > 0:
+            self._target = self._args[0]
+            
+            if len(self._args) == 2:
+                if isinstance(args[1], dict):
+                    self._kwargs = self._args[1]
+                
+                    self.return_value = self._target(**self._kwargs)
+                
+                else:
+                    self._neo_args = self._args[1]
+                    self.return_value = self._target(*self._neo_args)
+            
+            if len(self._args) == 3:
+                
+                i = 1
+                while i <= 2:
+                    if isinstance(self._args[i], dict):
+                        self._kwargs = self._args[i]
+                        
+                    if isinstance(self._args[i], (list, tuple)):
+                        self._neo_args = tuple(self._args[i])
+                        
+                    i += 1
+                    
+                self.return_value = self_target(*self._neo_args, **self._kwargs)
+                
+            return self.return_value
+            
+        else:
+            return None
 
 class CustomQthread(QThread):
     finished_signal = Signal(object)
