@@ -8,6 +8,7 @@ import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
+from multiprocessing import freeze_support
 
 import pandas
 from Main_application.CustomThread import CustomQthread
@@ -149,6 +150,7 @@ class Abstract_Main_GUI(ABC):
 
 class Main_Gui(Abstract_Main_GUI, ABC):
     def __init__(self):
+        self._cli_preparation_task_status = None
         self.end_timer = None
         self.start_timer = None
         self._sheet_creater_task_status = None
@@ -281,10 +283,10 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                                             status=self._template_checks_task_status)
 
         if self.task_running == 'Running Config Pre Checks':
-            self.end_timer = time.time()
-            print((self.end_timer-self.start_timer), ' seconds')
+            # self.end_timer = time.time()
+            # print((self.end_timer - self.start_timer), ' seconds')
             self._running_config_pre_checks_task = result
-            print(f'{self._running_config_pre_checks_task =}')
+            # print(f'{self._running_config_pre_checks_task =}')
             self.task_running = ''
             logging.debug(
                 f"Got the running_config_pre_checks task status as {self._running_config_pre_checks_task_status} for vendor {self.vendor_selected()}"
@@ -300,6 +302,50 @@ class Main_Gui(Abstract_Main_GUI, ABC):
             self.label_and_database_updater(task='Running Config Pre Checks',
                                             status=self._running_config_pre_checks_task)
             # print("line264")
+
+        if self.task_running == 'CLI Preparation':
+            self._cli_preparation_task_status = result
+            # print(f'{self._running_config_pre_checks_task =}')
+            self.task_running = ''
+            logging.debug(
+                f"Got the cli_preparation task status as {self._cli_preparation_task_status} for vendor {self.vendor_selected()}"
+            )
+
+            if self._thread.isRunning():
+                self._thread.exit()
+
+            if result == 'Successful':
+                self.information_message(title="    Task Successfully Completed!",
+                                         message=f"CLI Preparation Task successfully completed for {self.vendor_selected()}")
+
+            self.label_and_database_updater(task='CLI Preparation',
+                                            status=self._cli_preparation_task_status)
+
+
+    # Method for raising pop-ups for asking question to the user to get the response
+    def ask_yes_no(self, title: str, message: str) -> str:
+        """
+        Creates pop-ups for asking question to the user for response
+        :param title:  Sets the message Title
+        :param message: Sets the Message Text
+        :return: str : containing the response from user
+        """
+        message = str(message)
+
+        _message = QMessageBox()
+        _message.setText(message)
+        _message.setWindowIcon(QIcon(":/Main_Application_window/ericsson-blue-icon-logo.ico"))
+        _message.setWindowTitle(title)
+        _message.setIcon(QMessageBox.Icon.Question)
+        _message.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        _message.setDefaultButton(QMessageBox.StandardButton.Yes)
+        response = _message.exec()
+
+        if response == QMessageBox.StandardButton.Yes:
+            return 'yes'
+
+        if response == QMessageBox.StandardButton.No:
+            return 'no'
 
     # Method for raising error messages
     def critical_message(self, title: str, message: str) -> None:
@@ -506,7 +552,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
     # Method for submit button of first window
     def submit_button_method(self):
         self.host_details_path = self.app_first_window.host_details_file
-        print(self.host_details_path)
+        # print(self.host_details_path)
         if not self.host_details_path.strip().endswith(".xlsx"):
             logging.error(
                 f"raised QMessageBox critical message title= Host Details Not Selected!,\nhost_details = {self.host_details_path}")
@@ -582,7 +628,6 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                                             status=self._sheet_creater_task_status)
 
             logging.debug("Setting the Task_Running variable to \'Sheet Creater\'")
-
 
             try:
                 self.host_details_path = self.app_first_window.host_details_file
@@ -755,7 +800,6 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                         logging.info(f'Created the CustomQThread for Template Checks for {_vendor_selected}')
                         self._thread.finished_signal.connect(self.qthread_result_handler)
 
-
                         # _thread.finished.connect(_thread.deleteLater)
                         logging.info(f"Starting the Running Config Checks Pre CustomQThread for {_vendor_selected}")
                         self._thread.start()
@@ -800,39 +844,79 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
     # Method for CLI Preparation
     def cli_preparation_task(self) -> None:
+        response = 'yes'
         if self.task_running == '':
+            try:
+                if (len(self.vendor_selected()) == 0) or (self.vendor_selected().strip() == 'Select Vendor'):
+                    raise CustomException('Vendor Not Selected!', 'Kindly Select the Vendor before proceeding!')
+
+            except CustomException:
+                self.task_running = ''
+                self.label_and_database_updater(task= 'CLI Preparation',
+                                                status= '')
+
             self.vendor = self.vendor_selected()
             if ((isinstance(self.vendor, str)) and (len(self.vendor) > 0)) and (self.vendor.strip() != 'Select Vendor'):
-                _cli_preparation_task_status = 'In Progress'
-                self.label_and_database_updater(task='CLI Preparation',
-                                                status=_cli_preparation_task_status)
+                if self.app_main_window.main_window_ui.cli_preparation_status_label.text().strip() != 'Successful':
 
-                self.task_running = 'CLI Preparation Task'
+                    if self.app_main_window.main_window_ui.template_checks_label.text().strip() == 'Successful':
+                        self._cli_preparation_task_status = 'In Progress'
+                        self.label_and_database_updater(task='CLI Preparation',
+                                                        status=self._cli_preparation_task_status)
 
-                try:
-                    if (len(self.vendor_selected()) == 0) or (self.vendor_selected().strip() == 'Select Vendor'):
-                        raise CustomException('Vendor Not Selected!', 'Kindly Select the Vendor before proceeding!')
+                        self.task_running = 'CLI Preparation'
+
+                        if self.app_main_window.main_window_ui.running_config_pre_checks_label.text().strip() == '':
+                            response = self.ask_yes_no(title='CLI Preparation Task Confirmation!',
+                                                       message='\'Running Config Pre Checks\' have not initiated by the user, Do you still want to proceed for CLI Preparation?')
+
+                        if self.app_main_window.main_window_ui.running_config_pre_checks_label.text().strip() == 'Unsuccessful':
+                            response = self.ask_yes_no(title= 'CLI Preparation Task Confirmation!',
+                                                       message= '\'Running Config Pre Checks\' result showing as \'Unsuccessful\', Do you still want to proceed for CLI Preparation?')
+
+                        if response == 'yes':
+                            try:
+                                from Main_application.CLI_preparation import main_func
+                                # self._cli_preparation_task_status = main_func(vendor_selected= self.vendor_selected())
+                                self._thread = CustomQthread(target=main_func,
+                                                             kwargs={'vendor_selected': self.vendor_selected()})
+
+                                logging.info("Created the CustomQThread for CLI Preparation")
+                                self._thread.finished_signal.connect(self.qthread_result_handler)
+
+                                logging.info(f"Starting the CLI Preparation CustomQThread for {self.vendor_selected()}")
+                                self._thread.start()
+
+                            except CustomException as e:
+                                logging.error(f"{traceback.format_exc()}\nTitle --> {e.title}!\nMessage --> {e.message}\n")
+
+                                if (len(self.vendor_selected()) > 0) and (self.vendor_selected().strip() != 'Select Vendor'):
+                                    self._cli_preparation_task_status = 'Unsuccessful'
+                                    self.label_and_database_updater(task='CLI Preparation',
+                                                                    status=self._cli_preparation_task_status)
+
+                            except Exception as e:
+                                logging.debug(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
+                                self._cli_preparation_task_status = 'Unsuccessful'
+                                self.label_and_database_updater(task='CLI Preparation',
+                                                                status=self._cli_preparation_task_status)
+
+                            # finally:
+                            #     logging.debug(f"Updating the label for vendor() _cli_preparation_status ==> ")
+                            #     self.label_and_database_updater(task='CLI Preparation',
+                            #                                     status=self._cli_preparation_task_status)
+
+                        else:
+                            self.information_message(title='CLI Preparation Task Confirmation!',
+                                                     message= 'Aborting the CLI Preparation Task as per your input, Please complete the \'Running Config Pre Checks\' task and then proceed for CLI Preparation again!')
+
                     else:
-                        from .CLI_preparation import main_func
-                        _cli_preparation_task_status = main_func(file_name=self.app_first_window)
+                        self.warning_message(title= "Template Checks Not Successful!",
+                                             message= "Kindly complete the Template Checks successfully first and then try again!")
 
-                except CustomException as e:
-                    logging.error(f"{traceback.format_exc()}\nTitle --> {e.title}!\nMessage --> {e.message}\n")
-
-                    if (len(self.vendor_selected()) > 0) and (self.vendor_selected().strip() != 'Select Vendor'):
-                        _cli_preparation_task_status = 'Unsuccessful'
-
-                    else:
-                        _cli_preparation_task_status = ''
-
-                except Exception as e:
-                    logging.debug(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
-                    _cli_preparation_task_status = 'Unsuccessful'
-
-                finally:
-                    logging.debug(f"Updating the label for vendor() _cli_preparation_status ==> ")
-                    self.label_and_database_updater(task='CLI Preparation',
-                                                    status=_cli_preparation_task_status)
+                else:
+                    self.warning_message(title='Task Already Successfully Completed!',
+                                         message=f'CLI Preparation Task for \'{self.vendor_selected()}\' has already been successfully completed!!')
 
             else:
                 self.critical_message(title='Vendor Not Selected!',
@@ -1305,7 +1389,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                     if str(_data.iloc[0, _data.columns.get_loc('CLI_Preparation')]) != 'TempNA':
                         _value = str(_data.iloc[0, _data.columns.get_loc('CLI_Preparation')])
                         # self.app_main_window.main_window_ui.cli_preparation_status_label.setText(_value)
-                        self.app_main_window.task_method_status_updater(task="CLI Preparation ",
+                        self.app_main_window.task_method_status_updater(task="CLI Preparation",
                                                                         status=_value)
 
                         logging.info(f"cli_preparation_status_label Text is set to \'{_value}\' for vendor \'{_vendor}\'")
@@ -1422,7 +1506,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         # Got the result as existing session detected
         if result == "existing session detected":
             logging.debug("Got the result as existing session is detected!")
-            print("Hello")
+            # print("Hello")
             i = 65
             while i <= 100:
                 time.sleep(0.4)
@@ -1445,6 +1529,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
 
 if __name__ == '__main__':
+    freeze_support()
     app = Main_Gui()
     app.main()
 

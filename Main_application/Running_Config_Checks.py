@@ -142,7 +142,7 @@ def running_config_checks(**kwargs) -> str:
     # logging.captureWarnings(capture=True)
 
     vendor_selected = kwargs['vendor_selected']
-    print(type(vendor_selected))
+    # print(type(vendor_selected))
 
     if 'host_details' in kwargs:
         host_details = kwargs['host_details']
@@ -251,7 +251,8 @@ def running_config_checks(**kwargs) -> str:
             f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n"
         )
         flag = 'Unsuccessful'
-        messagebox.showerror("Exception Occurred!", str(e))
+        messagebox.showerror(title="Exception Occurred!",
+                             message=str(e))
 
     finally:
         del host_details_df

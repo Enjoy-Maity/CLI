@@ -146,7 +146,7 @@ class App_Main_Window(QWidget):
             if task == 'CLI Preparation':
                 self.main_window_ui.cli_preparation_status_label.setStyleSheet(
                     u"#cli_preparation_status_label{ \n"
-                    f"color: {self.cli_preparation_status_label_color}; \n"
+                    f"color: {self.color_dictionary[status]}; \n"
                     "}"
                 )
 
@@ -156,6 +156,22 @@ class App_Main_Window(QWidget):
                 )
 
                 self.main_window_ui.cli_preparation_status_label.setText(
+                    QCoreApplication.translate("Main_Application_Window", status, None)
+                )
+
+            if task == 'Running Config Post Checks':
+                self.main_window_ui.running_config_post_checks_label.setStyleSheet(
+                    u"#running_config_post_checks_label{ \n"
+                    f"color: {self.color_dictionary[status]}; \n"
+                    "}"
+                )
+
+                logging.debug(
+                    f"Setting the running_config_post_checks label text to {status} and "
+                    f"coloring it {self.color_dictionary[status]}"
+                )
+
+                self.main_window_ui.running_config_post_checks_label.setText(
                     QCoreApplication.translate("Main_Application_Window", status, None)
                 )
 
@@ -196,6 +212,14 @@ class App_Main_Window(QWidget):
                     QCoreApplication.translate("Main_Application_Window", status, None)
                 )
 
+            if task == 'Running Config Post Checks':
+                logging.debug(
+                    f"Setting the cli_preparation label to {status}"
+                )
+                self.main_window_ui.running_config_post_checks_label.setText(
+                    QCoreApplication.translate("Main_Application_Window", status, None)
+                )
+
     def table_view_data_loader(self, data: pandas.DataFrame | None) -> None:
         if isinstance(data, pandas.DataFrame):
             self.data = data
@@ -205,6 +229,7 @@ class App_Main_Window(QWidget):
         self.main_window_ui.task_database_tableview.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.main_window_ui.task_database_tableview.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.main_window_ui.task_database_tableview.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
+
         # palette = QPalette()
         # palette.setBrush(QPalette.Window, cr= Qt.BackgroundRole, brush=self.create_gradient_brush())
         # self.main_window_ui.task_database_tableview.horizontalHeader().setBackgroundRole(palette)
@@ -216,6 +241,7 @@ class App_Main_Window(QWidget):
                                                                   "	background-color: rgb(190, 190, 190);\n"
                                                                   "	alternate-background-color: rgb(210, 210, 210);\n"
                                                                   "border-radius:8px;\n"
+                                                                  "border:1px solid;\n"
                                                                   "gridline-color: rgb(0,0,0);\n"
                                                                   "border:1px solid;\n"
                                                                   "font:10pt 'Ericsson Hilda';\n"

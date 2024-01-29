@@ -438,7 +438,9 @@ class Ui_Main_Application_Window(object):
         self.task_database_tableview.setDragDropMode(QAbstractItemView.InternalMove)
         self.task_database_tableview.setAlternatingRowColors(True)
         self.task_database_tableview.setSelectionMode(QAbstractItemView.NoSelection)
-        self.task_database_tableview.setGridStyle(Qt.NoPen)
+        # self.task_database_tableview.setGridStyle(Qt.NoPen)
+        self.task_database_tableview.setGridStyle(Qt.SolidLine)
+        # self.task_database_tableview.setGridStyle(Qt.DotLine)
 
         # self.task_database_tableview.setColumnWidth(0, 50)
         # self.task_database_tableview.setColumnWidth(1, 20)

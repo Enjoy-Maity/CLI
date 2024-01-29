@@ -181,7 +181,7 @@ def error_message_writer(parent_folder: str, error_message_dict: dict) -> str:
         i += 1
 
     with open(error_file, 'w') as f:
-        print(f"Inside Main_func of Nokia now writing message line 366")
+        # print(f"Inside Main_func of Nokia now writing message line 366")
         f.write(error_message)
         f.close()
     del f
