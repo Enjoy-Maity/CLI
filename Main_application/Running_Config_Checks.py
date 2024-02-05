@@ -33,7 +33,7 @@ def host_details_pickle_checker() -> str:
     except Exception as e:
         logging.error(f"Exception Occurred\nTitle=>{type(e)}\n\t{e}")
         messagebox.showerror(title=f"{type(e)}",
-                               message=str(e))
+                             message=str(e))
         return ""
 
 
@@ -67,7 +67,7 @@ def hostnames_to_config_backup_file_mapping(list_of_filenames: list, list_of_hos
     #                     level=logging.DEBUG)
     # logging.captureWarnings(capture=True)
 
-    error_file_for_host_name_not_found = []
+    # error_file_for_host_name_not_found = []
     result_dictionary = {}
     list_of_filenames = sorted(list_of_filenames)
     list_of_filepaths = [os.path.join(parent_directory_of_config_backup_files, filename) for filename in
@@ -115,23 +115,23 @@ def running_config_checks(**kwargs) -> str:
 
     global flag
     flag = ''
-    log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
-    Path(log_file_path).mkdir(parents=True, exist_ok=True)
-
-    global log_file
-    log_file = os.path.join(log_file_path, "Running_Config_Checks(Node_Checks).log")
-
-    today = datetime.now()
-    today = today.replace(hour=0, minute=0, second=0)
+    # log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
+    # Path(log_file_path).mkdir(parents=True, exist_ok=True)
+    #
+    # global log_file
+    # log_file = os.path.join(log_file_path, "Running_Config_Checks(Node_Checks).log")
+    #
+    # today = datetime.now()
+    # today = today.replace(hour=0, minute=0, second=0)
 
     # print(today)
-    if os.path.exists(log_file):
-        # getting the creation time of the log file
-        log_file_create_time = datetime.fromtimestamp(os.path.getctime(log_file))
-        # print(log_file_create_time)
-
-        if log_file_create_time < today:
-            os.remove(log_file)
+    # if os.path.exists(log_file):
+    #     # getting the creation time of the log file
+    #     log_file_create_time = datetime.fromtimestamp(os.path.getctime(log_file))
+    #     # print(log_file_create_time)
+    #
+    #     if log_file_create_time < today:
+    #         os.remove(log_file)
 
     # logging.basicConfig(filename=log_file,
     #                     filemode="a",

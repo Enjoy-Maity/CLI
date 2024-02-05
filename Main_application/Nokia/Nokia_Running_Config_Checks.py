@@ -1,14 +1,10 @@
 import os
-import sys
 import logging
 import traceback
 import importlib
-import pandas as pd
-import time
 import numpy as np
 import pickle
 from pathlib import Path
-from threading import Event
 from tkinter import messagebox
 
 from Main_application.CustomThread import CustomThread
@@ -125,7 +121,7 @@ def error_message_dict_filter(dictionary: dict) -> dict:
 
 def error_message_writer(parent_folder: str, error_message_dict: dict) -> str:
     """
-
+    Writes the error message in a file.
     :param parent_folder: parent folder of the selected host_details
     :param error_message_dict: dictionary containing error details
     :return: error_message (str): contains the error message that has been written
@@ -192,13 +188,13 @@ def error_message_writer(parent_folder: str, error_message_dict: dict) -> str:
 
 def section_running_config_checks(dictionary, ip_node, running_config_backup_file_lines) -> dict:
     """
-        Creates thread for calling section wise modules for Template Checks
+        Creates thread for calling section wise modules for Running Config Checks
 
         Arguments : (dictionary,ip_node)
             dictionary ===> dict
                 description =====> {'Section Name' : dataframe containing data for the Section}
                                     'Section Name' ======> Section name, Example -> VPLS-1, VPLS-2, Layer3, etc.
-                                    dataframe      ======> Dataframe containing the data in the ip node sheet pertaining to corresponding section key.
+                                     dataframe      ======> Dataframe containing the data in the ip node sheet pertaining to corresponding section key.}
             
             ip_node ===> str
                 description =====> node ip for which the dictionary is passed as argument.
@@ -221,8 +217,8 @@ def section_running_config_checks(dictionary, ip_node, running_config_backup_fil
     #                         level=logging.DEBUG)
 
     sections = list(dictionary.keys())
-    thread_dictionary = {}
-    logging.info(f"Setting an event to wait until the thread is completed")
+    # thread_dictionary = {}
+    # logging.info(f"Setting an event to wait until the thread is completed")
     # event = Event()
     # i = 0
     # while i < len(sections):
@@ -331,7 +327,7 @@ def main_func(**kwargs):
 
         ip_hostname_mapping_ips = list(ip_hostname_mapping.keys())
 
-        thread_dictionary = {}
+        # thread_dictionary = {}
 
         # i = 0
         # while i < len(ip_hostname_mapping_ips):
@@ -350,7 +346,7 @@ def main_func(**kwargs):
         #     thread_dictionary[selected_ip].start()
         #     i += 1
 
-        logging.debug("Completed Creation of IP Node Threads")
+        # logging.debug("Completed Creation of IP Node Threads")
 
         # main_func_event = Event()
         #
@@ -374,6 +370,7 @@ def main_func(**kwargs):
             with open(file_to_be_open, "r") as f:
                 running_config_backup_file_lines = f.readlines()
                 f.close()
+            del f
 
             thread_result_dictionary[ip_hostname_mapping_ips[i]] = section_running_config_checks(nokia_design_input_data[selected_ip],
                                                                                                  selected_ip,
@@ -381,8 +378,8 @@ def main_func(**kwargs):
             i += 1
 
         error_message_dict = {}
-        logging.debug("Stopping all the threads and getting their results")
-        logging.debug("Checking the thread result")
+        # logging.debug("Stopping all the threads and getting their results")
+        # logging.debug("Checking the thread result")
         i = 0
         while i < len(ip_hostname_mapping_ips):
             selected_ip = ip_hostname_mapping_ips[i]
@@ -448,6 +445,7 @@ def main_func(**kwargs):
 
     except CustomException as e:
         logging.error(f"raised CustomException==>\n title = {e.title}\n message = {e.message}")
+        flag = 'Unsuccessful'
 
     except Exception as e:
         flag = 'Unsuccessful'

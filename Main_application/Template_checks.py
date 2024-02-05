@@ -333,7 +333,7 @@ def main_func(**kwargs) -> str:
                         if len(thread_return_list[k]) != 0:
                             section_dictionary_for_message[selected_section] = thread_return_list[k]
                     except Exception:
-                        if thread_return_list[k] != None:
+                        if thread_return_list[k] is not None:
                             section_dictionary_for_message[selected_section] = thread_return_list[k]
                     k += 1
                     j += 1
@@ -376,12 +376,13 @@ def main_func(**kwargs) -> str:
                         message_to_be_written = f"{message_to_be_written}\n\n"
                         i += 1
 
-                with open(error_file, 'w') as f:
+                with open(error_file, 'w', encoding='UTF-8') as f:
                     f.write(message_to_be_written)
                     f.close()
 
                 raise CustomException("Input Issue!",
-                                      f"Issues have been observed in uploaded input sheet. To find the issue in detail, Please! check the 'Template_Checks_error_Vendor_wise' inside 'Error_Folder'")
+                                      ("Issues have been observed in uploaded input sheet. To find the issue in detail, " +
+                                      "Please! check the 'Template_Checks_error_Vendor_wise' inside 'Error_Folder'"))
 
             # with open(error_file, 'w') as f:
             #     f.write('')
@@ -416,15 +417,12 @@ def main_func(**kwargs) -> str:
 
             if vendor_selected.upper() == 'CISCO':
                 logging.info("Going to perform template checks on 'Cisco' Design Template")
-                pass
 
             if vendor_selected.upper() == 'HUAWEI':
                 logging.info("Going to perform template checks on 'Huawei' Design Template")
-                pass
 
             if vendor_selected.upper() == 'ERICSSON':
                 logging.info("Going to perform template checks on 'Ericsson' Design Template")
-                pass
 
         if flag == '':
             flag = 'Unsuccessful'
@@ -435,11 +433,13 @@ def main_func(**kwargs) -> str:
     except CustomException as e:
         # global flag;
         flag = 'Unsuccessful'
-        logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntitle = {e.title}\nmessage = {e.message}")
+        logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\n" +
+                      f"title = {e.title}\nmessage = {e.message}")
 
     except AssertionError as e:
         flag = 'Unsuccessful'
-        logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\ntitle = {e.title}\nmessage = {e.message}")
+        logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\n" +
+                      f"title = {type(e)}\nmessage = {str(e)}")
         messagebox.showerror("Wrong Input File", str(e))
 
     except Exception as e:

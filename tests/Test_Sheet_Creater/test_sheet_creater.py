@@ -1,4 +1,3 @@
-import pytest
 import pandas as pd
 # import sys
 import os
@@ -9,7 +8,17 @@ import os
 from Main_application.Sheet_creater import main_func
 
 class Testsheetcreater:
-    
+    """class for tests.
+    """
+    def __init__(self) -> None:
+        self.host_details_1 = None
+        self.host_details_1_df = pd.DataFrame()
+        self.host_details_1_excelfile = None
+        self.host_details_2 = None
+        self.host_details_2_df = pd.DataFrame()
+        self.host_details_3 = None
+        self.host_details_3_df = pd.DataFrame()
+        
     def setup_method(self, method):
         self.host_details_1 = r"C:/CLI_Automation/Test_files/Sheet_creater_test_files/"+"Host_Details.xlsx"
         print(os.path.exists(self.host_details_1))
@@ -21,7 +30,7 @@ class Testsheetcreater:
         
         self.host_details_2 = r"C:/CLI_Automation/Test_files/Sheet_create_test_files/"+"Host_Details_1.xlsx"
         self.host_details_2_df = pd.read_excel(self.host_details_2,
-                                               engine= 'openpyxl', 
+                                               engine= 'openpyxl',
                                                sheet_name= 'Host Details')
         
         self.host_details_3 = r"C:/CLI_Automation/Test_files/Sheet_creater_test_files/Host_Details_2.xlsx"
@@ -41,7 +50,9 @@ class Testsheetcreater:
             Test is Unsuccessful for addition of new but same number of details
         """
         result = main_func(file_name = self.host_details_2)
+        assert result == 'Unsuccessful'
         
     def test_sheet_creater_unsuccessful_2(self):
         result = main_func(file_name=self.host_details_3)
         # Test is Unsuccessful for addition of new details
+        assert result == 'Unsuccessful'

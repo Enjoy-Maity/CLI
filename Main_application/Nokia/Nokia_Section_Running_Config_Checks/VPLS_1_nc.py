@@ -4,7 +4,7 @@ import traceback
 import pandas as pd
 import re
 
-from CustomThread import CustomThread
+from Main_application.CustomThread import CustomThread
 from Main_application.file_lines_handler import File_lines_handler as flh
 from tkinter import messagebox
 
@@ -44,7 +44,7 @@ def sap_without_lag_add_dataframe_checks_func(dataframe: pd.DataFrame, ip_node: 
     global port_details_file_lines_list_block
 
     compiled_pattern = re.compile(pattern=r"[sap,\s,lag]+([esat\-,esat \-,\s,\d,/)]+)")
-    second_compiled_pattern = re.compile
+    # second_compiled_pattern = re.compile
 
     logging.info(f'sap_starting_lines_from_service_lines_chunk=>\n{'\n'.join(sap_starting_lines_from_service_lines_chunk)}')
     sap_without_lag_add_dataframe_checks_result_dictionary = {}
@@ -790,7 +790,7 @@ def add_action_checks(dataframe: pd.DataFrame, running_config_backup_file_lines:
 
 def modify_delete_action_checks(dataframe: pd.DataFrame, running_config_backup_file_lines: list, ip_node: str, vpls_id_starter_lines_filter: list):
     """
-        Performs the checks for the presence of SDP variable in the running config backup files
+        Performs the checks for the presence of VPLS ID in the pre running config backup file
         
         Arguments: (dataframe, running_config_backup_file_lines, ip_node, vpls_id_starter_lines_filter)
         dataframe ===> pandas.DataFrame
@@ -825,8 +825,7 @@ def modify_delete_action_checks(dataframe: pd.DataFrame, running_config_backup_f
 
     modify_delete_action_checks_result_dictionary = {}
 
-    if str(ip_node).endswith('93'):
-        logging.info(f"{ip_node}: -vpls_id_starter_lines_filter =>\n{'\n'.join(vpls_id_starter_lines_filter)}")
+    logging.info(f"{ip_node}: -vpls_id_starter_lines_filter =>\n{'\n'.join(vpls_id_starter_lines_filter)}")
 
     reason = "Action:Modify, VPLS ID not found"
 
@@ -859,7 +858,7 @@ def modify_delete_action_checks(dataframe: pd.DataFrame, running_config_backup_f
     return modify_delete_action_checks_result_dictionary
 
 
-def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_lines: list):
+def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_lines: list) -> dict:
     """
         Performs the Node Checks for VPLS 1 
         
@@ -897,7 +896,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
     # declaring all the global variables as None
 
     global service_file_lines_list_block
-    service_file_lines_list_block = None
+    service_file_lines_list_block = []
 
     global port_details_file_lines_list_block, lag_details_file_lines_list_block, mesh_sdp_lines_start_lines, sdp_starting_start_lines
     global sdp_existence_status_dictionary
@@ -1057,7 +1056,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
             if sdp_existence_status_dictionary is None:
                 sdp_existence_status_dictionary = {}
 
-            logging.debug(f"Creating the thread for mesh_sdp_add checks for ip_node \'{ip_node}\' ==>\n{mesh_sdp_add_df.to_markdown()}\n")
+            logging.debug(f"Calling method for mesh_sdp_add checks for ip_node \'{ip_node}\' ==>\n{mesh_sdp_add_df.to_markdown()}\n")
             mesh_sdp_add_result_dictionary_from_main_func = sdp_checks_add_dataframe_func(mesh_sdp_add_df,
                                                                                           ip_node)
             if len(result_dictionary) == 0:
@@ -1081,7 +1080,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
             if sdp_existence_status_dictionary is None:
                 sdp_existence_status_dictionary = {}
 
-            logging.debug(f"Creating the thread for mesh_sdp_delete checks for ip_node \'{ip_node}\' ==>\n{mesh_sdp_delete_df.to_markdown()}\n")
+            logging.debug(f"Calling method for mesh_sdp_delete checks for ip_node \'{ip_node}\' ==>\n{mesh_sdp_delete_df.to_markdown()}\n")
             mesh_sdp_delete_result_dictionary_from_main_func = sdp_checks_delete_dataframe_func(mesh_sdp_delete_df,
                                                                                                 ip_node)
             if len(result_dictionary) == 0:
@@ -1114,9 +1113,9 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
         # if ser
 
         if (len(sap_lag_add_dataframe) > 0) and ((isinstance(sap_lag_starting_lines_from_service_lines_chunk, list)) and (len(sap_lag_starting_lines_from_service_lines_chunk) > 0)):
-            logging.debug(f"Creating the file_lines_chunk for sap_lag for VPLS-1 for ip_node ==> {ip_node}")
+            # logging.debug(f"Creating the file_lines_chunk for sap_lag for VPLS-1 for ip_node ==> {ip_node}")
 
-            logging.debug(f"Created the sap_lag_starting_file_lines_chunk fo sap_lag for VPLS-1 for ip_node ==> {ip_node} with => {len(sap_lag_starting_lines_from_service_lines_chunk) = }\n")
+            # logging.debug(f"Created the sap_lag_starting_file_lines_chunk fo sap_lag for VPLS-1 for ip_node ==> {ip_node} with => {len(sap_lag_starting_lines_from_service_lines_chunk) = }\n")
 
             lag_add_action_dataframe_checks_result_dictionary_from_main_func = lag_add_action_dataframe_checks_func(sap_lag_add_dataframe,
                                                                                                                     ip_node)
