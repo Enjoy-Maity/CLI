@@ -64,7 +64,7 @@ def error_message_dict_filter(dictionary: dict) -> dict:
                                     k = 0
                                     while k < reason_array.size:
                                         reason = reason_array[k]
-                                        if (dictionary[node][section][reason] is not None) and (isinstance(dictionary[node][section][reason], (list, tuple))):
+                                        if (dictionary[node][section][reason] is not None) and (isinstance(dictionary[node][section][reason], (list, tuple, str))):
                                             if len(dictionary[node][section][reason]) > 0:
                                                 if node not in result_dictionary:
                                                     result_dictionary[node] = {}
@@ -131,7 +131,41 @@ def section_wise_input(dictionary: dict, ip_node: str) -> dict:
     #                     level=logging.DEBUG)
 
     sections = list(dictionary.keys())
-    thread_dictionary = {}
+    # thread_dictionary = {}
+    # i = 0
+    # while i < len(sections):
+    #     try:
+    #         if (len(dictionary[sections[i]]) > 0) and (sections[i] in section_dictionary.keys()):
+    #             # Creating a variable to call the module according to section selected in particular iteration
+    #             module_to_be_called = section_dictionary[sections[i]]
+
+    #             # Creating Thread to call the main_func() of the module corresponding to selected iteration section.
+    #             thread_dictionary[sections[i]] = CustomThread(target=module_to_be_called.main_func,
+    #                                                           args=(dictionary[sections[i]], ip_node))
+    #             # thread_dictionary[sections[i]].daemon = True
+    #             thread_dictionary[sections[i]].start()
+    #         i += 1
+
+    #     except ImportError as e:
+    #         temp_flag = 'Unsuccessful'
+    #         logging.error(f"ImportError Occurred!======>\n\n{traceback.format_exc()}{e}")
+    #         messagebox.showerror("Exception Occurred!", str(e))
+
+    #     except Exception as e:
+    #         temp_flag = 'Unsuccessful'
+    #         logging.error(f"Exception Occurred!======>\n\n{traceback.format_exc()}{e}")
+    #         messagebox.showerror("Exception Occurred!", str(e))
+
+    # thread_result_dictionary = {}
+    # i = 0
+    # while i < len(sections):
+    #     if sections[i] in section_dictionary.keys():
+    #         thread_result_dictionary[sections[i]] = thread_dictionary[sections[i]].join()
+    #     i += 1
+
+    # return thread_result_dictionary
+    global section_dictionary
+    submodules_result_dictionary = {}
     i = 0
     while i < len(sections):
         try:
@@ -139,31 +173,27 @@ def section_wise_input(dictionary: dict, ip_node: str) -> dict:
                 # Creating a variable to call the module according to section selected in particular iteration
                 module_to_be_called = section_dictionary[sections[i]]
 
-                # Creating Thread to call the main_func() of the module corresponding to selected iteration section.
-                thread_dictionary[sections[i]] = CustomThread(target=module_to_be_called.main_func,
-                                                              args=(dictionary[sections[i]], ip_node))
-                # thread_dictionary[sections[i]].daemon = True
-                thread_dictionary[sections[i]].start()
-            i += 1
+                submodules_result_dictionary[sections[i]] = module_to_be_called.main_func(dictionary[sections[i]], ip_node)
 
         except ImportError as e:
             temp_flag = 'Unsuccessful'
             logging.error(f"ImportError Occurred!======>\n\n{traceback.format_exc()}{e}")
             messagebox.showerror("Exception Occurred!", str(e))
+            i += 1
+            continue
 
         except Exception as e:
             temp_flag = 'Unsuccessful'
             logging.error(f"Exception Occurred!======>\n\n{traceback.format_exc()}{e}")
             messagebox.showerror("Exception Occurred!", str(e))
+            i += 1
+            continue
+        
+        else:
+            i += 1
 
-    thread_result_dictionary = {}
-    i = 0
-    while i < len(sections):
-        if sections[i] in section_dictionary.keys():
-            thread_result_dictionary[sections[i]] = thread_dictionary[sections[i]].join()
-        i += 1
 
-    return thread_result_dictionary
+        return submodules_result_dictionary
 
 
 def nokia_main_func(**kwargs) -> str:
@@ -227,18 +257,24 @@ def nokia_main_func(**kwargs) -> str:
         try:
             logging.debug("Started the loop for creation of ip nodes threads")
             thread_dictionary = {}
+            # i = 0
+            # while i < len(ip_nodes):
+            #     thread_dictionary[ip_nodes[i]] = CustomThread(target=section_wise_input,
+            #                                                   args=(vendor_design_input_data[ip_nodes[i]], ip_nodes[i]))
+            #     # thread_dictionary[ip_nodes[i]].daemon = True
+            #     thread_dictionary[ip_nodes[i]].start()
+            #     i += 1
+
+            # logging.debug("Completed creation of ip nodes threads")
+            # i = 0
+            # while i < len(thread_dictionary):
+            #     thread_dictionary[ip_nodes[i]] = thread_dictionary[ip_nodes[i]].join()
+            #     i += 1
+
             i = 0
             while i < len(ip_nodes):
-                thread_dictionary[ip_nodes[i]] = CustomThread(target=section_wise_input,
-                                                              args=(vendor_design_input_data[ip_nodes[i]], ip_nodes[i]))
-                # thread_dictionary[ip_nodes[i]].daemon = True
-                thread_dictionary[ip_nodes[i]].start()
-                i += 1
-
-            logging.debug("Completed creation of ip nodes threads")
-            i = 0
-            while i < len(thread_dictionary):
-                thread_dictionary[ip_nodes[i]] = thread_dictionary[ip_nodes[i]].join()
+                thread_dictionary[ip_nodes[i]] = section_wise_input(vendor_design_input_data[ip_nodes[i]],
+                                                                    ip_nodes[i])
                 i += 1
 
             error_message_dict = {}
@@ -266,7 +302,9 @@ def nokia_main_func(**kwargs) -> str:
             """
                 error_message_dict = {
                     node_ip : {
-                        Section : { reasons : [list of serial numbers with error in template checks]}
+                        Section : { reasons : [list of serial numbers with error in template checks]
+                                    or
+                                    reason : string value}
                     }
                 }
             """
@@ -324,11 +362,15 @@ def nokia_main_func(**kwargs) -> str:
                                 reason = reasons[k]
                                 sr_no_list = error_message_dict[node_ips[i]][sections[j]][reason]
 
-                                if reason.endswith(")"):
+                                if (reason.endswith(")")) and (isinstance(sr_no_list, (list, tuple))):
                                     error_message = f"{error_message}\n\t\t{k + 1}.) {reason} ==>> {', '.join(str(element) for element in sr_no_list)}"
 
                                 else:
-                                    error_message = f"{error_message}\n\t\t{k + 1}.) {reason} for \'S.No.\' ==>> ({', '.join(str(int(element)) for element in sr_no_list)})"
+                                    
+                                    if isinstance(sr_no_list, (list,tuple)):
+                                        error_message = f"{error_message}\n\t\t{k + 1}.) {reason} for \'S.No.\' ==>> ({', '.join(str(int(element)) for element in sr_no_list)})"
+                                    else:
+                                        error_message = f"{error_message}\n\t\t{k + 1}.) {reason} ==>> {sr_no_list}"
                                 k += 1
 
                             error_message = f"{error_message}\n"

@@ -2,7 +2,9 @@ import numpy as np
 import pandas as pd
 import logging
 import os
+import pickle
 from pathlib import Path
+import re
 
 
 def same_vpls_id_found_error_message_generator(dataframe: pd.DataFrame, common_vpls_ids: np.array) -> list:
@@ -29,6 +31,117 @@ def same_vpls_id_found_error_message_generator(dataframe: pd.DataFrame, common_v
         i += 1
 
     return result_list
+
+def sdp_checks_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
+    """Checks for the sdp enteries with sdp section dataframe.
+
+    Args:
+        dataframe (pd.DataFrame): dataframe containing data to be checked
+        ip_node (str): ip_node
+
+    Returns:
+        result_dict_of_sdp_checks(dict): dictionary containing corresponding reasons with list of all the serial numbers pertaining to that error reason
+    """
+    result_dict_of_sdp_checks = {}
+    reason = 'SDP details are missing'
+    reason2 = 'We have found that \'New\' SDP {} inputs are missing in \'SDP\' Section'
+
+    dataframe = dataframe.loc[(~dataframe['Sequence'].str.strip().str.startswith('TempNA')) & (~dataframe['Action'].str.strip().str.startswith('TempNA'))]
+    logging.info(f"{ip_node}: -Got the dataframe after filling blanks with \'TempNA\'=>\n{dataframe.to_markdown()}")
+
+    dataframe_with_mesh_sdp = dataframe.loc[(~dataframe["Mesh-sdp"].str.startswith("TempNA"))]
+    logging.info(f"{ip_node}: - Got the dataframe after filtering rows with \'Mesh-sdp\' data present =>\n{dataframe_with_mesh_sdp.to_markdown()}")
+
+    # Entering the values of dataframe where 'Mesh-sdp' column is non-empty and 'SDP(New/Exist)' is empty.
+    result_dict_of_sdp_checks[reason] = [
+                                            int(element) for element in (dataframe_with_mesh_sdp.loc[(dataframe_with_mesh_sdp['SDP(New/Exist)'].str.strip() == 'TempNA') &
+                                                                                                     (dataframe_with_mesh_sdp['Sequence'].str.strip().str.startswith('ADD'))])['S.No.']
+                                        ]
+    logging.debug(f"{ip_node}: - Got the result dictionary as=>\n{'\n'.join([f'{key}: [ {', '.join([str(element) for element in value])} ]' for key, value in result_dict_of_sdp_checks.items()])}")
+
+    add_sequence_dataframe = dataframe_with_mesh_sdp.loc[dataframe_with_mesh_sdp['Sequence'].str.strip().str.startswith('ADD')]
+    logging.info(f"{ip_node}: - Got the filtered datframe from Mesh-sdp df for sequence action \'Add\'=>\n{add_sequence_dataframe.to_markdown()}")
+    
+    delete_sequence_dataframe = dataframe_with_mesh_sdp.loc[dataframe_with_mesh_sdp['Sequence'].str.strip().str.startswith('DELETE')]
+    logging.info(f"{ip_node}: - Got the filtered datframe from Mesh-sdp df for sequence action \'Delete\'=>\n{delete_sequence_dataframe.to_markdown()}")
+    
+    sdp_existence_entry_given_as_new_df = add_sequence_dataframe.loc[add_sequence_dataframe['SDP(New/Exist)'].str.strip().str.upper() == 'NEW']
+    logging.info(f"{ip_node}: - Got the data for the sdp_existence_entry_given_as_new_df as =>\n{sdp_existence_entry_given_as_new_df.to_markdown()}")
+    
+    sdp_existence_entry_given_as_exist_df = add_sequence_dataframe.loc[add_sequence_dataframe['SDP(New/Exist)'].str.strip().str.upper() == 'EXIST']
+    logging.info(f"{ip_node}: - Got the data for the sdp_existence_entry_given_as_exist_df as =>\n{sdp_existence_entry_given_as_exist_df.to_markdown()}")
+
+    username = os.popen(cmd= r'cmd.exe /C "echo %username%"').read().strip()
+    pickle_file_path = f"C:\\Users\\{username}\\AppData\\Local\\CLI_Automation\\Vendor_pickles\\NOKIA.pickle"
+
+    with open(pickle_file_path, 'rb') as f:
+        nokia_pickle_dictionary = pickle.load(file=f,
+                                              encoding='UTF-8')
+        f.close()
+    
+    logging.info(f"{ip_node}: - Got the dictionary from the NOKIA.pickle as" +
+        '\n'.join([f'{node} : {'\n'.join([f'{reason} : {serial_list}' for reason, serial_list in node_value.items()])}' for node, node_value in nokia_pickle_dictionary]) +
+    "}")
+
+    del f
+    nokia_pickle_dictionary = nokia_pickle_dictionary[ip_node]
+    logging.info(f"{ip_node}: - Got the data for {ip_node}=>\n" +
+                 '\n'.join([f'{section} : \n\t{df.to_markdown()}\n' for section, df in nokia_pickle_dictionary.items()]))
+
+    error_title = "SDP Section Input missing"
+    error_message = "We have found \'New\' sdp cases in vpls section. However, there corresponding inputs are missing in \'SDP\' Section."
+    
+    if sdp_existence_entry_given_as_new_df.shape[0] > 0:
+        if 'SDP' in nokia_pickle_dictionary:
+            compiled_pattern = re.compile(r'\d+')
+            ip_node_sdp_dataframe = nokia_pickle_dictionary[ip_node]['SDP']
+            unique_sdp_enteries = ip_node_sdp_dataframe['sdp'].dropna().unique().char.strip().astype(int)
+            unique_mesh_sdp_enteries = sdp_existence_entry_given_as_new_df['Mesh-sdp'].dropna().unique()
+            temp_list   = []
+            temp_list_2 = []
+
+            i = 0
+            while i < unique_mesh_sdp_enteries.size:
+                sdp_variable = int( ( re.findall(pattern=compiled_pattern, string=str(unique_mesh_sdp_enteries[i])) )[0].strip() )
+                temp_df = sdp_existence_entry_given_as_new_df.loc[sdp_existence_entry_given_as_new_df['Mesh-sdp'] == unique_mesh_sdp_enteries[i]]
+                if sdp_variable not in unique_sdp_enteries:
+                    temp_list.append(int(sdp_variable))
+                    j = 0
+                    while j < temp_df.shape[0]:
+                        temp_list_2.append(int(temp_df.iloc[j, temp_df.columns.get_loc('S.No.')]))
+                        j += 1
+                i += 1
+            if (len(temp_list) > 0) and (len(temp_list_2) > 0):
+                result_dict_of_sdp_checks[reason2.format(tuple(temp_list))] = temp_list_2
+        else:
+            result_dict_of_sdp_checks[error_title] = error_message
+    
+    reason3 = 'We have found that \'Exist\' SDP {} inputs are available in \'SDP\' Section'
+    if sdp_existence_entry_given_as_exist_df.shape[0] > 0:
+        if 'SDP' in nokia_pickle_dictionary:
+            compiled_pattern = re.compile(pattern=r'\d+')
+            unique_mesh_sdp_enteries = sdp_existence_entry_given_as_exist_df['Mesh-sdp'].dropna().unique()
+            ip_node_sdp_dataframe = nokia_pickle_dictionary[ip_node]['SDP']
+            unique_sdp_enteries = ip_node_sdp_dataframe['sdp'].dropna().unique().char.strip().astype(int)
+            temp_list   = []
+            temp_list_2 = []
+
+            i = 0
+            while i < unique_mesh_sdp_enteries.size:
+                sdp_variable = int( (re.findall(pattern=compiled_pattern, string= str(unique_mesh_sdp_enteries[i]))[0]).strip() )
+                temp_df = sdp_existence_entry_given_as_exist_df.loc[sdp_existence_entry_given_as_exist_df['Mesh-sdp'] == unique_mesh_sdp_enteries[i]]
+                if sdp_variable in unique_sdp_enteries:
+                    temp_list.append(sdp_variable)
+                    j = 0
+                    while j < temp_df.shape[0]:
+                        temp_list_2.append(int(temp_df.iloc[j, temp_df.columns.get_loc('S.No.')]))
+                        j += 1
+                i += 1
+            if len(temp_list) > 0:
+                result_dict_of_sdp_checks[reason3.format(temp_list)] = temp_list_2
+        
+        logging.info(f"{ip_node}: - Returning the dictionary result_dict_of_sdp_checks=>\n{'\n'.join([f'{key} : {', '.join(value)}' for key, value in result_dict_of_sdp_checks.items()])}")
+        return result_dict_of_sdp_checks
 
 
 def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
@@ -178,6 +291,11 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
 
             logging.debug(f"Entered the entries for 'Common VPLS IDs in Add and Modify/Delete Actions' for node ip {ip_node} for VPLS-1 ==>\n{result_dictionary}\n\n")
 
+    # Results from sdp_checks_func being updated into the result_dictionary
+    temp_dictionary = sdp_checks_func(dataframe= df,
+                                      ip_node= ip_node)
+    if len(temp_dictionary) > 0:
+        result_dictionary.update(temp_dictionary)
     logging.debug(f"The result_dictionary for node_ip({ip_node}) for VPLS-1 ==>\n {result_dictionary}")
 
     logging.shutdown()

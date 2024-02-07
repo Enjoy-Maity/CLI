@@ -13,7 +13,7 @@ port_details_file_lines_list_block = []
 lag_details_file_lines_list_block = []
 mesh_sdp_lines_start_lines = []
 sdp_starting_start_lines = []
-sdp_existence_status_dictionary = {}
+# sdp_existence_status_dictionary = {}
 sap_lag_starting_lines_from_service_lines_chunk = []
 sap_starting_lines_from_service_lines_chunk = []
 
@@ -528,7 +528,8 @@ def sdp_checks_add_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict
     global mesh_sdp_lines_start_lines
 
     reason = "Given Mesh-SDP clash found"
-    # reason2 = ""
+    reason2 = "Given SDP not found"
+    reason3 = "Given SDP clash found"
 
     compiled_digits_pattern = re.compile(pattern=r"\d+")
 
@@ -540,17 +541,31 @@ def sdp_checks_add_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict
 
             mesh_input_from_dataframe = (dataframe.iloc[i, dataframe.columns.get_loc("Mesh-sdp")]).lower()
             mesh_sdp_input_status = False
+            sdp_found = False
 
             j = 0
             while j < len(sdp_starting_start_lines):
                 if sdp_starting_start_lines[j].strip().startswith(f"sdp {mesh_sdp_digit_variable}"):
-                    sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Found"
+                    sdp_found = True
+                    # sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Found"
+                    if str(dataframe.iloc[i, dataframe.columns.get_loc('SDP(New/Exist)')]).strip().upper() == 'NEW':
+                        if reason3 not in sdp_checks_add_dataframe_result_dictionary.keys():
+                            sdp_checks_add_dataframe_result_dictionary[reason3] = []
+                            sdp_checks_add_dataframe_result_dictionary[reason3].append(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')])
+                        else:
+                            sdp_checks_add_dataframe_result_dictionary[reason3].append(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')])
                     break
                 j += 1
 
-            if not f"sdp {mesh_sdp_digit_variable}" in sdp_existence_status_dictionary:
-                if isinstance(sdp_existence_status_dictionary, dict):
-                    sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Not Found"
+            if not sdp_found:
+                # if isinstance(sdp_existence_status_dictionary, dict):
+                #     sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Not Found"
+                if str(dataframe.iloc[i, 'SDP(New/Exist)']).strip().upper().startswith('EXIST'):
+                        if reason2 not in sdp_checks_add_dataframe_result_dictionary.keys():
+                            sdp_checks_add_dataframe_result_dictionary[reason2] = []
+                            sdp_checks_add_dataframe_result_dictionary[reason2].append(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')])
+                        else:
+                            sdp_checks_add_dataframe_result_dictionary[reason2].append(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')])
 
             k = 0
             while k < len(mesh_sdp_lines_start_lines):
@@ -569,7 +584,7 @@ def sdp_checks_add_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict
 
             i += 1
 
-    logging.info(f"{ip_node}: -\n{'\n'.join([f'{key} : {value}' for key, value in sdp_existence_status_dictionary.items()])}")
+    # logging.info(f"{ip_node}: -\n{'\n'.join([f'{key} : {value}' for key, value in sdp_existence_status_dictionary.items()])}")
 
     logging.debug(
         f"Returning the result_dictionary from sdp_checks_add_dataframe_func for ip_node \'{ip_node}\':\n\'{'\n'.join([f'{key}:{value}' for key, value in sdp_checks_add_dataframe_result_dictionary.items()])}")
@@ -577,6 +592,7 @@ def sdp_checks_add_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict
 
 
 def sdp_checks_delete_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
+
     """Checks for the sdp checks for the delete sequence action
 
     Args:
@@ -610,25 +626,28 @@ def sdp_checks_delete_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> d
 
             mesh_input_from_dataframe = (dataframe.iloc[i, dataframe.columns.get_loc("Mesh-sdp")]).lower()
             mesh_sdp_input_status = False
+            sdp_found = False
 
             j = 0
             while j < len(sdp_starting_start_lines):
                 if sdp_starting_start_lines[j].strip().startswith(f"sdp {mesh_sdp_digit_variable}"):
-                    if isinstance(sdp_existence_status_dictionary, dict):
-                        sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Found"
-                        break
+                    # if isinstance(sdp_existence_status_dictionary, dict):
+                    #     sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Found"
+                    sdp_found = True
+                    break
                 j += 1
 
-            if not f"sdp {mesh_sdp_digit_variable}" in sdp_existence_status_dictionary:
-                reason = "Given 'S:Delete' sdp not found"
-                sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Not Found"
+            # if not f"sdp {mesh_sdp_digit_variable}" in sdp_existence_status_dictionary:
+            if not sdp_found:
+                reason2 = "Given 'S:Delete' sdp not found"
+                # sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Not Found"
 
-                if reason not in sdp_checks_delete_dataframe_result_dictionary:
-                    sdp_checks_delete_dataframe_result_dictionary[reason] = []
-                    sdp_checks_delete_dataframe_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+                if reason2 not in sdp_checks_delete_dataframe_result_dictionary:
+                    sdp_checks_delete_dataframe_result_dictionary[reason2] = []
+                    sdp_checks_delete_dataframe_result_dictionary[reason2].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
 
                 else:
-                    sdp_checks_delete_dataframe_result_dictionary[reason].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
+                    sdp_checks_delete_dataframe_result_dictionary[reason2].append(int(dataframe.iloc[i, dataframe.columns.get_loc("S.No.")]))
 
                 i += 1
 
@@ -899,12 +918,12 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
     service_file_lines_list_block = []
 
     global port_details_file_lines_list_block, lag_details_file_lines_list_block, mesh_sdp_lines_start_lines, sdp_starting_start_lines
-    global sdp_existence_status_dictionary
+    # global sdp_existence_status_dictionary
     port_details_file_lines_list_block = []
     lag_details_file_lines_list_block = []
     mesh_sdp_lines_start_lines = []
     sdp_starting_start_lines = []
-    sdp_existence_status_dictionary = {}
+    # sdp_existence_status_dictionary = {}
 
     # global exception_raised
     # exception_raised = False
@@ -1053,8 +1072,8 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
             # sdp_starting_start_lines = flh().file_lines_starter_filter(file_lines_list=service_file_lines_list_block,
             #                                                            start_word="sdp ")
 
-            if sdp_existence_status_dictionary is None:
-                sdp_existence_status_dictionary = {}
+            # if sdp_existence_status_dictionary is None:
+            #     sdp_existence_status_dictionary = {}
 
             logging.debug(f"Calling method for mesh_sdp_add checks for ip_node \'{ip_node}\' ==>\n{mesh_sdp_add_df.to_markdown()}\n")
             mesh_sdp_add_result_dictionary_from_main_func = sdp_checks_add_dataframe_func(mesh_sdp_add_df,
@@ -1077,8 +1096,8 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
             #
             #     logging.debug(f"Created file lines filter with lines starting with 'sdp' for ip_node \'{ip_node}\' with len==>\n{len(sdp_starting_start_lines)}\n")
 
-            if sdp_existence_status_dictionary is None:
-                sdp_existence_status_dictionary = {}
+            # if sdp_existence_status_dictionary is None:
+            #     sdp_existence_status_dictionary = {}
 
             logging.debug(f"Calling method for mesh_sdp_delete checks for ip_node \'{ip_node}\' ==>\n{mesh_sdp_delete_df.to_markdown()}\n")
             mesh_sdp_delete_result_dictionary_from_main_func = sdp_checks_delete_dataframe_func(mesh_sdp_delete_df,
