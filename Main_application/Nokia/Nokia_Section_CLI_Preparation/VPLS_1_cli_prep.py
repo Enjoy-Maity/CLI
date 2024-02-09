@@ -274,10 +274,15 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> str:
     if (len(add_action_dataframe) > 0) and (node_type.upper().strip() == 'ROUTER'):
         cli = f'{cli}{add_action_cli_preparation_router(dataframe=add_action_dataframe,
                                                         ip_node=ip_node)}'
+    
+    if (len(add_action_dataframe) > 0) and (node_type.upper().strip() == 'SWITCH'):
+        cli = f'{cli}{add_action_cli_preparation_switch(dataframe=add_action_dataframe,
+                                                        ip_node=ip_node)}'
 
     if (len(modify_action_dataframe) > 0) and (node_type.upper().strip() == 'ROUTER'):
         modify_action_cli_preparation_router(dataframe=modify_action_dataframe,
                                              ip_node=ip_node)
+    
 
     cli = f'{cli}\texit all\n'
 
