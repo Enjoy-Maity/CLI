@@ -299,6 +299,7 @@ def main_func(**kwargs):
 
     ip_hostname_mapping = kwargs['ip_hostname_mapping']
     file_mapping_dictionary = kwargs['file_mapping_dictionary']
+    parent_folder = ""
 
     username = (os.popen('cmd.exe /C "echo %username%"').read()).strip()
     pickle_path = rf"C:\\Users\\{username}\\AppData\\Local\\CLI_Automation\\Vendor_pickles\\NOKIA.pickle"
@@ -410,7 +411,7 @@ def main_func(**kwargs):
         """
         username = (os.popen(cmd=r'cmd.exe /C "echo %username%"').read()).strip()
         host_details_file_path = rf'C:\\Users\\{username}\\AppData\\Local\\CLI_Automation\\host_details_file_path.txt'
-        parent_folder = ''
+        # parent_folder = ''
         with open(host_details_file_path, 'r') as f:
             parent_folder = os.path.dirname(f.readline())
             f.close()
@@ -445,6 +446,8 @@ def main_func(**kwargs):
 
     except CustomException as e:
         logging.error(f"raised CustomException==>\n title = {e.title}\n message = {e.message}")
+        if e.title == "Wrong Input for Uploaded Template!":
+            os.popen(cmd=rf'cmd.exe /C "notepad.exe {os.path.join(os.path.join(os.path.join(parent_folder, "Error_Folder"), "Running_Config_Checks_Results"),"Nokia_Nodes_Running_Config_Checks_Error.txt")}"')
         flag = 'Unsuccessful'
 
     except Exception as e:

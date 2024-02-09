@@ -10,18 +10,138 @@ def modify_action_cli_preparation_router(dataframe: pd.DataFrame, ip_node: str) 
     :param dataframe: filtered dataframe with only Modify action
     :return: cli (str) : cli for Modify action data
     """
-    pass
+    cli = ""
+
+
+def add_action_cli_preparation_switch(dataframe: pd.DataFrame, ip_node: str) -> str:
+    """Creates CLI for VPLS-1 Section for Action 'Add' for switch.
+
+    Args:
+        dataframe (pd.DataFrame): filtered dataframe with only Add action
+        ip_node (str): ip_node for which the 'Add' action data belongs to
+
+    Returns:
+        cli (str): cli for Add action data
+    """
+    add_action_switch_cli = ""
+    unique_VPLS_IDs = dataframe['VPLS ID'].unique()
+    unique_VPLS_IDs = unique_VPLS_IDs.astype(int)
+    logging.info(f"Got an array of unique VPLS IDs for {ip_node} for switch:-\n{'\n'.join(unique_VPLS_IDs.astype(str))}")
+
+    i = 0
+    while i < unique_VPLS_IDs:
+        selected_vpls_id = unique_VPLS_IDs[i]
+        temp_cli = ''
+
+        temp_df = dataframe.loc[dataframe['VPLS ID'] == selected_vpls_id]
+
+        vpls_name = temp_df.iloc[0, temp_df.columns.get_loc('VPLS Name')]
+        vpls_description = temp_df.iloc[0, temp_df.columns.get_loc('VPLS Description')]
+        ip_int_bind = temp_df.iloc[0, temp_df.columns.get_loc('allow-ip-int-bind')]
+        stp_variable = str(temp_df.iloc[0, temp_df.columns.get_loc('STP')]).strip().lower()
+        additional_commands = temp_df.iloc[0, temp_df.columns.get_loc("Additional Command")]
+        svc_sap_type = 'svc-sap-type any'
+
+        temp_cli = (f"\t\tvpls {selected_vpls_id} customer 1 {svc_sap_type} create\n" +
+                    f"\t\t\tservice-name {vpls_name}\n" +
+                    f"\t\t\tdescription {vpls_description}\n")
+        
+        if ip_int_bind.strip().lower() == 'yes':
+            temp_cli = (f"{temp_cli}\t\t\tallow-ip-int-bind\n" +
+                        "\t\t\texit\n")
+        
+        if len(additional_commands) > 0:
+            additional_commands_list = [str(command).strip().lower() for command in additional_commands.split(',')]
+
+            if len(additional_commands_list) > 0:
+                j = 0
+                while j < len(additional_commands_list):
+                    temp_cli = f"{temp_cli}\t\t\t{additional_commands_list[j]}\n"
+                    j += 1
+
+            if stp_variable != 'TempNA':
+                temp_cli = (f"{temp_cli}\t\t\tstp\n" +
+                            f"\t\t\t\t{stp_variable}\n" +
+                            "\t\t\texit\n")
+            j = 0
+        while j < temp_df.shape[0]:
+            mesh_sdp_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Mesh-sdp")]).strip().lower()
+            mesh_sdp_description_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Mesh-sdp Description")])
+            mesh_sdp_status_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Mesh Status")]).strip().lower()
+            sap_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Sap/Lag")]).strip().lower()
+            sap_description_variable = temp_df.iloc[j, temp_df.columns.get_loc("Sap Description")]
+            sap_status_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Sap Status")]).strip().lower()
+            sap_ingress_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Ingress")])
+            sap_egress_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Egress")])
+
+            if mesh_sdp_variable != "tempna":
+                temp_cli = f"{temp_cli}\t\t\t{mesh_sdp_variable} create\n"
+
+                if mesh_sdp_description_variable != "TempNA":
+                    temp_cli = f"{temp_cli}\t\t\t\tdescription \"{mesh_sdp_description_variable}\"\n"
+
+                if mesh_sdp_status_variable != "tempna":
+                    temp_cli = f"{temp_cli}\t\t\t\t{mesh_sdp_status_variable}\n"
+
+                if mesh_sdp_status_variable == 'tempna':
+                    temp_cli = f"{temp_cli}\t\t\t\tno shutdown\n"
+
+                temp_cli = f"{temp_cli}\t\t\texit\n"
+
+            if sap_variable != "tempna":
+                temp_cli = f"{temp_cli}\t\t\t{sap_variable} create\n"
+
+                if sap_description_variable != "TempNA":
+                    temp_cli = f"{temp_cli}\t\t\t\tdescription {sap_description_variable}\n"
+
+                if (sap_ingress_variable != "TempNA") and (sap_ingress_variable.strip().upper() != 'YES'):
+                    temp_cli = (f"{temp_cli}\t\t\t\tingress\n" +
+                                f"\t\t\t\t\t{sap_ingress_variable.strip().lower()}\n" +
+                                "\t\t\t\texit\n")
+
+                if (sap_ingress_variable != "TempNA") and (sap_ingress_variable.upper() == 'YES'):
+                    temp_cli = (f"{temp_cli}\t\t\t\tingress\n" +
+                                "\t\t\t\texit\n")
+
+                if (sap_egress_variable != "TempNA") and (sap_egress_variable.upper() == "YES"):
+                    temp_cli = (f"{temp_cli}\t\t\t\tegress\n" +
+                                "\t\t\t\texit\n")
+
+                if (sap_egress_variable != "TempNA") and (sap_egress_variable.upper() != "YES"):
+                    temp_cli = (f"{temp_cli}\t\t\t\tegress\n" +
+                                f"\t\t\t\t\t{sap_egress_variable.strip().lower()}\n" +
+                                "\t\t\t\texit\n")
+
+                if sap_status_variable != "tempna":
+                    temp_cli = f"{temp_cli}\t\t\t\t{sap_status_variable}\n"
+
+                if sap_status_variable == "tempna":
+                    temp_cli = f"{temp_cli}\t\t\t\tno shutdown\n"
+
+                temp_cli = f"{temp_cli}\t\t\texit\n"
+
+            j += 1
+
+        temp_cli = (f"{temp_cli}\t\t\tno shutdown\n" +
+                    "\t\texit\n")
+
+        add_action_switch_cli = f"{add_action_switch_cli}{temp_cli}"
+        i += 1
+
+        logging.info(f"{ip_node}: - Created the Add action CLI for switch =>\n{add_action_switch_cli}")
+
+        return add_action_switch_cli
 
 
 def add_action_cli_preparation_router(dataframe: pd.DataFrame, ip_node: str) -> str:
     """
-    Creates CLI for VPLS-1 Section for Action 'Add'
+    Creates CLI for VPLS-1 Section for Action 'Add' for router.
     :param ip_node: ip_node for which the 'Add' action data belongs to
     :param dataframe: filtered dataframe with only Add action
     :return: cli (str): cli for Add action data
     """
     add_action_cli = ''
-    unique_VPLS_IDs = np.array(dataframe['VPLS ID'].unique())
+    unique_VPLS_IDs = dataframe['VPLS ID'].unique()
     unique_VPLS_IDs = unique_VPLS_IDs.astype(int)
     logging.info(f"Got an array of unique VPLS IDs for {ip_node}:-\n{'\n'.join(unique_VPLS_IDs.astype(str))}")
 
