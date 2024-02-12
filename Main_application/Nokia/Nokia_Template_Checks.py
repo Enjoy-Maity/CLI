@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from threading import Event
-from Main_application.CustomThread import CustomThread
-from Main_application.Custom_Exception import CustomException
+from CustomThread import CustomThread
+from Custom_Exception import CustomException
 from tkinter import messagebox
 
 flag = ''

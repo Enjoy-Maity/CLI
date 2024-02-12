@@ -30,7 +30,7 @@ def text_file_writer(path: str, cli_dictionary: dict) -> None:
     i = 0
     while i < len(ip_nodes):
         ip_node = ip_nodes[i]
-        cli = f"{cli}************ Node IP :- {ip_node}*************\n{cli_dictionary[ip_node]}\n"
+        cli = f"{cli}************ Node IP :- {ip_node}*************\n{cli_dictionary[ip_node]}\n\n\n"
         i += 1
 
     logging.info(f"Writing into {text_file_path} cli:-\n{cli}")
@@ -155,13 +155,14 @@ def section_wise_cli_preparation(dictionary: dict, ip_node: str) -> str:
     while i < len(list_of_sections):
         selected_section = list_of_sections[i]
 
-        logging.info(f"Starting the cli preparation for {selected_section} of {ip_node}")
-        dataframe = dictionary[selected_section]
+        if selected_section in section_dictionary:
+            logging.info(f"Starting the cli preparation for {selected_section} of {ip_node}")
+            dataframe = dictionary[selected_section]
 
-        module_to_be_imported = section_dictionary[selected_section]
+            module_to_be_imported = section_dictionary[selected_section]
 
-        section_cli = module_to_be_imported.main_func(dataframe, ip_node)
-        cli = f'{cli}\n{section_cli}'
+            section_cli = module_to_be_imported.main_func(dataframe, ip_node)
+            cli = f'{cli}\n{section_cli}'
 
         i += 1
 

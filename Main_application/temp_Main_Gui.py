@@ -11,7 +11,7 @@ from pathlib import Path
 from multiprocessing import freeze_support
 
 import pandas
-from Main_application.CustomThread import CustomQthread
+from CustomThread import CustomQthread
 # Importing the custom exception
 from Custom_Exception import CustomException
 # Importing the GUI Classes

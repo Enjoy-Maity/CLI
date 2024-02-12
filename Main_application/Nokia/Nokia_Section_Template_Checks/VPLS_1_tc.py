@@ -80,7 +80,7 @@ def sdp_checks_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
         f.close()
     
     logging.info(f"{ip_node}: - Got the dictionary from the NOKIA.pickle as" +
-        '\n'.join([f'{node} : {'\n'.join([f'{reason} : {serial_list}' for reason, serial_list in node_value.items()])}' for node, node_value in nokia_pickle_dictionary]) +
+        '\n'.join([f'{node} : {'\n'.join([f'{reason} : {serial_list}' for reason, serial_list in node_value.items()])}' for node, node_value in nokia_pickle_dictionary.items()]) +
     "}")
 
     del f
@@ -294,7 +294,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
     # Results from sdp_checks_func being updated into the result_dictionary
     temp_dictionary = sdp_checks_func(dataframe= df,
                                       ip_node= ip_node)
-    if len(temp_dictionary) > 0:
+    if (isinstance(temp_dictionary, dict)) and (len(temp_dictionary) > 0):
         result_dictionary.update(temp_dictionary)
     logging.debug(f"The result_dictionary for node_ip({ip_node}) for VPLS-1 ==>\n {result_dictionary}")
 
