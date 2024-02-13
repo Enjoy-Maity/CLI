@@ -22,6 +22,7 @@ def text_file_writer(path: str, cli_dictionary: dict) -> None:
     """
 
     text_file_path = os.path.join(path, "Nokia_cli.txt")
+    # print(f"{text_file_path =}")
 
     ip_nodes = list(cli_dictionary.keys())
 
@@ -50,6 +51,7 @@ def excel_writer(path: str, cli_dictionary: dict) -> None:
     """
 
     excel_file_path = os.path.join(path, "CLI Execution.xlsx")
+    # print(f"{excel_file_path =}")
 
     if os.path.exists(excel_file_path):
         os.remove(excel_file_path)
@@ -216,7 +218,7 @@ def main_func() -> str:
         parent_folder_for_cli_preparation_wkbk = os.path.join(parent_folder_for_cli_preparation_wkbk, "Nokia")
 
         Path(parent_folder_for_cli_preparation_wkbk).mkdir(exist_ok=True, parents=True)
-
+        # print(f"{parent_folder_for_cli_preparation_wkbk}")
         text_file_writer(parent_folder_for_cli_preparation_wkbk, cli_dictionary)
 
         excel_writer(parent_folder_for_cli_preparation_wkbk, cli_dictionary)

@@ -16,10 +16,10 @@ def modify_action_cli_preparation_add_sequence(dataframe: pd.DataFrame, ip_node:
     Returns:
         add_sequence_cli (str): cli prepared.
     """
-    add_sequence_modify_cli : str
-    unique_VPLS_IDs = dataframe['VPLS ID'].unique().astype(str)
-    unique_VPLS_IDs = unique_VPLS_IDs.char.strip()
-    unique_VPLS_IDs = unique_VPLS_IDs.astype(int)
+    add_sequence_modify_cli = ''
+    unique_VPLS_IDs = np.array(dataframe['VPLS ID'].unique()).astype(str)
+    unique_VPLS_IDs = np.char.strip(unique_VPLS_IDs)
+    unique_VPLS_IDs = unique_VPLS_IDs.astype(float).astype(int)
     logging.info(f"Got an array of unique VPLS IDs for {ip_node} for switch:-\n{'\n'.join(unique_VPLS_IDs.astype(str))}")
 
     i = 0
@@ -44,7 +44,7 @@ def modify_action_cli_preparation_add_sequence(dataframe: pd.DataFrame, ip_node:
 
         if vpls_description != 'TempNA':
             temp_cli = (f"{temp_cli}\t\t\tno description\n" +
-                        f"\t\t\tdescription {vpls_description}\n")
+                        f"\t\t\tdescription \"{vpls_description}\"\n")
 
         if ip_int_bind.strip().lower() == 'yes':
             temp_cli = (f"{temp_cli}\t\t\tallow-ip-int-bind\n" +
@@ -143,11 +143,11 @@ def modify_action_cli_preparation_delete_sequence(dataframe: pd.DataFrame, ip_no
     Returns:
         delete_sequence_cli (str): cli prepared.
     """
-    delete_sequence_cli : str
+    delete_sequence_cli = ""
 
-    unique_vpls_id_enteries = dataframe['VPLS ID'].unique().astype(str)
-    unique_vpls_id_enteries = unique_vpls_id_enteries.char.strip()
-    unique_vpls_id_enteries = unique_vpls_id_enteries.astype(int)
+    unique_vpls_id_enteries = np.array(dataframe['VPLS ID'].unique()).astype(str)
+    unique_vpls_id_enteries = np.char.strip(unique_vpls_id_enteries)
+    unique_vpls_id_enteries = unique_vpls_id_enteries.astype(float).astype(int)
 
     i = 0
     while i < unique_vpls_id_enteries.size:
@@ -158,7 +158,7 @@ def modify_action_cli_preparation_delete_sequence(dataframe: pd.DataFrame, ip_no
         temp_cli = f"\t\tvpls {selected_vpls_id}\n"
 
         j = 0
-        while j < 0:
+        while j < temp_df.shape[0]:
             mesh_sdp_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Mesh-sdp")]).strip().lower()
             sap_lag_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Sap/Lag")]).strip().lower()
 
@@ -166,16 +166,17 @@ def modify_action_cli_preparation_delete_sequence(dataframe: pd.DataFrame, ip_no
                 temp_cli = (f"{temp_cli}\t\t\t{mesh_sdp_variable}\n" +
                             "\t\t\t\tshutdown\n" +
                             "\t\t\texit\n" +
-                            f"\t\t\tno {mesh_sdp_variable}")
+                            f"\t\t\tno {mesh_sdp_variable}\n")
 
             if sap_lag_variable != 'tempna':
                 temp_cli = (f"{temp_cli}\t\t\t{sap_lag_variable}\n" +
                             "\t\t\t\tshutdown\n" +
                             "\t\t\texit\n" +
-                            f"\t\t\tno {sap_lag_variable}")
+                            f"\t\t\tno {sap_lag_variable}\n")
 
             j += 1
-
+        
+        temp_cli = f'{temp_cli}\t\texit\n'
         delete_sequence_cli = f"{delete_sequence_cli}{temp_cli}"
         i += 1
 
@@ -194,9 +195,9 @@ def modify_action_cli_preparation_modify_sequence(dataframe: pd.DataFrame, ip_no
         modify_sequence_cli (str): cli prepared.
     """
     modify_sequence_cli = ""
-    unique_vpls_id_array = dataframe['VPLS ID'].unique().astype(str)
-    unique_vpls_id_array = unique_vpls_id_array.char.strip()
-    unique_vpls_id_array = unique_vpls_id_array.astype(int)
+    unique_vpls_id_array = np.array(dataframe['VPLS ID'].unique()).astype(str)
+    unique_vpls_id_array = np.char.strip(unique_vpls_id_array)
+    unique_vpls_id_array = unique_vpls_id_array.astype(float).astype(int)
     logging.info(f"{ip_node}: - Got an array of unique VPLS IDs:\n{'\n'.join(unique_vpls_id_array.astype(str))}")
 
     i = 0
@@ -212,7 +213,7 @@ def modify_action_cli_preparation_modify_sequence(dataframe: pd.DataFrame, ip_no
 
         if vpls_description_variable != "TempNA":
             temp_cli = (f"{temp_cli}\t\t\tno description\n" +
-                        f"\t\t\tdescription {vpls_description_variable}\n")
+                        f"\t\t\tdescription \"{vpls_description_variable}\"\n")
 
         if stp_variable != 'TempNA':
             temp_cli = (f"{temp_cli}\t\t\tstp\n" +
@@ -238,8 +239,8 @@ def modify_action_cli_preparation_modify_sequence(dataframe: pd.DataFrame, ip_no
                 temp_cli = f"{temp_cli}\t\t\t{mesh_sdp_variable}\n"
 
                 if mesh_sdp_description_variable != "TempNA":
-                    temp_cli = (f"{temp_cli}\t\t\t\tno description"
-                                f"\t\t\t\tdescription {mesh_sdp_description_variable}\n")
+                    temp_cli = (f"{temp_cli}\t\t\t\tno description\n"
+                                f"\t\t\t\tdescription \"{mesh_sdp_description_variable}\"\n")
 
                 if mesh_status_variable != "TempNA":
                     if (isinstance(mesh_status_variable, str)) and (mesh_status_variable.__contains__(",")):
@@ -261,7 +262,7 @@ def modify_action_cli_preparation_modify_sequence(dataframe: pd.DataFrame, ip_no
 
                 if sap_lag_description_variable != 'TempNA':
                     temp_cli = (f"{temp_cli}\t\t\t\tno description\n" +
-                                f"\t\t\t\tdescription {sap_lag_description_variable}\n")
+                                f"\t\t\t\tdescription \"{sap_lag_description_variable}\"\n")
 
                 if ingress_variable != "tempna":
                     temp_cli = f"{temp_cli}\t\t\t\tingress\n"
@@ -338,9 +339,9 @@ def add_action_cli_preparation_switch(dataframe: pd.DataFrame, ip_node: str) -> 
         cli (str): cli for Add action data
     """
     add_action_switch_cli = ""
-    unique_VPLS_IDs = dataframe['VPLS ID'].unique().astype(str)
-    unique_VPLS_IDs = unique_VPLS_IDs.char.strip()
-    unique_VPLS_IDs = unique_VPLS_IDs.astype(int)
+    unique_VPLS_IDs = np.array(dataframe['VPLS ID'].unique()).astype(str)
+    unique_VPLS_IDs = np.char.strip(unique_VPLS_IDs)
+    unique_VPLS_IDs = unique_VPLS_IDs.astype(float).astype(int)
     logging.info(f"Got an array of unique VPLS IDs for {ip_node} for switch:-\n{'\n'.join(unique_VPLS_IDs.astype(str))}")
 
     i = 0
@@ -456,9 +457,9 @@ def add_action_cli_preparation_router(dataframe: pd.DataFrame, ip_node: str) -> 
     :return: cli (str): cli for Add action data
     """
     add_action_cli = ''
-    unique_VPLS_IDs = dataframe['VPLS ID'].unique().astype(str)
-    unique_VPLS_IDs = unique_VPLS_IDs.char.strip()
-    unique_VPLS_IDs = unique_VPLS_IDs.astype(int)
+    unique_VPLS_IDs = np.array(dataframe['VPLS ID'].unique()).astype(str)
+    unique_VPLS_IDs = np.char.strip(unique_VPLS_IDs)
+    unique_VPLS_IDs = unique_VPLS_IDs.astype(float).astype(int)
     logging.info(f"Got an array of unique VPLS IDs for {ip_node}:-\n{'\n'.join(unique_VPLS_IDs.astype(str))}")
 
     i = 0
@@ -596,8 +597,8 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> str:
                                                         ip_node=ip_node)}'
 
     if (len(modify_action_dataframe) > 0) and (node_type.upper().strip() == 'ROUTER'):
-        modify_action_cli_preparation_router(dataframe=modify_action_dataframe,
-                                             ip_node=ip_node)
+        cli = f"{cli}{modify_action_cli_preparation_router(dataframe=modify_action_dataframe,
+                                             ip_node=ip_node)}"
     
 
     cli = f'{cli}\texit all\n'
