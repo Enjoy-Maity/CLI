@@ -1,0 +1,64 @@
+************ Node IP :- 172.31.72.93*************
+
+configure
+	service
+		vpls 9000011
+			sap lag-1:9000011
+				shutdown
+			exit
+			no sap lag-1:9000011
+		exit
+		vpls 9000012
+			sap esat-1/1/15:9000012
+				shutdown
+			exit
+			no sap esat-1/1/15:9000012
+		exit
+		vpls 9000013
+			sap lag-1:9000013
+				shutdown
+			exit
+			no sap lag-1:9000013
+		exit
+		vpls 9000014
+			sap esat-1/1/15:9000014
+				shutdown
+			exit
+			no sap esat-1/1/15:9000014
+		exit
+	exit all
+admin save
+
+
+************ Node IP :- 172.31.72.94*************
+
+configure
+	service
+		vpls 9000011
+			mesh-sdp 5: 9000011
+				shutdown
+			exit
+			no mesh-sdp 5: 9000011
+		exit
+		vpls 9000012
+			sap esat-1/1/15:9000012
+				shutdown
+			exit
+			no sap esat-1/1/15:9000012
+		exit
+		vpls 9000013
+			sap lag-1:9000013
+				shutdown
+			exit
+			no sap lag-1:9000013
+		exit
+		vpls 9000014
+			mesh-sdp 129:9000014
+				shutdown
+			exit
+			no mesh-sdp 129:9000014
+		exit
+	exit all
+admin save
+
+

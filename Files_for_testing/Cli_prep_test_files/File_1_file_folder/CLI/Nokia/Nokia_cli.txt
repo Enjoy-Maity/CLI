@@ -1,0 +1,156 @@
+************ Node IP :- 172.31.72.93*************
+
+configure
+	service
+		vpls 9000011
+			no description
+			description "CK01-lb-signaling-V3802_VPLS"
+			allow-ip-int-bind
+			exit
+			fdb-table-low-wmark 89
+			fdb-table-high-wmark 90
+			no service-mtu-check
+			stp
+				shutdown
+			exit
+			sap lag-1:9000011 create
+				description "TO_TNX_CHN_SAN_CR04_SR2s_R01"
+				ingress
+					qos 30
+				exit
+				no shutdown
+			exit
+			no shutdown
+		exit
+		vpls 9000012
+			no description
+			description "PA3420_EPDG_FW01_INTERNAL_VPLS"
+			allow-ip-int-bind
+			exit
+			fdb-table-low-wmark 89
+			fdb-table-high-wmark 90
+			no service-mtu-check
+			stp
+				shutdown
+			exit
+			sap esat-1/1/15:9000012 create
+				description "TO_TNX_SAN_PA3420_EPDG_FW01"
+				no shutdown
+			exit
+			no shutdown
+		exit
+		vpls 9000013
+			no description
+			description "PA3430_EPDG_FW02_EXTERNAL_VPLS"
+			allow-ip-int-bind
+			exit
+			fdb-table-low-wmark 89
+			fdb-table-high-wmark 90
+			no service-mtu-check
+			stp
+				shutdown
+			exit
+			sap lag-1:9000013 create
+				description "TO_TNX_CHN_SAN_CR05_SR2s_R01"
+				ingress
+					qos 40
+				exit
+				no shutdown
+			exit
+			no shutdown
+		exit
+		vpls 9000014
+			no description
+			description "PA3320_EPDG_FW03_EXTERNAL_VPLS"
+			allow-ip-int-bind
+			exit
+			fdb-table-low-wmark 89
+			fdb-table-high-wmark 90
+			no service-mtu-check
+			stp
+				shutdown
+			exit
+			sap esat-1/1/15:9000014 create
+				description "TO_TNX_SAN_PA3320_EPDG_FW01"
+				no shutdown
+			exit
+			no shutdown
+		exit
+	exit all
+admin save
+
+
+************ Node IP :- 172.31.72.94*************
+
+configure
+	service
+		vpls 9000011
+			no description
+			description "CK01-lb-signaling-V3802_VPLS"
+			allow-ip-int-bind
+			exit
+			tempna
+			stp
+				shutdown
+			exit
+			mesh-sdp 5: 9000011 create
+				description "To_HOS-ACIN1"
+				no shutdown
+			exit
+			no shutdown
+		exit
+		vpls 9000012
+			no description
+			description "PA3420_EPDG_FW01_INTERNAL_VPLS"
+			allow-ip-int-bind
+			exit
+			tempna
+			stp
+				shutdown
+			exit
+			sap esat-1/1/15:9000012 create
+				description "TO_TNX_SAN_PA3420_EPDG_FW01"
+				egress
+					qos 30
+				exit
+				no shutdown
+			exit
+			no shutdown
+		exit
+		vpls 9000013
+			no description
+			description "PA3430_EPDG_FW02_EXTERNAL_VPLS"
+			allow-ip-int-bind
+			exit
+			tempna
+			stp
+				shutdown
+			exit
+			sap lag-1:9000013 create
+				description "TO_TNX_CHN_SAN_CR05_SR2s_R01"
+				ingress
+					qos 40
+				exit
+				no shutdown
+			exit
+			no shutdown
+		exit
+		vpls 9000014
+			no description
+			description "PA3320_EPDG_FW03_EXTERNAL_VPLS"
+			allow-ip-int-bind
+			exit
+			tempna
+			stp
+				shutdown
+			exit
+			mesh-sdp 129:9000014 create
+				description "To_HOS-ACIN3"
+				no shutdown
+			exit
+			no shutdown
+		exit
+	exit all
+admin save
+
+
