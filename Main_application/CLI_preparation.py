@@ -16,13 +16,14 @@ def main_func(**kwargs) -> str:
     :return: str : string communicating the execution status as 'Successful' or 'Unsuccessful'
     """
     global flag
+    print(kwargs)
     vendor_selected = kwargs['vendor_selected']
 
     try:
 
         if vendor_selected.strip().upper() == 'NOKIA':
             design_input_file = ""
-
+            print(vendor_selected)
             from Nokia.Nokia_CLI_Preparation import main_func
             flag = main_func()
 
