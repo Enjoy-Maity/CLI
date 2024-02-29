@@ -24,6 +24,14 @@ class Abstract_class_file_lines_handler(ABC):
     def file_lines_pattern_filter(self):
         pass
 
+    @abstractmethod
+    def file_lines_chunk_divisor(self):
+        pass
+
+    @abstractmethod
+    def file_lines_chunk_divisor_pattern(self):
+        pass
+
 
 class File_lines_handler(Abstract_class_file_lines_handler):
     def __init__(self):
@@ -32,11 +40,11 @@ class File_lines_handler(Abstract_class_file_lines_handler):
     def file_lines_cleaner(self, file_lines_list: list) -> list:
         """
             Strips the lines of any character sequence and returns the clean list of lines
-            
+
             Arguments : (file_lines_list)
                 file_lines_list ===> list
                     description =====> contains the list of non-cleaned lines
-                    
+
             return cleaned_file_list
                 cleaned_file_list ===> list
                     description =====> list of file lines without any escape sequences in file lines
@@ -56,14 +64,14 @@ class File_lines_handler(Abstract_class_file_lines_handler):
     def file_lines_starter_filter(self, file_lines_list: list, start_word: str) -> list:
         """
             Filters the lines from the given list of file lines starting from the given start word
-            
+
             Arguments : (file_lines_list, start_word)
                 file_lines_list ===> list
                     description =====> contains the list of lines from the file.
-                    
+
                 start_word ===> str
                     description =====> contains the word for which we need to filter the list with lines starting from the given start_word
-                    
+
             return filtered_lines_list
                 filtered_lines_list ===> list
                     description =====> contains the list of lines starting with the given start word
@@ -159,7 +167,7 @@ class File_lines_handler(Abstract_class_file_lines_handler):
             file_lines_list (list): _description_ : list of file lines
             start_string (str): _description_ : first keywords from where parsing of chunk lines will be started
             end_string_pattern (str): _description_ : last string pattern till where parsing of chunk lines will be terminated
-        
+
         return:
             filtered_lines_list (list): _description_ : chunk of parsed file lines
         """
@@ -184,7 +192,7 @@ class File_lines_handler(Abstract_class_file_lines_handler):
                         logging.info(f"Got the start string at {i} for start string {start_string}")
                         start_index = i
 
-                    if re.search(compiled_pattern, file_line) is not None:
+                    elif re.search(compiled_pattern, file_line):
                         if (i > start_index) and (start_index > 0):
                             logging.debug(f"{start_index = }")
                             logging.info(f"found end string pattern at {i}")
@@ -195,6 +203,40 @@ class File_lines_handler(Abstract_class_file_lines_handler):
                 filtered_lines_list = file_lines_list[start_index:end_index]
 
                 return filtered_lines_list
+
+        except TypeError as e:
+            logging.error(f"Exception Occurred!!\n\tTitle => {'TypeError'}\n\t\tMessage ==> {str(e)}")
+            messagebox.showerror(title='TypeError',
+                                 message=str(e))
+
+
+
+    def file_lines_chunk_divisor_pattern(self, file_lines_list: list, starting_string_pattern: str, end_string_pattern: str):
+        try:
+
+            file_lines_list = self.file_lines_cleaner(file_lines_list= file_lines_list)
+            filtered_lines_list = []
+
+            start_string_compiled_pattern = re.compile(pattern= starting_string_pattern)
+            ending_string_compiled_pattern = re.compile(pattern= end_string_pattern)
+
+            starting_index = 0
+            ending_index = 0
+            i = 0
+            while i < len(file_lines_list):
+                if re.search(pattern=start_string_compiled_pattern, string=file_lines_list[i]):
+                    starting_index = i
+
+                if (starting_index > 0) and (i > starting_index):
+                    if re.search(pattern= ending_string_compiled_pattern, string= file_lines_list[i]):
+                        ending_index = i
+                        break
+                i += 1
+
+            if (starting_index > 0) and (ending_index > 0):
+                filtered_lines_list = file_lines_list[starting_index : ending_index]
+
+            return filtered_lines_list
 
         except TypeError as e:
             logging.error(f"Exception Occurred!!\n\tTitle => {'TypeError'}\n\t\tMessage ==> {str(e)}")
