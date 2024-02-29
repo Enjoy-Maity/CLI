@@ -56,10 +56,11 @@ def modify_action_cli_preparation_add_sequence(dataframe: pd.DataFrame, ip_node:
             if len(additional_commands_list) > 0:
                 j = 0
                 while j < len(additional_commands_list):
-                    temp_cli = f"{temp_cli}\t\t\t{additional_commands_list[j]}\n"
+                    if additional_commands_list[j] != 'tempna':
+                        temp_cli = f"{temp_cli}\t\t\t{additional_commands_list[j]}\n"
                     j += 1
 
-            if stp_variable != 'TempNA':
+            if stp_variable != 'tempna':
                 temp_cli = (f"{temp_cli}\t\t\tstp\n" +
                             f"\t\t\t\t{stp_variable}\n" +
                             "\t\t\texit\n")
@@ -122,7 +123,7 @@ def modify_action_cli_preparation_add_sequence(dataframe: pd.DataFrame, ip_node:
 
             j += 1
 
-        temp_cli = (f"{temp_cli}\t\t\tno shutdown\n" +
+        temp_cli = (f"{temp_cli}" +
                     "\t\texit\n")
 
         add_sequence_modify_cli = f"{add_sequence_modify_cli}{temp_cli}"
@@ -204,43 +205,43 @@ def modify_action_cli_preparation_modify_sequence(dataframe: pd.DataFrame, ip_no
     while i < unique_vpls_id_array.size:
         selected_vpls_id = unique_vpls_id_array[i]
         temp_df = dataframe.loc[dataframe["VPLS ID"] == selected_vpls_id]
-        vpls_description_variable  = str(temp_df.iloc[0, temp_df.columns.get_loc("VPLS Description")])
-        stp_variable = str(temp_df.iloc[0, temp_df.columns.get_loc("STP")]).strip().lower()
-        allow_ip_int_bind_variable = str(temp_df.iloc[0, temp_df.columns.get_loc("allow-ip-int-bind")]).strip()
+        # vpls_description_variable  = str(temp_df.iloc[0, temp_df.columns.get_loc("VPLS Description")])
+        # stp_variable = str(temp_df.iloc[0, temp_df.columns.get_loc("STP")]).strip().lower()
+        # allow_ip_int_bind_variable = str(temp_df.iloc[0, temp_df.columns.get_loc("allow-ip-int-bind")]).strip()
         temp_cli  = ""
 
         temp_cli = f"\t\tvpls {selected_vpls_id}\n"
 
-        if vpls_description_variable != "TempNA":
-            temp_cli = (f"{temp_cli}\t\t\tno description\n" +
-                        f"\t\t\tdescription \"{vpls_description_variable}\"\n")
+        # if vpls_description_variable != "TempNA":
+        #     temp_cli = (f"{temp_cli}\t\t\tno description\n" +
+        #                 f"\t\t\tdescription \"{vpls_description_variable}\"\n")
 
-        if stp_variable != 'TempNA':
-            temp_cli = (f"{temp_cli}\t\t\tstp\n" +
-                        f"\t\t\t\t{stp_variable}\n" +
-                        "\t\t\texit\n")
+        # if stp_variable != 'TempNA':
+        #     temp_cli = (f"{temp_cli}\t\t\tstp\n" +
+        #                 f"\t\t\t\t{stp_variable}\n" +
+        #                 "\t\t\texit\n")
         
-        if (allow_ip_int_bind_variable != "TempNA") and (allow_ip_int_bind_variable.lower() == 'yes'):
-            temp_cli = (f"{temp_cli}\t\t\tallow-ip-int-bind\n" +
-                        "\t\t\texit\n")
+        # if (allow_ip_int_bind_variable != "TempNA") and (allow_ip_int_bind_variable.lower() == 'yes'):
+        #     temp_cli = (f"{temp_cli}\t\t\tallow-ip-int-bind\n" +
+        #                 "\t\t\texit\n")
         
-        if (allow_ip_int_bind_variable != "TempNA") and (allow_ip_int_bind_variable.lower() == 'no'):
-            temp_cli = (f"{temp_cli}\t\t\tno allow-ip-int-bind\n" +
-                        "\t\t\texit\n")
+        # if (allow_ip_int_bind_variable != "TempNA") and (allow_ip_int_bind_variable.lower() == 'no'):
+        #     temp_cli = (f"{temp_cli}\t\t\tno allow-ip-int-bind\n" +
+        #                 "\t\t\texit\n")
         j = 0
         while j < temp_df.shape[0]:
             mesh_sdp_variable = str(temp_df.iloc[j, temp_df.columns.get_loc('Mesh-sdp')]).strip()
             sap_lag_variable  = str(temp_df.iloc[j, temp_df.columns.get_loc("Sap/Lag")]).strip()
 
             if mesh_sdp_variable != "TempNA":
-                mesh_sdp_description_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Mesh-sdp Description")]).strip()
+                # mesh_sdp_description_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Mesh-sdp Description")]).strip()
                 mesh_status_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Mesh Status")]).strip().lower()
 
                 temp_cli = f"{temp_cli}\t\t\t{mesh_sdp_variable}\n"
 
-                if mesh_sdp_description_variable != "TempNA":
-                    temp_cli = (f"{temp_cli}\t\t\t\tno description\n"
-                                f"\t\t\t\tdescription \"{mesh_sdp_description_variable}\"\n")
+                # if mesh_sdp_description_variable != "TempNA":
+                #     temp_cli = (f"{temp_cli}\t\t\t\tno description\n"
+                #                 f"\t\t\t\tdescription \"{mesh_sdp_description_variable}\"\n")
 
                 if mesh_status_variable != "TempNA":
                     if (isinstance(mesh_status_variable, str)) and (mesh_status_variable.__contains__(",")):
@@ -253,32 +254,32 @@ def modify_action_cli_preparation_modify_sequence(dataframe: pd.DataFrame, ip_no
                 temp_cli = f"{temp_cli}\t\t\texit\n"
 
             if sap_lag_variable != "TempNA":
-                sap_lag_description_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Sap Description")]).strip()
+                # sap_lag_description_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Sap Description")]).strip()
                 sap_status_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Sap Status")]).strip()
-                ingress_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Ingress")]).strip().lower()
-                egress_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Egress")]).strip().lower()
+                # ingress_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Ingress")]).strip().lower()
+                # egress_variable = str(temp_df.iloc[j, temp_df.columns.get_loc("Egress")]).strip().lower()
 
                 temp_cli = f"{temp_cli}\t\t\t{sap_lag_variable}\n"
 
-                if sap_lag_description_variable != 'TempNA':
-                    temp_cli = (f"{temp_cli}\t\t\t\tno description\n" +
-                                f"\t\t\t\tdescription \"{sap_lag_description_variable}\"\n")
+                # if sap_lag_description_variable != 'TempNA':
+                #     temp_cli = (f"{temp_cli}\t\t\t\tno description\n" +
+                #                 f"\t\t\t\tdescription \"{sap_lag_description_variable}\"\n")
 
-                if ingress_variable != "tempna":
-                    temp_cli = f"{temp_cli}\t\t\t\tingress\n"
+                # if ingress_variable != "tempna":
+                #     temp_cli = f"{temp_cli}\t\t\t\tingress\n"
 
-                    if ingress_variable != 'yes':
-                        temp_cli = f"{temp_cli}\t\t\t\t\t{ingress_variable}\n"
+                #     if ingress_variable != 'yes':
+                #         temp_cli = f"{temp_cli}\t\t\t\t\t{ingress_variable}\n"
 
-                    temp_cli = f"{temp_cli}\t\t\t\texit\n"
+                #     temp_cli = f"{temp_cli}\t\t\t\texit\n"
 
-                if egress_variable != "tempna":
-                    temp_cli = f"{temp_cli}\t\t\t\tegress\n"
+                # if egress_variable != "tempna":
+                #     temp_cli = f"{temp_cli}\t\t\t\tegress\n"
 
-                    if egress_variable != 'yes':
-                        temp_cli = f"{temp_cli}\t\t\t\t\t{egress_variable}\n"
+                #     if egress_variable != 'yes':
+                #         temp_cli = f"{temp_cli}\t\t\t\t\t{egress_variable}\n"
 
-                    temp_cli = f"{temp_cli}\t\t\t\texit\n"
+                #     temp_cli = f"{temp_cli}\t\t\t\texit\n"
 
                 if (sap_status_variable != 'TempNA') and (sap_status_variable.__contains__(",")):
                     sap_statuses = sap_status_variable.split(",")
@@ -474,7 +475,7 @@ def add_action_cli_preparation_router(dataframe: pd.DataFrame, ip_node: str) -> 
         stp_variable = str(temp_df.iloc[0, temp_df.columns.get_loc('STP')]).strip().lower()
         additional_commands = temp_df.iloc[0, temp_df.columns.get_loc("Additional Command")]
 
-        temp_cli = (f"\t\tvpls {selected_vpls_id} name {vpls_name} customer 1 create\n" +
+        temp_cli = (f"\t\tvpls {selected_vpls_id} name \"{vpls_name}\" customer 1 create\n" +
                     f"\t\t\tdescription \"{vpls_description}\"\n")
 
         if ip_int_bind.strip().upper() == 'YES':
