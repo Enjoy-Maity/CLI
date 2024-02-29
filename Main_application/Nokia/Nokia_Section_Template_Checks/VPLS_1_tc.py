@@ -144,6 +144,144 @@ def sdp_checks_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
         return result_dict_of_sdp_checks
 
 
+def modify_checks(dataframe: pd.DataFrame, ip_node: str) -> dict:
+    """Performs the checks on Action Modify sequence 'Modify'.
+
+    Args:
+        dataframe (pd.DataFrame): Filtered dataframe containing the action 'Modify' with sequence 'Modify'.
+        ip_node (str): contains the name of the 'IP Node' worksheet, being checked 
+
+    Returns:
+        dict: dictionary containing the list of Serial Numbers with template errors as value and reason as key.
+    """
+
+    dictionary_to_be_returned = {}
+
+    logging.debug(
+        f"{ip_node}: - Got the filtered dictionary\n{dataframe.to_markdown()}"
+    )
+
+    mesh_filtered_df= dataframe.loc[~dataframe["Mesh-sdp"].str.strip().str.endswith("TempNA")]
+
+    logging.info(
+        f"{ip_node}: - Got the filtered df for fields in mesh_filtered_df\n{mesh_filtered_df.to_markdown()}"
+    )
+
+    if mesh_filtered_df.shape[0] > 0:
+        reason1 = "Mesh Status field left empty for sequence \'Modify\'"
+        reason2 = "Mesh Status field input is filled incorrectly for sequence \'Modify\'"
+        reason3 = "Mesh Status prior and after modification status entered is same and it cannot be same for sequence \'Modify\'"
+
+        i = 0
+        while i < mesh_filtered_df.shape[0]:
+            if str(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("Mesh Status")]) == "TempNA":
+                if reason1 not in dictionary_to_be_returned:
+                    dictionary_to_be_returned[reason1] = []
+                    dictionary_to_be_returned[reason1].append(int(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")]))
+
+                else:
+                    dictionary_to_be_returned[reason1].append(int(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")]))
+
+            elif str(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("Mesh Status")]).__contains__(","):
+                statuses = [str(status).strip() for status in mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("Mesh Status")].split(",")]
+
+                if len(statuses) < 2:
+                    if reason2 not in dictionary_to_be_returned:
+                        dictionary_to_be_returned[reason2] = []
+                        dictionary_to_be_returned[reason2].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+                    else:
+                        dictionary_to_be_returned[reason2].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+
+                if len(statuses) == 2:
+                    if statuses[0] == statuses[1]:
+                        if reason3 not in dictionary_to_be_returned:
+                            dictionary_to_be_returned[reason3] = []
+                            dictionary_to_be_returned[reason3].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+
+                        else:
+                            dictionary_to_be_returned[reason3].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+
+                    elif (str(statuses[0]).strip().lower() not in ["shutdown", "no shutdown"]) and (str(statuses[1]).strip().lower() not in ["shutdown", "no shutdown"]):
+                        if reason2 not in dictionary_to_be_returned:
+                            dictionary_to_be_returned[reason2] = []
+                            dictionary_to_be_returned[reason2].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+
+                        else:
+                            dictionary_to_be_returned[reason2].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+
+                if len(statuses) > 2:
+                    if reason2 not in dictionary_to_be_returned:
+                        dictionary_to_be_returned[reason2] = []
+                        dictionary_to_be_returned[reason2].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+
+                    else:
+                        dictionary_to_be_returned[reason2].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+
+            i += 1
+
+    sap_filtered_df= dataframe.loc[~dataframe["Sap/Lag"].str.strip().str.endswith("TempNA")]
+
+    logging.info(
+        f"{ip_node}: - Got the filtered df for fields in mesh_filtered_df\n{sap_filtered_df.to_markdown()}"
+    )
+
+    if sap_filtered_df.shape[0] > 0:
+        reason1 = "Sap Status field left empty for sequence \'Modify\'"
+        reason2 = "Sap Status field input is filled incorrectly for sequence \'Modify\'"
+        reason3 = "Sap Status prior and after modification status entered is same and it cannot be same for sequence \'Modify\'"
+
+        i = 0
+        while i < sap_filtered_df.shape[0]:
+            if str(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("Sap Status")]) == "TempNA":
+                if reason1 not in dictionary_to_be_returned:
+                    dictionary_to_be_returned[reason1] = []
+                    dictionary_to_be_returned[reason1].append(int(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")]))
+
+                else:
+                    dictionary_to_be_returned[reason1].append(int(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")]))
+
+            elif str(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("Sap Status")]).__contains__(","):
+                statuses = [str(status).strip() for status in sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("Sap Status")].split(",")]
+
+                if len(statuses) < 2:
+                    if reason2 not in dictionary_to_be_returned:
+                        dictionary_to_be_returned[reason2] = []
+                        dictionary_to_be_returned[reason2].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
+                    else:
+                        dictionary_to_be_returned[reason2].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
+
+                if len(statuses) == 2:
+                    if statuses[0] == statuses[1]:
+                        if reason3 not in dictionary_to_be_returned:
+                            dictionary_to_be_returned[reason3] = []
+                            dictionary_to_be_returned[reason3].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
+
+                        else:
+                            dictionary_to_be_returned[reason3].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
+
+                    elif (str(statuses[0]).strip().lower() not in ["shutdown", "no shutdown"]) and (str(statuses[1]).strip().lower() not in ["shutdown", "no shutdown"]):
+                        if reason2 not in dictionary_to_be_returned:
+                            dictionary_to_be_returned[reason2] = []
+                            dictionary_to_be_returned[reason2].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
+
+                        else:
+                            dictionary_to_be_returned[reason2].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
+
+                if len(statuses) > 2:
+                    if reason2 not in dictionary_to_be_returned:
+                        dictionary_to_be_returned[reason2] = []
+                        dictionary_to_be_returned[reason2].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
+
+                    else:
+                        dictionary_to_be_returned[reason2].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
+
+            i += 1
+
+    return dictionary_to_be_returned
+
+
+
+
 def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
     """
         Performs the Template checks for the VPLS 1 Section (VPLS with Mesh-sdp/sap)
@@ -297,6 +435,29 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
     if (isinstance(temp_dictionary, dict)) and (len(temp_dictionary) > 0):
         result_dictionary.update(temp_dictionary)
     logging.debug(f"The result_dictionary for node_ip({ip_node}) for VPLS-1 ==>\n {result_dictionary}")
+
+    temp_df = dataframe.loc[(~dataframe["Action"].str.strip().str.endswith("TempNA")) & (dataframe["Sequence"].str.strip().str.upper().str.contains("MODIFY|DELETE"))]
+    logging.debug(
+        f"{ip_node}: - The filtered dataframe that we got\n{temp_df.to_markdown()}"
+    )
+
+    if temp_df.shape[0] > 0:
+        temp_dictionary = {}
+        temp_dictionary = modify_checks(dataframe= temp_df,
+                                        ip_node= ip_node)
+
+        logging.info(
+            f"{ip_node}: - Got the temp_dictionary after completing the modify checks=> \n{temp_dictionary}"
+        )
+
+        if isinstance(temp_dictionary, dict):
+            if len(temp_dictionary) > 0:
+                logging.info(
+                    f"{ip_node}: - Prettied view of the dictionary from modify_checks=>\n{
+                        '\n'.join([f'{key}: [{', '.join([str(value) for value in values])}]' for key, values in temp_dictionary.items()])
+                    }"
+                )
+                result_dictionary.update(temp_dictionary)
 
     logging.shutdown()
     return result_dictionary
