@@ -168,14 +168,20 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         self.vendor = None
         self.app_first_window = None
         self.log_file = None
-        self.log_file_checker()
         self._thread = None
 
-        logging.basicConfig(filename=self.log_file,
-                            filemode="a",
+        self.log_file_checker()
+
+        handler = logging.FileHandler(filename=self.log_file,
+                                      mode="a",
+                                      encoding="UTF-8",
+                                      delay=False)
+
+        logging.basicConfig(handlers=[handler],
                             format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({'%(module)s'}/{'%(funcName)s'}): [[Line No. - {'%(lineno)d'}]] {'%(message)s'}",
                             datefmt='%d-%b-%Y %I:%M:%S %p',
                             encoding="UTF-8",
+                            force= True,
                             level=logging.DEBUG)
 
         logging.debug("Creating necessary variables")
@@ -227,17 +233,26 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         Path(os.path.dirname(self.log_file)).mkdir(parents=True, exist_ok=True)
 
         if os.path.exists(self.log_file):
+            print("Hello")
             _log_file_getmtime = datetime.fromtimestamp(os.path.getmtime(self.log_file))
 
             _log_file_getmtime_timedelta_var = datetime.now() - _log_file_getmtime
             _log_file_getmtime_timedelta_var_hour = int(_log_file_getmtime_timedelta_var.days * 24 + (_log_file_getmtime_timedelta_var.seconds // 3600))
             _current_hour = int(datetime.now().strftime("%H"))
+
+            logging.debug(f"Checking the current hour {_current_hour} Hr")
+            
+
+            logging.debug(f"Getting the hours for which the file has been created - {_log_file_getmtime_timedelta_var_hour} Hrs")
+            print(f"{_log_file_getmtime_timedelta_var_hour = }")
             if _current_hour > 12:
                 if (int(_log_file_getmtime_timedelta_var.days) >= 1) or (_log_file_getmtime_timedelta_var_hour >= 20):
                     os.remove(self.log_file)
 
                     with open(self.log_file, 'w') as _f:
                         _f.close()
+
+                    del _f
 
     # Method for handling the qthread results
     def qthread_result_handler(self, result: str) -> None:
@@ -249,10 +264,10 @@ class Main_Gui(Abstract_Main_GUI, ABC):
         """
 
         if self.task_running == 'Sheet Creater':
-            self._sheet_creater_task_status = result
+            self._sheet_creater_task_status_result = result
             self.task_running = ''
             logging.debug(
-                f"Got the sheet_creater task status as {self._sheet_creater_task_status}!!"
+                f"Got the sheet_creater task status as {self._sheet_creater_task_status_result}!!"
             )
 
             if self._thread.isRunning():
@@ -263,13 +278,13 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                                          message=f" Sheet Creater Task successfully completed!!")
 
             self.label_and_database_updater(task='Sheet Creater',
-                                            status=self._sheet_creater_task_status)
+                                            status=self._sheet_creater_task_status_result)
 
         if self.task_running == 'Template Checks':
-            self._template_checks_task_status = result
+            self._template_checks_task_status_result = result
             self.task_running = ''
             logging.debug(
-                f"Got the template_checks task status as {self._template_checks_task_status} for vendor {self.vendor_selected()}"
+                f"Got the template_checks task status as {self._template_checks_task_status_result} for vendor {self.vendor_selected()}"
             )
 
             if self._thread.isRunning():
@@ -280,12 +295,12 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                                          message=f" Template Checks Task successfully completed for {self.vendor_selected()}")
 
             self.label_and_database_updater(task='Template Checks',
-                                            status=self._template_checks_task_status)
+                                            status=self._template_checks_task_status_result)
 
         if self.task_running == 'Running Config Pre Checks':
             # self.end_timer = time.time()
             # print((self.end_timer - self.start_timer), ' seconds')
-            self._running_config_pre_checks_task = result
+            self._running_config_pre_checks_task_result = result
             # print(f'{self._running_config_pre_checks_task =}')
             self.task_running = ''
             logging.debug(
@@ -300,7 +315,7 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                                          message=f"Running Config Pre Checks Task successfully completed for {self.vendor_selected()}")
 
             self.label_and_database_updater(task='Running Config Pre Checks',
-                                            status=self._running_config_pre_checks_task)
+                                            status=self._running_config_pre_checks_task_result)
             # print("line264")
 
         if self.task_running == 'CLI Preparation':
@@ -320,6 +335,28 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
             self.label_and_database_updater(task='CLI Preparation',
                                             status=self._cli_preparation_task_status)
+
+        if self.task_running == 'Running Config Post Checks':
+            # self.end_timer = time.time()
+            # print((self.end_timer - self.start_timer), ' seconds')
+
+            self._running_config_post_checks_task_result = result
+
+            # print(f'{self._running_config_pre_checks_task =}')
+            self.task_running = ''
+            logging.debug(
+                f"Got the running_config_pre_checks task status as {self._running_config_post_checks_task_status} for vendor {self.vendor_selected()}"
+            )
+
+            if self._thread.isRunning():
+                self._thread.exit()
+
+            if result == 'Successful':
+                self.information_message(title="    Task Successfully Completed!",
+                                         message=f"Running Config Post Checks Task successfully completed for {self.vendor_selected()}")
+
+            self.label_and_database_updater(task='Running Config Post Checks',
+                                            status=self._running_config_post_checks_task_result)
 
 
     # Method for raising pop-ups for asking question to the user to get the response
@@ -544,6 +581,21 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                 logging.info("Reloading the database")
                 self.app_main_window.table_view_data_loader(data=self._database_manager.data_fetcher())
 
+            if task == 'Running Config Post Checks':
+                logging.debug(f"Setting Running Config Pre Checks task status -> {status}")
+                self.app_main_window.task_method_status_updater(task='Running Config Post Checks',
+                                                                status=status)
+
+                if status != "In Progress":
+                    logging.info(
+                        f"Updating the database for {self.vendor_selected()} for \n\ttask =>{task}\n\t\twith status => {status}")
+                    self._database_manager.database_updater(vendor=self.vendor_selected(),
+                                                            task='Running_Config_Post_Checks',
+                                                            status=status)
+
+                logging.info("Reloading the database")
+                self.app_main_window.table_view_data_loader(data=self._database_manager.data_fetcher())
+
         except Exception as e:
             logging.error(f"{traceback.format_exc()}\n\tException Occurred!\n\t\t{e}")
             self.critical_message(title="Exception Occurred!",
@@ -675,7 +727,12 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
     # Method for Template Checks Task
     def template_checks_task(self) -> None:
-        if self.task_running == '':
+        if (len(self.vendor_selected()) == 0 ) or (self.vendor_selected() == "Select Vendor"):
+                self.critical_message(
+                    title="   Vendor Not Selected!",
+                    message="Kindly, Select the Vendor First!"
+                )
+        elif self.task_running == '':
             if self.app_main_window.main_window_ui.template_checks_label.text() != 'Successful':
                 self.task_running = 'Template Checks'
                 self._template_checks_task_status = 'In Progress'
@@ -767,7 +824,12 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
     # Method for Running Config Pre Checks Task
     def running_config_pre_checks_task(self) -> None:
-        if self.task_running == '':
+        if (len(self.vendor_selected()) == 0 ) or (self.vendor_selected() == "Select Vendor"):
+                self.critical_message(
+                    title="   Vendor Not Selected!",
+                    message="Kindly, Select the Vendor First!"
+                )
+        elif self.task_running == '':
             if self.app_main_window.main_window_ui.running_config_pre_checks_label.text().strip() != 'Successful':
                 self._running_config_pre_checks_task_status = 'In Progress'
                 self.label_and_database_updater(task='Running Config Pre Checks',
@@ -844,8 +906,14 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
     # Method for CLI Preparation
     def cli_preparation_task(self) -> None:
-        response = 'yes'
-        if self.task_running == '':
+        if (len(self.vendor_selected()) == 0 ) or (self.vendor_selected() == "Select Vendor"):
+                self.critical_message(
+                    title="   Vendor Not Selected!",
+                    message="Kindly, Select the Vendor First!"
+                )
+
+        elif self.task_running == '':
+            response = 'yes'
             try:
                 if (len(self.vendor_selected()) == 0) or (self.vendor_selected().strip() == 'Select Vendor'):
                     raise CustomException('Vendor Not Selected!', 'Kindly Select the Vendor before proceeding!')
@@ -928,7 +996,101 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
     # Method for Running Config Post Checks Task
     def running_config_post_checks_task(self):
-        pass
+        if (len(self.vendor_selected()) == 0 ) or (self.vendor_selected() == "Select Vendor"):
+                self.critical_message(
+                    title="   Vendor Not Selected!",
+                    message="Kindly, Select the Vendor First!"
+                )
+
+        elif self.task_running == '':
+
+            if self.app_main_window.main_window_ui.running_config_post_checks_label.text() != 'Successful':
+                self.task_running = 'Running Config Post Checks'
+                self._running_config_post_checks_task_status = 'In Progress'
+                self.label_and_database_updater(task='Running Config Post Checks',
+                                                status=self._running_config_post_checks_task_status)
+
+                # if self._template_checks_task_status == 'Successful':
+                #     logging.debug(
+                #         f"User clicked on the Template Checks Button even though it was successfully completed for {self.app_main_window.current_vendor('')}"
+                #     )
+                #     self.warning_message(title="Task Already Successfully Completed!",
+                #                          message="Template Checks Task is already successfully completed!")
+                # else:
+
+                try:
+                    # self.start_time = time.
+                    _username = (os.popen(cmd=r'cmd.exe /C "echo %username%"').read()).strip()
+
+                    _app_data_local_saved_host_details_path = f"C:\\Users\\{_username}\\AppData\\Local\\CLI_Automation\\host_details_file_path.txt"
+                    _filename = ''
+
+                    logging.debug(f"Got the path for _app_data_local_saved_host_details_path=>\n\t{_app_data_local_saved_host_details_path}")
+                    if not os.path.exists(_app_data_local_saved_host_details_path):
+                        logging.debug(f"{os.path.exists(_app_data_local_saved_host_details_path)= }")
+                        logging.debug("Raising exception as the file for _app_data_local_saved_host_details_path not found")
+                        raise CustomException("File Not Found",
+                                              "File for the selected host details not found kindly start the new session to start over!")
+
+                    with open(file=_app_data_local_saved_host_details_path, mode="r") as _f:
+                        logging.debug("Reading the file to get the file path")
+                        _filename = _f.readline()
+                        _f.close()
+
+                    del _f
+
+                    from Running_Config_Checks_Post import main_func
+                    _vendor_selected = self.vendor_selected()
+                    # self._template_checks_task_status = main_func(filename=_filename.strip(),
+                    #                                               vendor_selected=self.vendor_selected())
+
+                    self._thread = CustomQthread(target=main_func,
+                                                 kwargs={'vendor_selected': _vendor_selected})
+                    logging.info(f'Created the CustomQThread for Running Config Post Checks for {_vendor_selected}')
+                    self._thread.finished_signal.connect(self.qthread_result_handler)
+
+                    logging.info(f"Starting the Running Config Post Checks CustomQThread for {_vendor_selected}")
+                    self._thread.start()
+
+                except CustomException as e:
+                    logging.error(f"Raised CustomException =>\n\tTitle ==> {e.title}\n\tMessage ==> {e.message}")
+
+                    if (len(self.vendor_selected()) > 0) and (self.vendor_selected().strip() != 'Select Vendor'):
+                        self._running_config_post_checks_task_status = 'Unsuccessful'
+                        self.label_and_database_updater(task='Running Config Post Checks',
+                                                        status=self._running_config_post_checks_task_status)
+
+                    else:
+                        self._running_config_post_checks_task_status = ''
+                        self.label_and_database_updater(task='Running Config Post Checks',
+                                                        status=self._running_config_post_checks_task_status)
+
+                except FileNotFoundError as e:
+                    logging.error(f"{traceback.format_exc()}\nTitle --> File Not Found")
+                    self.critical_message(title="FileNotFound Error!", message=str(e))
+                    self._running_config_post_checks_task_status = 'Unsuccessful'
+                    self.label_and_database_updater(task='Running Config Post Checks',
+                                                    status=self._template_checks_task_status)
+
+                except Exception as e:
+                    logging.error(f"{traceback.format_exc()}\nTitle --> Exception Occurred!\nMessage --> {e}\n")
+                    self.critical_message(title="Exception Occurred!", message=str(e))
+                    self._running_config_post_checks_task_status = 'Unsuccessful'
+                    self.label_and_database_updater(task='Running Config Post Checks',
+                                                    status=self._running_config_post_checks_task_status)
+
+                # finally:
+                #     self.task_running = ''
+                #     self.label_and_database_updater(task='Template Checks',
+                #                                     status=self._template_checks_task_status)
+
+            else:
+                self.warning_message(title='Task Already Successfully Completed!',
+                                     message=f'Running Config Post Checks Task for \'{self.vendor_selected()}\' has already been successfully completed!!')
+        else:
+            self.warning_message(title="Task Already Running!",
+                                 message=f"{self.task_running} is already running! Please Wait for the completion of "
+                                         f"task execution!")
 
     # Method for pre-session checks
     def pre_run_checks(self) -> str:
@@ -1213,6 +1375,11 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                             self.app_main_window.main_window_ui.cli_preparation_btn.clicked.connect(
                                 self.cli_preparation_task)
 
+                            # Creating connection for running config post checks
+                            self.app_main_window.main_window_ui.running_config_post_checks_btn.clicked.connect(
+                                self.running_config_post_checks_task
+                            )
+
                             # Creating connection for new session button
                             self.app_main_window.main_window_ui.new_session_button_3.clicked.connect(
                                 self.new_session_surity_checker_method)
@@ -1317,6 +1484,11 @@ class Main_Gui(Abstract_Main_GUI, ABC):
                         self.app_main_window.main_window_ui.cli_preparation_btn.clicked.connect(
                             self.cli_preparation_task)
 
+                        # Creating connection for running config post checks task
+                        self.app_main_window.main_window_ui.running_config_post_checks_btn.clicked.connect(
+                            self.running_config_post_checks_task
+                        )
+
                         # Creating connection for new session button
                         self.app_main_window.main_window_ui.new_session_button_3.clicked.connect(
                             self.new_session_surity_checker_method)
@@ -1394,6 +1566,14 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
                         logging.info(f"cli_preparation_status_label Text is set to \'{_value}\' for vendor \'{_vendor}\'")
 
+                    if str(_data.iloc[0, _data.columns.get_loc('Running_Config_Post_Checks')]) != 'TempNA':
+                        _value = str(_data.iloc[0, _data.columns.get_loc('Running_Config_Post_Checks')])
+                        # self.app_main_window.main_window_ui.cli_preparation_status_label.setText(_value)
+                        self.app_main_window.task_method_status_updater(task="Running Config Post Checks",
+                                                                        status=_value)
+
+                        logging.info(f"running_config_post_checks_label Text is set to \'{_value}\' for vendor \'{_vendor}\'")
+
                 else:
                     self.critical_message(title="Data not Found",
                                           message="Kindly Start a New Session as Data for the current selected Vendor is not found!")
@@ -1431,6 +1611,11 @@ class Main_Gui(Abstract_Main_GUI, ABC):
 
         # Creating connection for cli preparation task
         self.app_main_window.main_window_ui.cli_preparation_btn.clicked.connect(self.cli_preparation_task)
+
+        # Creating connection for running config post checks task
+        self.app_main_window.main_window_ui.running_config_post_checks_btn.clicked.connect(
+            self.running_config_post_checks_task
+        )
 
         # Creating connection for new session button
         self.app_main_window.main_window_ui.new_session_button_3.clicked.connect(self.new_session_surity_checker_method)
