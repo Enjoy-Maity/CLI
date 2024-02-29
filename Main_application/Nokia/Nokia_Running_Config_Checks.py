@@ -126,7 +126,7 @@ def error_message_writer(parent_folder: str, error_message_dict: dict) -> str:
     :param error_message_dict: dictionary containing error details
     :return: error_message (str): contains the error message that has been written
     """
-    error_folder = os.path.join(os.path.join(parent_folder, "Error_Folder"), "Running_Config_Checks_Results")
+    error_folder = os.path.join(os.path.join(parent_folder, "Error_Folder"), "Pre_Running_Config_Checks_Results")
     Path(error_folder).mkdir(exist_ok=True, parents=True)
 
     logging.debug(f"Creating the folder for Node checks namely for Nokia template checks\n{error_folder}")
@@ -143,7 +143,7 @@ def error_message_writer(parent_folder: str, error_message_dict: dict) -> str:
         """
 
     logging.debug(f"Got the error_message_dict =====>{error_message_dict}\n")
-    error_message = "<================<<Design Input Errors Observed in Below Uploaded Nodes for \"Nokia\" Vendor>>================>"
+    error_message = "<================<<Design Input Errors for Pre Running Nodes Configuration Observed in Below Uploaded Nodes for \"Nokia\" Vendor>>================>"
 
     node_ips = list(error_message_dict.keys())
 
@@ -447,7 +447,7 @@ def main_func(**kwargs):
     except CustomException as e:
         logging.error(f"raised CustomException==>\n title = {e.title}\n message = {e.message}")
         if e.title == "Wrong Input for Uploaded Template!":
-            os.popen(cmd=rf'cmd.exe /C "notepad.exe {os.path.join(os.path.join(os.path.join(parent_folder, "Error_Folder"), "Running_Config_Checks_Results"),"Nokia_Nodes_Running_Config_Checks_Error.txt")}"')
+            os.popen(cmd=rf'cmd.exe /C "notepad.exe {os.path.join(os.path.join(os.path.join(parent_folder, "Error_Folder"), "Pre_Running_Config_Checks_Results"),"Nokia_Nodes_Running_Config_Checks_Error.txt")}"')
         flag = 'Unsuccessful'
 
     except Exception as e:
