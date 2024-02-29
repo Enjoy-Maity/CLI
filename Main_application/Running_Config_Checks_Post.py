@@ -83,7 +83,7 @@ def main_func(**kwargs: dict) -> str:
     global flag
     flag = ''
 
-    username = os.popen(cmd=r"cmd.exe /C 'echo %username%'").read().strip()
+    username = os.popen(cmd="cmd.exe /C \"echo %username%\"").read().strip()
 
     host_details = host_details_pickle_checker()
     vendor_selected = str(kwargs['vendor_selected'])
@@ -198,3 +198,5 @@ def main_func(**kwargs: dict) -> str:
         logging.info(f"Returning the flag => {flag}")
         logging.shutdown()
         return flag
+
+# main_func(vendor_selected= "Nokia")
