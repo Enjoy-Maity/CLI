@@ -82,7 +82,10 @@ def error_message_dict_filter(dictionary: dict) -> dict:
                                         logging.info(
                                             f"for node => \'{node}\' and \n\tsection => {section}\n\t\tselected reason => {reason}"
                                         )
-                                        if len(dictionary[node][section][reason] is not None) and (isinstance(dictionary[node][section][reason], (list, tuple))):
+
+                                        logging.debug(f"{type(dictionary[node][section][reason]) = }")
+                                        if (dictionary[node][section][reason] is not None) and (isinstance(dictionary[node][section][reason], (list, tuple))):
+
                                             if len(dictionary[node][section][reason]) > 0:
                                                 if node not in result_dictionary:
                                                     result_dictionary[node] = {}
@@ -228,8 +231,8 @@ def main_func(**kwargs: dict) -> str:
     ip_hostname_mapping = kwargs['ip_hostname_mapping']
     file_mapping_dictionary = kwargs['file_mapping_dictionary']
 
-    logging.info(f"ip_hostname_mapping := \n{'\n'.join([f'{key}: {value}' for key, value in ip_hostname_mapping])}")
-    logging.info(f"file_mapping_dictionary :=\n{'\n'.join([f'{key}: {value}' for key, value in file_mapping_dictionary])}")
+    logging.info(f"ip_hostname_mapping := \n{'\n'.join([f'{key}: {value}' for key, value in ip_hostname_mapping.items()])}")
+    logging.info(f"file_mapping_dictionary :=\n{'\n'.join([f'{key}: {value}' for key, value in file_mapping_dictionary.items()])}")
 
     username = os.popen(cmd='cmd.exe /C "echo %username%"').read().strip()
     pickle_path = rf"C:\\Users\\{username}\\AppData\\Local\\CLI_Automation\\Vendor_pickles\\NOKIA.pickle"
@@ -342,7 +345,7 @@ def main_func(**kwargs: dict) -> str:
         flag = 'Unsuccessful'
 
     except Exception as e:
-        logging.error(f"Exception Occurred!=>\nTitle==>{type(e)}\nMessage==>{str(e)}")
+        logging.error(f"Exception Occurred!=>\nTitle==>{e.__class__.__name__}\nMessage==>{str(e)}")
         messagebox.showerror(title="Exception Occurred!",
                              message=str(e))
         flag = 'Unsuccessful'
