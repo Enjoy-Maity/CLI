@@ -20,7 +20,6 @@ configure
 				exit
 				no shutdown
 			exit
-			no shutdown
 		exit
 		vpls 9000012
 			no description
@@ -37,7 +36,6 @@ configure
 				description "TO_TNX_SAN_PA3420_EPDG_FW01"
 				no shutdown
 			exit
-			no shutdown
 		exit
 		vpls 9000013
 			no description
@@ -57,7 +55,6 @@ configure
 				exit
 				no shutdown
 			exit
-			no shutdown
 		exit
 		vpls 9000014
 			no description
@@ -74,7 +71,6 @@ configure
 				description "TO_TNX_SAN_PA3320_EPDG_FW01"
 				no shutdown
 			exit
-			no shutdown
 		exit
 	exit all
 admin save
@@ -89,7 +85,6 @@ configure
 			description "CK01-lb-signaling-V3802_VPLS"
 			allow-ip-int-bind
 			exit
-			tempna
 			stp
 				shutdown
 			exit
@@ -97,14 +92,12 @@ configure
 				description "To_HOS-ACIN1"
 				no shutdown
 			exit
-			no shutdown
 		exit
 		vpls 9000012
 			no description
 			description "PA3420_EPDG_FW01_INTERNAL_VPLS"
 			allow-ip-int-bind
 			exit
-			tempna
 			stp
 				shutdown
 			exit
@@ -115,14 +108,12 @@ configure
 				exit
 				no shutdown
 			exit
-			no shutdown
 		exit
 		vpls 9000013
 			no description
 			description "PA3430_EPDG_FW02_EXTERNAL_VPLS"
 			allow-ip-int-bind
 			exit
-			tempna
 			stp
 				shutdown
 			exit
@@ -133,14 +124,12 @@ configure
 				exit
 				no shutdown
 			exit
-			no shutdown
 		exit
 		vpls 9000014
 			no description
 			description "PA3320_EPDG_FW03_EXTERNAL_VPLS"
 			allow-ip-int-bind
 			exit
-			tempna
 			stp
 				shutdown
 			exit
@@ -148,7 +137,6 @@ configure
 				description "To_HOS-ACIN3"
 				no shutdown
 			exit
-			no shutdown
 		exit
 	exit all
 admin save

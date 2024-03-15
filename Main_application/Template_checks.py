@@ -11,7 +11,6 @@ from datetime import datetime
 from CustomThread import CustomThread
 from Section_splitter import section_splitter
 
-
 flag = ''
 selected_vendor_book_excel_file = None
 node_to_section_dictionary = None
@@ -43,29 +42,37 @@ def error_message_filter(dictionary: dict) -> dict:
                         j = 0
                         while j < len(sections_list):
                             section = sections_list[j]
-                            if (dictionary[node][section] is not None) and (isinstance(dictionary[node][section], (list, tuple))):
+                            if (dictionary[node][section] is not None) and (isinstance(dictionary[node][section], dict)):
                                 if len(dictionary[node][section]) > 0:
-                                    if node not in result_dictionary:
-                                        result_dictionary[node] = {}
-                                        if section not in result_dictionary[node]:
-                                            result_dictionary[node][section] = {}
-                                            result_dictionary[node][section] = dictionary[node][section]
-                                        else:
-                                            result_dictionary[node][section] = dictionary[node][section]
+                                    reasons = list(dictionary[node][section].keys())
+                                    if len(reasons) > 0:
+                                        k = 0
+                                        while k < len(reasons):
+                                            reason = reasons[k]
+                                            if (dictionary[node][section][reason] is not None) and (isinstance(dictionary[node][section][reason], (list, tuple))):
+                                                if node not in result_dictionary:
+                                                    result_dictionary[node] = {}
+                                                    if section not in result_dictionary[node]:
+                                                        result_dictionary[node][section] = {}
+                                                        result_dictionary[node][section][reason] = dictionary[node][section][reason]
+                                                    else:
+                                                        result_dictionary[node][section][reason] = dictionary[node][section][reason]
 
-                                    else:
-                                        if section not in result_dictionary[node]:
-                                            result_dictionary[node][section] = {}
-                                            result_dictionary[node][section] = dictionary[node][section]
-                                        else:
-                                            result_dictionary[node][section] = dictionary[node][section]
+                                                else:
+                                                    if section not in result_dictionary[node]:
+                                                        result_dictionary[node][section] = {}
+                                                        result_dictionary[node][section][reason] = dictionary[node][section][reason]
+                                                    else:
+                                                        result_dictionary[node][section][reason] = dictionary[node][section][reason]
+
+                                            k += 1
                             j += 1
                 i += 1
 
     logging.info(
         "Got the cleaned result_dictionary ==> {\n" +
         f"{'\n\t'.join([f'{node}: {
-                '\n\t\t'.join([f'{reason}: {reason_list}' for reason, reason_list in result_dictionary.items()])}' for node, value in result_dictionary.items()])}" +
+            '\n\t\t'.join([f'{reason}: {reason_list}' for reason, reason_list in result_dictionary.items()])}' for node, value in result_dictionary.items()])}" +
         "}"
     )
     return result_dictionary
@@ -91,22 +98,59 @@ def pickling_func(dictionary: dict, vendor_selected: str) -> None:
     del f
 
 
-def action_blank_check(*args) -> list:
+def action_blank_check(*args) -> dict[str, list | None]:
     try:
         assert isinstance(args[0], pd.DataFrame)
         dataframe = args[0]
-        result = list()
+        result = dict()
 
         # dataframe.fillna("TempNA", inplace = True)
         # Alternative for dataframe.fillna("TempNA", inplace = True)
         dataframe = dataframe.where(~dataframe.isna(), "TempNA")
 
         i = 0
-
+        reason = "Blank \'Action\' input found in Design Template"
         while i < len(dataframe):
             if dataframe.iloc[i, dataframe.columns.get_loc('Action')] == "TempNA":
-                result.append(str(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')]))
+                if reason not in result:
+                    result[reason] = []
+                    result[reason].append(str(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')]))
+                else:
+                    result[reason].append(str(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')]))
             i += 1
+
+        return result
+
+    except AssertionError as e:
+        logging.debug(f"Assertion Error====>\n{traceback.format_exc()}\n{e}")
+        messagebox.showerror('Wrong Data Type!', str(e))
+
+
+def serial_list_checks(*args) -> dict[str, list | None]:
+    try:
+        assert isinstance(args[0], pd.DataFrame)
+        dataframe = args[0]
+        dataframe = dataframe.where(~dataframe.isna(), "TempNA")
+        result = dict()
+
+        reason = "Blank \'S.No.\' found in Design Template"
+        i = 0
+        while i < len(dataframe):
+            if dataframe.iloc[i, dataframe.columns.get_loc('S.No.')] == "TempNA":
+                if reason not in result:
+                    result[reason] = []
+                    result[reason].append(str(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')]))
+                else:
+                    result[reason].append(str(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')]))
+            i += 1
+
+        reason = "Duplicate \'S.No.\' found in Design Template"
+        temp_df = dataframe.loc[(dataframe.duplicated(subset=['S.No.'], keep=False))]
+
+        temp_df = temp_df.loc[temp_df["S.No."] != "TempNA"]
+
+        if temp_df.shape[0] > 0:
+            result[reason] = temp_df["S.No."].astype(float).astype(int).to_list()
 
         return result
 
@@ -213,20 +257,20 @@ def main_func(**kwargs) -> str:
 
         if ((len(host_details_not_present_in_the_workbook) > 0) and
                 (len(host_details_present_in_workbook_but_not_in_host_details) > 0)):
-            response = messagebox.askyesno(title= "Wrong Data Input!",
-                                           message= f"Host Details not found in {input_design_file_name.format(vendor_selected)} workbook:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nand\n\n extra Host IP details found :\n\n{', '.join(host_details_present_in_workbook_but_not_in_host_details)}\n\nDo You want to proceed?",
-                                           icon= 'warning')
+            response = messagebox.askyesno(title="Wrong Data Input!",
+                                           message=f"Host Details not found in {input_design_file_name.format(vendor_selected)} workbook:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nand\n\n extra Host IP details found :\n\n{', '.join(host_details_present_in_workbook_but_not_in_host_details)}\n\nDo You want to proceed?",
+                                           icon='warning')
 
         else:
             if len(host_details_not_present_in_the_workbook) > 0:
-                response = messagebox.askyesno(title= "Host Details Missing!",
-                                               message= f"Host Details IPs Missing in {input_design_file_name.format(vendor_selected)}:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",
-                                               icon = 'warning')
+                response = messagebox.askyesno(title="Host Details Missing!",
+                                               message=f"Host Details IPs Missing in {input_design_file_name.format(vendor_selected)}:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",
+                                               icon='warning')
 
             if len(host_details_present_in_workbook_but_not_in_host_details) > 0:
-                response = messagebox.askyesno(title= "Extra Host Details Found!",
-                                               message= f"Extra Host IP details found in {input_design_file_name.format(vendor_selected)} but not present in uploaded Host Details:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",
-                                               icon = 'warning' )
+                response = messagebox.askyesno(title="Extra Host Details Found!",
+                                               message=f"Extra Host IP details found in {input_design_file_name.format(vendor_selected)} but not present in uploaded Host Details:\n\n{', '.join(host_details_not_present_in_the_workbook)}\n\nDo You want to proceed?",
+                                               icon='warning')
 
         if (response is not None) and (not response):
             # selected_vendor_book_excel_file.close()
@@ -291,6 +335,7 @@ def main_func(**kwargs) -> str:
         try:
             i = 0
             thread_list = []
+            neo_thread_list = []
             while i < len(keys_pertaining_nodes):
                 selected_node = keys_pertaining_nodes[i]
                 sections = list(node_to_section_dictionary[selected_node].keys())
@@ -304,11 +349,19 @@ def main_func(**kwargs) -> str:
                     temp_thread.daemon = True
                     thread_list.append(temp_thread)
                     temp_thread.start()
+
+                    neo_temp_thread = CustomThread(target=serial_list_checks,
+                                                   args=(dataframe,))
+                    neo_temp_thread.daemon = True
+                    neo_thread_list.append(neo_temp_thread)
+                    neo_temp_thread.start()
                     j += 1
                 i += 1
 
             thread_return_list = []
+            neo_thread_return_list = []
             thread_list_len = len(thread_list)
+            neo_thread_list_len = len(neo_thread_list)
             k = 0  # Incrementer for the thread_list
 
             dictionary_for_message = {}
@@ -319,7 +372,15 @@ def main_func(**kwargs) -> str:
                 thread_return_list.append(thread_list[i].join())
                 i += 1
 
+            i = 0
+            while i < neo_thread_list_len:
+                neo_thread_return_list.append(neo_thread_list[i].join())
+                i += 1
+
             logging.debug(f"Got the thread_return_list :-\n{thread_return_list}")
+
+            logging.debug(f"Got the neo_thread_return_list :-\n{neo_thread_return_list}")
+
             i = 0
             while i < len(keys_pertaining_nodes):
                 selected_node = keys_pertaining_nodes[i]
@@ -329,12 +390,19 @@ def main_func(**kwargs) -> str:
                 j = 0
                 while j < len(sections):
                     selected_section = sections[j]
+                    section_dictionary_for_message[selected_section] = dict()
                     try:
                         if len(thread_return_list[k]) != 0:
-                            section_dictionary_for_message[selected_section] = thread_return_list[k]
+                            section_dictionary_for_message[selected_section].update(thread_return_list[k])
+
+                        if len(neo_thread_return_list[k]) != 0:
+                            section_dictionary_for_message[selected_section].update(neo_thread_return_list[k])
                     except Exception:
                         if thread_return_list[k] is not None:
-                            section_dictionary_for_message[selected_section] = thread_return_list[k]
+                            section_dictionary_for_message[selected_section].update(thread_return_list[k])
+
+                        if neo_thread_return_list[k] is not None:
+                            section_dictionary_for_message[selected_section].update(neo_thread_return_list[k])
                     k += 1
                     j += 1
 
@@ -360,18 +428,25 @@ def main_func(**kwargs) -> str:
                 dictionary_for_message_keys_list = list(dictionary_for_message.keys())
 
                 if len(dictionary_for_message_keys_list) > 0:
-                    message_to_be_written = f"General Check Issues:\n\nIssues have been found for below '{vendor_selected}' nodes for mentioned Sr.Nos on {datetime.now().strftime('%d-%b-%Y %H:%M')} ({datetime.now().strftime('%A')})\n\n"
+                    message_to_be_written = f"General Check Issues:\n\nIssues have been found for below '{vendor_selected}' nodes for mentioned Sr.Nos on {datetime.now().strftime('%d-%b-%Y %I:%M %p')} ({datetime.now().strftime('%A')})\n\n"
                     i = 0
                     while i < len(dictionary_for_message_keys_list):
                         node_selected = dictionary_for_message_keys_list[i]
                         sections_in_dictionary_for_message = list(dictionary_for_message[node_selected].keys())
 
-                        message_to_be_written = f"{message_to_be_written}Node:- '{node_selected}'\n"
+                        message_to_be_written = f"{message_to_be_written}Node:- '{node_selected}'\n\n"
                         j = 0
                         while j < len(sections_in_dictionary_for_message):
                             section_selected = sections_in_dictionary_for_message[j]
-                            message_to_be_written = f"{message_to_be_written}\tSection: '{section_selected}':- Action details are missing for Sr.No: ({','.join(str(element) for element in dictionary_for_message[node_selected][section_selected])})\n"
+                            message_to_be_written = f"{message_to_be_written}\tSection: '{section_selected}':-\n"
+
+                            reasons = list(dictionary_for_message[node_selected][section_selected].keys())
+                            k = 0
+                            while k < len(reasons):
+                                message_to_be_written = f"{message_to_be_written}\t\t\t{k + 1}) {reasons[k]}: ({', '.join(str(element) for element in dictionary_for_message[node_selected][section_selected][reasons[k]])})\n"
+                                k += 1
                             j += 1
+                            message_to_be_written = f"{message_to_be_written}\n"
 
                         message_to_be_written = f"{message_to_be_written}\n\n"
                         i += 1
@@ -382,7 +457,7 @@ def main_func(**kwargs) -> str:
 
                 raise CustomException("Input Issue!",
                                       ("Issues have been observed in uploaded input sheet. To find the issue in detail, " +
-                                      "Please! check the 'Template_Checks_error_Vendor_wise' inside 'Error_Folder'"))
+                                       "Please! check the 'Template_Checks_error_Vendor_wise' inside 'Error_Folder'"))
 
             # with open(error_file, 'w') as f:
             #     f.write('')
@@ -392,8 +467,11 @@ def main_func(**kwargs) -> str:
             # global flag;
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntitle = {e.title}\nmessage = {e.message}")
-            messagebox.showerror(title=e.title,
-                                   message=e.message)
+
+            if e.title == 'Input Issue!':
+                os.popen(cmd= f'notepad.exe {error_file}')
+            # messagebox.showerror(title=e.title,
+            #                      message=e.message)
 
         except Exception as e:
             flag = 'Unsuccessful'

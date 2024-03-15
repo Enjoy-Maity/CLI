@@ -64,7 +64,7 @@ class WorkerProcess:
                         
                     i += 1
                     
-                self.return_value = self_target(*self._neo_args, **self._kwargs)
+                self.return_value = self._target(*self._neo_args, **self._kwargs)
                 
             return self.return_value
             

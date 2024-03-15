@@ -28,6 +28,7 @@ def modify_action_cli_preparation_add_sequence(dataframe: pd.DataFrame, ip_node:
         temp_cli = ''
 
         temp_df = dataframe.loc[dataframe['VPLS ID'] == selected_vpls_id]
+        vpls_status = str(temp_df.iloc[0, temp_df.columns.get_loc('VPLS Status')]).strip().lower()
 
         # vpls_name = temp_df.iloc[0, temp_df.columns.get_loc('VPLS Name')]
         vpls_description = temp_df.iloc[0, temp_df.columns.get_loc('VPLS Description')]
@@ -123,6 +124,9 @@ def modify_action_cli_preparation_add_sequence(dataframe: pd.DataFrame, ip_node:
 
             j += 1
 
+        if vpls_status != "tempna":
+            temp_cli = f"{temp_cli}\t\t\t{vpls_status}\n"
+
         temp_cli = (f"{temp_cli}" +
                     "\t\texit\n")
 
@@ -154,6 +158,7 @@ def modify_action_cli_preparation_delete_sequence(dataframe: pd.DataFrame, ip_no
     while i < unique_vpls_id_enteries.size:
         selected_vpls_id = unique_vpls_id_enteries[i]
         temp_df = dataframe.loc[dataframe["VPLS ID"] == selected_vpls_id]
+        vpls_status = str(temp_df.iloc[0, temp_df.columns.get_loc("VPLS Status")]).strip().lower()
         temp_cli = ''
 
         temp_cli = f"\t\tvpls {selected_vpls_id}\n"
@@ -176,7 +181,10 @@ def modify_action_cli_preparation_delete_sequence(dataframe: pd.DataFrame, ip_no
                             f"\t\t\tno {sap_lag_variable}\n")
 
             j += 1
-        
+
+        if vpls_status != 'tempna':
+            temp_cli = f"{temp_cli}\t\t\t{vpls_status}\n"
+
         temp_cli = f'{temp_cli}\t\texit\n'
         delete_sequence_cli = f"{delete_sequence_cli}{temp_cli}"
         i += 1
@@ -205,6 +213,7 @@ def modify_action_cli_preparation_modify_sequence(dataframe: pd.DataFrame, ip_no
     while i < unique_vpls_id_array.size:
         selected_vpls_id = unique_vpls_id_array[i]
         temp_df = dataframe.loc[dataframe["VPLS ID"] == selected_vpls_id]
+        vpls_status = str(temp_df.iloc[0, temp_df.columns.get_loc("VPLS Status")]).strip().lower()
         # vpls_description_variable  = str(temp_df.iloc[0, temp_df.columns.get_loc("VPLS Description")])
         # stp_variable = str(temp_df.iloc[0, temp_df.columns.get_loc("STP")]).strip().lower()
         # allow_ip_int_bind_variable = str(temp_df.iloc[0, temp_df.columns.get_loc("allow-ip-int-bind")]).strip()
@@ -292,8 +301,13 @@ def modify_action_cli_preparation_modify_sequence(dataframe: pd.DataFrame, ip_no
 
             j += 1
 
-        temp_cli = (f"{temp_cli}\t\t\tno shutdown\n" +
-                    "\t\texit\n")
+        if vpls_status != 'tempna':
+            temp_cli = (f"{temp_cli}\t\t\t{vpls_status}\n" +
+                        "\t\texit\n")
+
+        if vpls_status == 'tempna':
+            temp_cli = (f"{temp_cli}\t\t\tno shutdown\n" +
+                        "\t\texit\n")
 
         modify_sequence_cli = f"{modify_sequence_cli}{temp_cli}"
 
@@ -351,6 +365,7 @@ def add_action_cli_preparation_switch(dataframe: pd.DataFrame, ip_node: str) -> 
         temp_cli = ''
 
         temp_df = dataframe.loc[dataframe['VPLS ID'] == selected_vpls_id]
+        vpls_status = str(temp_df.iloc[0, temp_df.columns.get_loc('VPLS Status')]).strip().lower()
 
         vpls_name = temp_df.iloc[0, temp_df.columns.get_loc('VPLS Name')]
         vpls_description = temp_df.iloc[0, temp_df.columns.get_loc('VPLS Description')]
@@ -439,8 +454,13 @@ def add_action_cli_preparation_switch(dataframe: pd.DataFrame, ip_node: str) -> 
 
             j += 1
 
-        temp_cli = (f"{temp_cli}\t\t\tno shutdown\n" +
-                    "\t\texit\n")
+        if vpls_status != "tempna":
+            temp_cli = (f"{temp_cli}\t\t\t{vpls_status}\n" +
+                        "\t\texit\n")
+
+        if vpls_status == "tempna":
+            temp_cli = (f"{temp_cli}\t\t\tno shutdown\n" +
+                        "\t\texit\n")
 
         add_action_switch_cli = f"{add_action_switch_cli}{temp_cli}"
         i += 1
@@ -469,6 +489,7 @@ def add_action_cli_preparation_router(dataframe: pd.DataFrame, ip_node: str) -> 
         temp_cli = ''
 
         temp_df = dataframe.loc[dataframe['VPLS ID'] == selected_vpls_id]
+        vpls_status = str(temp_df.iloc[0, temp_df.columns.get_loc('VPLS Status')]).strip().lower()
         vpls_name = temp_df.iloc[0, temp_df.columns.get_loc('VPLS Name')]
         vpls_description = temp_df.iloc[0, temp_df.columns.get_loc('VPLS Description')]
         ip_int_bind = temp_df.iloc[0, temp_df.columns.get_loc('allow-ip-int-bind')]
@@ -555,8 +576,13 @@ def add_action_cli_preparation_router(dataframe: pd.DataFrame, ip_node: str) -> 
 
             j += 1
 
-        temp_cli = (f"{temp_cli}\t\t\tno shutdown\n" +
-                    "\t\texit\n")
+        if vpls_status != "tempna":
+            temp_cli = (f"{temp_cli}\t\t\t{vpls_status}\n" +
+                        "\t\texit\n")
+
+        if vpls_status == "tempna":
+            temp_cli = (f"{temp_cli}\t\t\tno shutdown\n" +
+                        "\t\texit\n")
 
         add_action_cli = f"{add_action_cli}{temp_cli}"
 

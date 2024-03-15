@@ -3,12 +3,13 @@ import logging
 import os
 import pickle
 import traceback
+from datetime import datetime
 from pathlib import Path
 import numpy as np
 import pandas as pd
 from threading import Event
-from CustomThread import CustomThread
-from Custom_Exception import CustomException
+from Main_application.CustomThread import CustomThread
+from Main_application.Custom_Exception import CustomException
 from tkinter import messagebox
 
 flag = ''
@@ -131,6 +132,9 @@ def section_wise_input(dictionary: dict, ip_node: str) -> dict:
     #                     level=logging.DEBUG)
 
     sections = list(dictionary.keys())
+    logging.info(
+        f"{ip_node}: - Creating Thread for Template Checks for {', '.join(sections)}"
+    )
     # thread_dictionary = {}
     # i = 0
     # while i < len(sections):
@@ -169,6 +173,10 @@ def section_wise_input(dictionary: dict, ip_node: str) -> dict:
     i = 0
     while i < len(sections):
         try:
+            logging.info(
+                f"{ip_node}: - Calling method for Template Checks for {sections[i]}\n"
+                f"\t{((len(dictionary[sections[i]]) > 0) and (sections[i] in section_dictionary.keys())) = }"
+            )
             if (len(dictionary[sections[i]]) > 0) and (sections[i] in section_dictionary.keys()):
                 # Creating a variable to call the module according to section selected in particular iteration
                 module_to_be_called = section_dictionary[sections[i]]
@@ -188,12 +196,10 @@ def section_wise_input(dictionary: dict, ip_node: str) -> dict:
             messagebox.showerror("Exception Occurred!", str(e))
             i += 1
             continue
-        
         else:
             i += 1
 
-
-        return submodules_result_dictionary
+    return submodules_result_dictionary
 
 
 def nokia_main_func(**kwargs) -> str:
@@ -206,8 +212,7 @@ def nokia_main_func(**kwargs) -> str:
                         'parent_folder' : str
                             description =====> path of the directory where 'Nokia_Design_Input_Sheet.xlsx' is located
         
-        return flag
-            flag : str
+        return flag: str
                 description =====> contains 'Successful' string corresponding the status of execution completion
 
     
@@ -309,7 +314,7 @@ def nokia_main_func(**kwargs) -> str:
                 }
             """
             error_message_dict = error_message_dict_filter(dictionary=error_message_dict)
-            error_message = ''
+
             logging.info(
                 "Created the path for error folder for message to be written if needed"
             )
@@ -339,7 +344,7 @@ def nokia_main_func(**kwargs) -> str:
                 logging.debug(
                     f"Got the error_message_dict =====>{error_message_dict}\n"
                 )
-                error_message = "<================<<Design Input Errors Observed in Below Uploaded Nodes for \"Nokia\" Vendor>>================>"
+                error_message = f"<================<<Design Input Errors Observed in Below Uploaded Nodes for \"Nokia\" Vendor on [{datetime.now().strftime('%d-%b-%Y %I:%M %p')}({datetime.now().strftime('%A')})]>>================>"
 
                 node_ips = list(error_message_dict.keys())
 
@@ -366,8 +371,8 @@ def nokia_main_func(**kwargs) -> str:
                                     error_message = f"{error_message}\n\t\t{k + 1}.) {reason} ==>> {', '.join(str(element) for element in sr_no_list)}"
 
                                 else:
-                                    
-                                    if isinstance(sr_no_list, (list,tuple)):
+
+                                    if isinstance(sr_no_list, (list, tuple)):
                                         error_message = f"{error_message}\n\t\t{k + 1}.) {reason} for \'S.No.\' ==>> ({', '.join(str(int(element)) for element in sr_no_list)})"
                                     else:
                                         error_message = f"{error_message}\n\t\t{k + 1}.) {reason} ==>> {sr_no_list}"
@@ -391,14 +396,17 @@ def nokia_main_func(**kwargs) -> str:
             flag = 'Unsuccessful'
             logging.error(f"{traceback.format_exc()}\n\nraised CustomException==>\ntitle = {e.title}\nmessage = {e.message}")
 
+            if e.title == "Wrong Design Input for Uploaded Template!":
+                os.popen(cmd= f'notepad.exe {os.path.join(kwargs['parent_folder'], "Error_Folder", "Design_Input_Checks_Results", "Nokia_Nodes_Design_Input_Checks_Error.txt")}')
+
         except AssertionError as e:
             flag = 'Unsuccessful'
-            logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\ntitle = {e.title}\nmessage = {e.message}")
+            logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\ntitle = {e.__class__.__name__}\nmessage = {str(e)}")
             messagebox.showerror("Wrong Input File", str(e))
 
         except Exception as e:
             flag = 'Unsuccessful'
-            logging.error(f"{traceback.format_exc()}\n\nException:==>{e}")
+            logging.error(f"{traceback.format_exc()}\n\nException:==>{e.__class__.__name__}\nmessage = {str(e)}")
             messagebox.showerror("Exception Occurred!", str(e))
 
         if flag != 'Unsuccessful':
@@ -411,7 +419,7 @@ def nokia_main_func(**kwargs) -> str:
 
     except AssertionError as e:
         flag = 'Unsuccessful'
-        logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\ntitle = {e.title}\nmessage = {e.message}")
+        logging.error(f"{traceback.format_exc()}\n\nraised AssertionError==>\ntitle = {e.__class__.__name__}\nmessage = {str(e)}")
         messagebox.showerror("Wrong Input File", str(e))
 
     except Exception as e:

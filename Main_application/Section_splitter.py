@@ -57,7 +57,7 @@ def section_splitter(dataframe: pd.DataFrame, method_called: str):
                 while j < len(dataframe):
                     # If either we have reached the last row of the dataframe or encountered another row with special section string
                     # we are breaking the loop
-                    if (j < len(dataframe)) and (str(dataframe.iloc[j, 0]).strip().__contains__(string_to_be_found)):
+                    if (str(dataframe.iloc[j, 0]).strip().__contains__(string_to_be_found)):
                         break
 
                     else:
@@ -69,12 +69,12 @@ def section_splitter(dataframe: pd.DataFrame, method_called: str):
                             k += 1
                     j += 1
 
-                i = j + 2
+                i = j
 
                 # Creating the section df and assigning it 
                 section_dictionary[section] = pd.DataFrame(dictionary_for_columns, columns=columns)
                 section_dictionary[section].drop_duplicates(keep="first", inplace=True)
-                section_dictionary[section].replace("TempNA", np.nan, inplace=True)
+                section_dictionary[section] = section_dictionary[section].replace("TempNA", np.nan)
                 section_dictionary[section].dropna(how="all", inplace=True)
                 section_dictionary[section].reset_index(drop=True, inplace=True)
 

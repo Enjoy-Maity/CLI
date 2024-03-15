@@ -522,9 +522,14 @@ def sdp_checks_add_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict
     #                     encoding="UTF-8",
     #                     level=logging.DEBUG)
 
-    logging.debug("Running the sdp_checks_add_dataframe_func for ip_node \'{ip_node}\'")
+    logging.debug(f"Running the sdp_checks_add_dataframe_func for ip_node \'{ip_node}\'")
     sdp_checks_add_dataframe_result_dictionary = {}
     global sdp_starting_start_lines
+
+    logging.info(
+        f"{ip_node}: - got the list\n"
+        f"{'\n'.join(sdp_starting_start_lines)}"
+    )
     global mesh_sdp_lines_start_lines
 
     reason = "Given Mesh-SDP clash found"
@@ -535,17 +540,21 @@ def sdp_checks_add_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict
 
     if (isinstance(sdp_starting_start_lines, list)) and (isinstance(mesh_sdp_lines_start_lines, list)):
         i = 0
-        while i < len(dataframe):
+        while i < dataframe.shape[0]:
             mesh_sdp_digit_variable = (re.findall(pattern=compiled_digits_pattern,
                                                   string=dataframe.iloc[i, dataframe.columns.get_loc("Mesh-sdp")]))[0]
 
             mesh_input_from_dataframe = (dataframe.iloc[i, dataframe.columns.get_loc("Mesh-sdp")]).lower()
+            logging.info(
+                f"{ip_node}: - running checks for mesh sdp - \'{mesh_input_from_dataframe}\' with sdp value - \'{mesh_sdp_digit_variable}\'"
+            )
             mesh_sdp_input_status = False
             sdp_found = False
 
             j = 0
             while j < len(sdp_starting_start_lines):
-                if sdp_starting_start_lines[j].strip().startswith(f"sdp {mesh_sdp_digit_variable}"):
+                if sdp_starting_start_lines[j].strip().startswith(f"sdp {mesh_sdp_digit_variable} mpls"):
+                # if re.search(pattern= f"^sdp\s+{mesh_sdp_digit_variable}\s+", string= sdp_starting_start_lines[j].strip()):
                     sdp_found = True
                     # sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Found"
                     if str(dataframe.iloc[i, dataframe.columns.get_loc('SDP(New/Exist)')]).strip().upper() == 'NEW':
@@ -560,7 +569,7 @@ def sdp_checks_add_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> dict
             if not sdp_found:
                 # if isinstance(sdp_existence_status_dictionary, dict):
                 #     sdp_existence_status_dictionary[f"sdp {mesh_sdp_digit_variable}"] = "Not Found"
-                if str(dataframe.iloc[i, 'SDP(New/Exist)']).strip().upper().startswith('EXIST'):
+                if str(dataframe.iloc[i, dataframe.columns.get_loc('SDP(New/Exist)')]).strip().upper().startswith('EXIST'):
                         if reason2 not in sdp_checks_add_dataframe_result_dictionary.keys():
                             sdp_checks_add_dataframe_result_dictionary[reason2] = []
                             sdp_checks_add_dataframe_result_dictionary[reason2].append(dataframe.iloc[i, dataframe.columns.get_loc('S.No.')])

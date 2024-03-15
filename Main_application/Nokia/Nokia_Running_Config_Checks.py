@@ -155,7 +155,7 @@ def error_message_writer(parent_folder: str, error_message_dict: dict) -> str:
         error_message = f"{error_message}\nNode IP : \"{node_ips[i]}\""
         j = 0
         while j < len(sections):
-            error_message = f"{error_message}\nSection : \'{sections[j]}\'"
+            error_message = f"{error_message}\n\tSection : \'{sections[j]}\'"
 
             reasons = list(error_message_dict[node_ips[i]][sections[j]].keys())
             k = 0
@@ -164,10 +164,10 @@ def error_message_writer(parent_folder: str, error_message_dict: dict) -> str:
                 sr_no_list = error_message_dict[node_ips[i]][sections[j]][reason]
 
                 if reason.endswith(")"):
-                    error_message = f"{error_message}\n\t{k + 1}.) {reason} ==>> {', '.join(str(element) for element in sr_no_list)}"
+                    error_message = f"{error_message}\n\t\t\t{k + 1}.) {reason} ==>> {', '.join(str(element) for element in sr_no_list)}"
 
                 else:
-                    error_message = f"{error_message}\n\t{k + 1}.) {reason} for \'S.No.\' ==>> ({', '.join(str(int(element)) for element in sr_no_list)})"
+                    error_message = f"{error_message}\n\t\t\t{k + 1}.) {reason} for \'S.No.\' ==>> ({', '.join(str(int(element)) for element in sr_no_list)})"
                 k += 1
 
             error_message = f"{error_message}\n"

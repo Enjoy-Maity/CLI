@@ -166,7 +166,7 @@ def sdp_checks_delete_dataframe_func(dataframe: pd.DataFrame, ip_node: str) -> N
         i += 1
 
     logging.info(
-        f"{ip_node}:- sdp_checks_delete_datframe_func "
+        f"{ip_node}:- sdp_checks_delete_dataframe_func "
         "{\n"
         f"{'\n'.join([f'{key}: {', '.join([str(value) for value in values])}' for key,values in result_dictionary.items()])}"
         "\n}"

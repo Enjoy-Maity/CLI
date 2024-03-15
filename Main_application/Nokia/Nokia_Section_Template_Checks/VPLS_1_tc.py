@@ -182,6 +182,14 @@ def modify_checks(dataframe: pd.DataFrame, ip_node: str) -> dict:
                 else:
                     dictionary_to_be_returned[reason1].append(int(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")]))
 
+            elif not str(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("Mesh Status")]).__contains__(","):
+                if reason2 not in dictionary_to_be_returned:
+                    dictionary_to_be_returned[reason2] = []
+                    dictionary_to_be_returned[reason2].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+
+                else:
+                    dictionary_to_be_returned[reason2].append(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("S.No.")])
+
             elif str(mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("Mesh Status")]).__contains__(","):
                 statuses = [str(status).strip() for status in mesh_filtered_df.iloc[i, mesh_filtered_df.columns.get_loc("Mesh Status")].split(",")]
 
@@ -239,6 +247,14 @@ def modify_checks(dataframe: pd.DataFrame, ip_node: str) -> dict:
 
                 else:
                     dictionary_to_be_returned[reason1].append(int(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")]))
+
+            elif not str(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("Sap Status")]).__contains__(","):
+                if reason2 not in dictionary_to_be_returned:
+                    dictionary_to_be_returned[reason2] = []
+                    dictionary_to_be_returned[reason2].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
+
+                else:
+                    dictionary_to_be_returned[reason2].append(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("S.No.")])
 
             elif str(sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("Sap Status")]).__contains__(","):
                 statuses = [str(status).strip() for status in sap_filtered_df.iloc[i, sap_filtered_df.columns.get_loc("Sap Status")].split(",")]
@@ -436,7 +452,8 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
         result_dictionary.update(temp_dictionary)
     logging.debug(f"The result_dictionary for node_ip({ip_node}) for VPLS-1 ==>\n {result_dictionary}")
 
-    temp_df = dataframe.loc[(~dataframe["Action"].str.strip().str.endswith("TempNA")) & (dataframe["Sequence"].str.strip().str.upper().str.contains("MODIFY|DELETE"))]
+
+    temp_df = df.loc[(~df["Action"].str.strip().str.endswith("TempNA")) & (df["Sequence"].str.strip().str.upper().str.endswith("MODIFY"))]
     logging.debug(
         f"{ip_node}: - The filtered dataframe that we got\n{temp_df.to_markdown()}"
     )

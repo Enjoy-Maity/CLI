@@ -1,0 +1,346 @@
+************ Node IP :- 172.31.72.93*************
+
+configure service vsd
+domain "VSD_SIG_EPG01_VSFO_30_v1031" type l2-domain-irb create
+	description "VSD_SIG_EPG01_VSFO_30_v1031_VPLS"
+	no shutdown
+exit
+
+domain "VSD_SIG_EPG01_VSFO_30_v1031" type l2-domain-irb create
+	description "VSD_SIG_EPG01_VSFO_30_v1031_VPLS"
+	no shutdown
+exit
+
+exit all
+admin save
+config service
+
+		vpls 103 name "VSD_SIG_EPG01_VSFO_30_v1031" customer 1 create
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+			exit
+			bgp
+				route-distinguisher 65535:103
+				vsi-export "VSD_SIG_EPG_VSFO_30_v1031_EXPORT"
+				vsi-import "VSD_KK_SIG_IMPORT"
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			vsd-domain-name "VSD_SIG_EPG01_VSFO_30_v1031"
+			no shutdown
+		exit
+		vpls 105 name "VSD_SIG_EPG01_VSFO_30_v1031" customer 1 create
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+			exit
+			bgp
+				route-distinguisher 65535:103
+				vsi-export "VSD_SIG_EPG_VSFO_30_v1031_EXPORT"
+				vsi-import "VSD_KK_SIG_IMPORT"
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			vsd-domain-name "VSD_SIG_EPG01_VSFO_30_v1031"
+			no shutdown
+		exit
+
+		vpls 104 name "TempNA" customer 1 create
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+		exit
+			vxlan instance 1 vni 104 create
+			exit
+			bgp
+				route-distinguisher 65535:104
+				route-target export 65535:104
+				route-target import 65535:104
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			no shutdown
+		exit
+		vpls 106 name "TempNA" customer 1 create
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+		exit
+			vxlan instance 1 vni 106 create
+			exit
+			bgp
+				route-distinguisher 65535:106
+				route-target export 65535:106
+				route-target import 65535:106
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			no shutdown
+		exit
+
+
+		vpls 107
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+			exit
+			bgp
+				route-distinguisher 65535:107
+				vsi-export "VSD_SIG_EPG_VSFO_30_v1031_EXPORT"
+				vsi-import "VSD_KK_SIG_IMPORT"
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			vsd-domain-name "VSD_SIG_EPG01_VSFO_30_v1031"
+			shutdown
+		exit
+		vpls 109
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+			exit
+			bgp
+				route-distinguisher 65535:107
+				vsi-export "VSD_SIG_EPG_VSFO_30_v1031_EXPORT"
+				vsi-import "VSD_KK_SIG_IMPORT"
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			vsd-domain-name "VSD_SIG_EPG01_VSFO_30_v1031"
+			shutdown
+		exit
+
+		vpls 108
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+		exit
+			vxlan instance 1 vni 104 create
+			exit
+			bgp
+				route-distinguisher 65535:108
+				route-target export 65535:107
+				route-target import 65535:107
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			no shutdown
+		exit
+		vpls 110
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+		exit
+			vxlan instance 1 vni 106 create
+			exit
+			bgp
+				route-distinguisher 65535:110
+				route-target export 65535:109
+				route-target import 65535:109
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			no shutdown
+		exit
+exit all
+admin save
+
+
+************ Node IP :- 172.31.72.94*************
+
+configure service vsd
+domain "VSD_SIG_EPG01_VSFO_30_v1031" type l2-domain-irb create
+	description "VSD_SIG_EPG01_VSFO_30_v1031_VPLS"
+	no shutdown
+exit
+
+domain "VSD_SIG_EPG01_VSFO_30_v1031" type l2-domain-irb create
+	description "VSD_SIG_EPG01_VSFO_30_v1031_VPLS"
+	no shutdown
+exit
+
+exit all
+admin save
+config service
+
+		vpls 103 name "VSD_SIG_EPG01_VSFO_30_v1031" customer 1 create
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+			exit
+			bgp
+				route-distinguisher 65535:103
+				vsi-export "VSD_SIG_EPG_VSFO_30_v1031_EXPORT"
+				vsi-import "VSD_KK_SIG_IMPORT"
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			vsd-domain-name "VSD_SIG_EPG01_VSFO_30_v1031"
+			no shutdown
+		exit
+		vpls 105 name "VSD_SIG_EPG01_VSFO_30_v1031" customer 1 create
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+			exit
+			bgp
+				route-distinguisher 65535:103
+				vsi-export "VSD_SIG_EPG_VSFO_30_v1031_EXPORT"
+				vsi-import "VSD_KK_SIG_IMPORT"
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			vsd-domain-name "VSD_SIG_EPG01_VSFO_30_v1031"
+			no shutdown
+		exit
+
+		vpls 104 name "TempNA" customer 1 create
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+		exit
+			vxlan instance 1 vni 104 create
+			exit
+			bgp
+				route-distinguisher 65535:104
+				route-target export 65535:104
+				route-target import 65535:104
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			no shutdown
+		exit
+		vpls 106 name "TempNA" customer 1 create
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+		exit
+			vxlan instance 1 vni 106 create
+			exit
+			bgp
+				route-distinguisher 65535:106
+				route-target export 65535:106
+				route-target import 65535:106
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			no shutdown
+		exit
+
+
+		vpls 107
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+			exit
+			bgp
+				route-distinguisher 65535:107
+				vsi-export "VSD_SIG_EPG_VSFO_30_v1031_EXPORT"
+				vsi-import "VSD_KK_SIG_IMPORT"
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			vsd-domain-name "VSD_SIG_EPG01_VSFO_30_v1031"
+			shutdown
+		exit
+		vpls 109
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+			exit
+			bgp
+				route-distinguisher 65535:107
+				vsi-export "VSD_SIG_EPG_VSFO_30_v1031_EXPORT"
+				vsi-import "VSD_KK_SIG_IMPORT"
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			vsd-domain-name "VSD_SIG_EPG01_VSFO_30_v1031"
+			shutdown
+		exit
+
+		vpls 108
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+		exit
+			vxlan instance 1 vni 104 create
+			exit
+			bgp
+				route-distinguisher 65535:108
+				route-target export 65535:107
+				route-target import 65535:107
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			no shutdown
+		exit
+		vpls 110
+			service-mtu 9181
+			allow-ip-int-bind
+				vxlan-ipv4-tep-ecmp
+		exit
+			vxlan instance 1 vni 106 create
+			exit
+			bgp
+				route-distinguisher 65535:110
+				route-target export 65535:109
+				route-target import 65535:109
+			exit
+			bgp-evpn
+			exit
+			stp
+				shutdown
+			exit
+			no shutdown
+		exit
+exit all
+admin save
+
+

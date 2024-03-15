@@ -1,6 +1,4 @@
 import logging
-import os
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -21,17 +19,17 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
             result_dictionary => dict, 
             description ====> contains the dictionary with the list of all errors found in Template Checks with reason as keys.
     """
-    log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
-    Path(log_file_path).mkdir(parents=True, exist_ok=True)
+    # log_file_path = "C:/Ericsson_Application_Logs/CLI_Automation_Logs/"
+    # Path(log_file_path).mkdir(parents=True, exist_ok=True)
 
-    log_file = os.path.join(log_file_path, "Template_checks.log")
+    # log_file = os.path.join(log_file_path, "Template_checks.log")
 
-    logging.basicConfig(filename=log_file,
-                        filemode="a",
-                        format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({os.path.basename(os.path.dirname(__file__))}/{'%(module)s'}): {'%(message)s'}",
-                        datefmt='%d-%b-%Y %I:%M:%S %p',
-                        encoding="UTF-8",
-                        level=logging.DEBUG)
+    # logging.basicConfig(filename=log_file,
+    #                     filemode="a",
+    #                     format=f"[ {'%(asctime)s'} ]: <<{'%(levelname)s'}>>: ({os.path.basename(os.path.dirname(__file__))}/{'%(module)s'}): {'%(message)s'}",
+    #                     datefmt='%d-%b-%Y %I:%M:%S %p',
+    #                     encoding="UTF-8",
+    #                     level=logging.DEBUG)
 
     # logging.debug(
     #     f"Adding the system path for the Nokia main folder so that the NameError is not encountered in Nokia.Nokia_Section_Template_Checks.VPLS_1.same_vpls_id_found_error_message in VPLS-2 Section Checks")
@@ -165,9 +163,30 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
     if reason in result_dictionary.keys():
         logging.debug(f"Created entries for the 'Blank VSD Controller Mapping' in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}\n\n")
 
+    reason = 'Wrong Input for \'VSD Controller Mapping\' field'
+
+    serial_list = list((df.loc[~df["VSD Controller Mapping"].str.strip().str.upper().isin(['TEMPNA', 'YES', 'NO'])])['S.No.'].astype(int))
+
+    if len(serial_list) > 0:
+        result_dictionary[reason] = serial_list
+        logging.debug(
+            f"{ip_node}: - Added reason for unacceptable entries for field \'VSD Controller Mapping\'\n{
+                '\n'.join([f'{key} : {', '.join(str(value) for value in values)}' for key, values in result_dictionary.items()])
+            }"
+        )
+
     logging.debug(f"Checking for the 'VSD Controller Mapping' specific checks in the dataframe for VPLS-2 for node ip {ip_node}\n\n")
     df_with_vsd_controller_yes = df[df['VSD Controller Mapping'].str.strip().str.upper() == 'YES']
+
+    logging.info(
+        f"{ip_node}: - Got the filtered data from VSD Controller Mapping == YES for VPLS-2 for node ip {ip_node} ==> \n{df_with_vsd_controller_yes.to_markdown()}\n"
+    )
+
     df_with_vsd_controller_no = df[df['VSD Controller Mapping'].str.strip().str.upper() == 'NO']
+
+    logging.info(
+        f"{ip_node}: - Got the filtered data from VSD Controller Mapping == NO for VPLS-2 for node ip {ip_node} ==> \n{df_with_vsd_controller_no.to_markdown()}\n"
+    )
 
     if len(df_with_vsd_controller_yes) > 0:
         logging.debug(
@@ -179,25 +198,33 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
                 reason1 = 'Blank \'Vsd-domain Name\' found'
                 if reason1 not in result_dictionary.keys():
                     result_dictionary[reason1] = []
-                    result_dictionary[reason1].append(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')])
+                    result_dictionary[reason1].append(int(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')]))
                 else:
-                    result_dictionary[reason1].append(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')])
+                    result_dictionary[reason1].append(int(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')]))
 
             if df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('Vsd-domain Description')] == 'TempNA':
                 reason2 = 'Blank \'Vsd-domain Description\' found'
                 if reason2 not in result_dictionary.keys():
                     result_dictionary[reason2] = []
-                    result_dictionary[reason2].append(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')])
+                    result_dictionary[reason2].append(int(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')]))
                 else:
-                    result_dictionary[reason2].append(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')])
+                    result_dictionary[reason2].append(int(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')]))
 
             if df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('Vsd-domain Type')] == 'TempNA':
                 reason3 = 'Blank \'Vsd-domain Type\' found'
-                if not reason3 in result_dictionary.keys():
+                if reason3 not in result_dictionary.keys():
                     result_dictionary[reason3] = []
-                    result_dictionary[reason3].append(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')])
+                    result_dictionary[reason3].append(int(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')]))
                 else:
-                    result_dictionary[reason3].append(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')])
+                    result_dictionary[reason3].append(int(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')]))
+
+            if df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc("VSD Domain(Exist/New)")] == 'TempNA':
+                reason4 = 'Blank \'VSD Domain(Exist/New)\' found'
+                if reason4 not in result_dictionary.keys():
+                    result_dictionary[reason4] = []
+                    result_dictionary[reason4].append(int(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')]))
+                else:
+                    result_dictionary[reason4].append(int(df_with_vsd_controller_yes.iloc[i, df_with_vsd_controller_yes.columns.get_loc('S.No.')]))
             i += 1
 
         logging.debug(f"Created entries for the 'VSD Controller Mapping' equal to \'Yes\' status in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}\n\n")
@@ -212,25 +239,25 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
                 reason1 = 'Non-Blank \'Vsd-domain Name\' found'
                 if reason1 not in result_dictionary.keys():
                     result_dictionary[reason1] = []
-                    result_dictionary[reason1].append(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')])
+                    result_dictionary[reason1].append(int(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')]))
                 else:
-                    result_dictionary[reason1].append(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')])
+                    result_dictionary[reason1].append(int(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')]))
 
             if df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('Vsd-domain Description')] != 'TempNA':
                 reason2 = 'Non-Blank \'Vsd-domain Description\' found'
                 if reason2 not in result_dictionary.keys():
                     result_dictionary[reason2] = []
-                    result_dictionary[reason2].append(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')])
+                    result_dictionary[reason2].append(int(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')]))
                 else:
-                    result_dictionary[reason2].append(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')])
+                    result_dictionary[reason2].append(int(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')]))
 
             if df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('Vsd-domain Type')] != 'TempNA':
                 reason3 = 'Non-Blank \'Vsd-domain Type\' found'
                 if reason3 not in result_dictionary.keys():
                     result_dictionary[reason3] = []
-                    result_dictionary[reason3].append(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')])
+                    result_dictionary[reason3].append(int(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')]))
                 else:
-                    result_dictionary[reason3].append(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')])
+                    result_dictionary[reason3].append(int(df_with_vsd_controller_no.iloc[i, df_with_vsd_controller_no.columns.get_loc('S.No.')]))
             i += 1
 
         logging.debug(f"Created entries for the 'VSD Controller Mapping' equal to \'No\' status in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}\n\n")
@@ -243,25 +270,25 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
     # Entry checking for RT-Export Character length
     if len(filtered_df_for_rt_export_for_string_length_greater_than_32) > 0:
         reason = 'RT-Export Field Entry Length Greater than 32 characters'
-        result_dictionary[reason] = filtered_df_for_rt_export_for_string_length_greater_than_32['S.No.'].tolist()
+        result_dictionary[reason] = filtered_df_for_rt_export_for_string_length_greater_than_32['S.No.'].astype(int).tolist()
         logging.debug(f"Created entries for the '{reason}' in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}\n\n")
 
     # Entry checking for RT-Import Character length
     if len(filtered_df_for_rt_import_for_string_length_greater_than_32) > 0:
         reason = 'RT-Import Field Entry Length Greater than 32 characters'
-        result_dictionary[reason] = filtered_df_for_rt_import_for_string_length_greater_than_32['S.No.'].tolist()
+        result_dictionary[reason] = filtered_df_for_rt_import_for_string_length_greater_than_32['S.No.'].astype(int).tolist()
         logging.debug(f"Created entries for the '{reason}' in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}\n\n")
 
     # Entry checking for VSI-Export Character length
     if len(filtered_df_for_VSI_export_for_string_length_greater_than_32) > 0:
         reason = 'VSI-Export Field Entry Length Greater than 32 characters'
-        result_dictionary[reason] = filtered_df_for_VSI_export_for_string_length_greater_than_32['S.No.'].tolist()
+        result_dictionary[reason] = filtered_df_for_VSI_export_for_string_length_greater_than_32['S.No.'].astype(int).tolist()
         logging.debug(f"Created entries for the '{reason}' in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}\n\n")
 
     # Entry checking for VSI-Import Character length
     if len(filtered_df_for_VSI_import_for_string_length_greater_than_32) > 0:
         reason = 'VSI-Import Field Entry Length Greater than 32 characters'
-        result_dictionary[reason] = filtered_df_for_VSI_import_for_string_length_greater_than_32['S.No.'].tolist()
+        result_dictionary[reason] = filtered_df_for_VSI_import_for_string_length_greater_than_32['S.No.'].astype(int).tolist()
         logging.debug(f"Created entries for the '{reason}' in the result_dictionary for node ip '{ip_node}' for VPLS-2 ==>\n{result_dictionary}\n\n")
 
     logging.debug(f"The result_dictionary for node_ip({ip_node}) for VPLS-2 ==>\n {result_dictionary}\n\n")
