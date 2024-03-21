@@ -100,13 +100,13 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
             i += 1
         logging.debug(f"Entered the entries for 'Blank VPLS Name' for node ip {ip_node} for VPLS 2 ==>\n{result_dictionary}\n\n")
 
-        # temp_df = df_add[df_add.duplicated(subset=['VPLS ID'], keep=False)]
-        # if len(temp_df) > 0:
-        #     logging.debug(f"Found duplicate VPLS IDs for VPLS-2 for node_ip ({ip_node})==>\n{temp_df.to_markdown()}\n\n")
-        #     reason = 'Same VPLS ID found ==> for VPLS IDs(S.Nos.)'
-        #     from Nokia.Nokia_Section_Template_Checks.VPLS_1_tc import same_vpls_id_found_error_message_generator
-        #     result_dictionary[reason] = same_vpls_id_found_error_message_generator(dataframe=temp_df, common_vpls_ids=temp_df['VPLS ID'].unique().astype(int))
-        #     del temp_df
+        temp_df = df_add[df_add.duplicated(subset=['VPLS ID'], keep=False)]
+        if len(temp_df) > 0:
+            logging.debug(f"Found duplicate VPLS IDs for VPLS-2 for node_ip ({ip_node})==>\n{temp_df.to_markdown()}\n\n")
+            reason = 'Same VPLS ID found ==> for VPLS IDs(S.Nos.)'
+            from Main_application.Nokia.Nokia_Section_Template_Checks.VPLS_1_tc import same_vpls_id_found_error_message_generator
+            result_dictionary[reason] = same_vpls_id_found_error_message_generator(dataframe=temp_df, common_vpls_ids=temp_df['VPLS ID'].unique().astype(int))
+            del temp_df
 
     # reason = 'VPLS ID of Action \'Add\' present in Action \'Modify/Delete\''
     # reason = 'Same VPLS ID found'
@@ -143,8 +143,9 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> dict:
             # result_dictionary[reason] = list((df[df['VPLS ID'].isin(list(set_intersection_between_Add_and_Modify_Delete_dfs))])['S.No.'])
 
             # Importing function from the VPLS_1 module for same_vpls_id_found_error_message_generator
-            from Nokia.Nokia_Section_Template_Checks.VPLS_1_tc import same_vpls_id_found_error_message_generator
-            result_dictionary[reason] = same_vpls_id_found_error_message_generator(dataframe=df, common_vpls_ids=set_intersection_between_Add_and_Modify_Delete_dfs)
+            from Main_application.Nokia.Nokia_Section_Template_Checks.VPLS_1_tc import same_vpls_id_found_error_message_generator
+            result_dictionary[reason] = same_vpls_id_found_error_message_generator(dataframe=df,
+                                                                                   common_vpls_ids=set_intersection_between_Add_and_Modify_Delete_dfs)
 
             logging.debug(f"Entered the  entries for 'Common VPLS IDs in Add and Modify/Delete Actions' for node ip {ip_node} for VPLS-2 ==>\n{result_dictionary}\n\n")
 

@@ -8,10 +8,82 @@ import pandas as pd
 from Main_application.CustomThread import CustomThread
 from Main_application.file_lines_handler import File_lines_handler as flh
 
+result_dictionary = {}
 vpls_section_filter_lines_list = []
 service_file_lines_list_block = []
 global_running_config_backup_file_lines = []
 port_details_file_lines_list = []
+
+
+def common_checks_for_sequence_add(ip_node: str, dataframe: pd.DataFrame):
+    """Performs the common checks for \'ADD\' sequence filtered dataframe irrespective of action.
+
+    Args:
+        ip_node (str): ip node for which the checks are being performed
+        dataframe (pd.DataFrame): \'ADD\' action filtered dataframe
+    """
+
+    logging.debug(
+        f"{ip_node}: - inside {__name__}"
+    )
+
+    global result_dictionary
+
+    reason = "Route-distinguisher Clash found"
+
+    global service_file_lines_list_block
+    logging.debug(
+        f"{ip_node}: - Got the dataframe\n{dataframe.to_markdown()}"
+    )
+
+    unique_vpls_ids = dataframe['VPLS ID'].unique().astype(float)
+    unique_vpls_ids = unique_vpls_ids.astype(int)
+
+    filtered_lines_starting_with_route_distinguisher = flh().file_lines_starter_filter(file_lines_list=service_file_lines_list_block,
+                                                                                       start_word="route-distinguisher ")
+
+    logging.info(
+        f"{ip_node}: - Got the list of filtered_lines_starting_with_route_distinguisher\n" +
+        f"{'\n'.join(filtered_lines_starting_with_route_distinguisher)}"
+    )
+
+    i = 0
+    while i < unique_vpls_ids.size:
+        selected_vpls_id = unique_vpls_ids[i]
+        temp_df = dataframe.loc[dataframe['VPLS ID'] == selected_vpls_id]
+        logging.info(
+            f"{ip_node}: - Got the temp dataframe for vpls id {selected_vpls_id}.\n{temp_df.to_markdown()}"
+        )
+        route_distinguisher_var = temp_df.iloc[0, temp_df.columns.get_loc("BGP")]
+        logging.debug(
+            f"{ip_node}: - Got the route_distinguisher_var for vpls id {selected_vpls_id}.\n{route_distinguisher_var}"
+        )
+
+        route_distinguisher_var_found = False
+
+        j = 0
+        while j < len(filtered_lines_starting_with_route_distinguisher):
+            if filtered_lines_starting_with_route_distinguisher[j].strip() == route_distinguisher_var:
+                route_distinguisher_var_found = True
+                break
+            j += 1
+
+        if route_distinguisher_var_found:
+            if reason not in result_dictionary:
+                result_dictionary[reason] = []
+                result_dictionary[reason].extend(temp_df["S.No."].astype(float).astype(int).to_list())
+            else:
+                result_dictionary[reason].extend(temp_df["S.No."].astype(float).astype(int).to_list())
+        i += 1
+
+    logging.info(
+        f"{ip_node}: - Returning the result dictionary of {__name__} method execution " +
+        f"\n{'\n'.join(
+            [f'{key} : {
+                ', '.join(str(value) for value in values)
+            }' for key, values in result_dictionary.items()]
+        )}"
+    )
 
 
 def add_action_checks(ip_node: str, dataframe: pd.DataFrame) -> dict:
@@ -32,7 +104,6 @@ def add_action_checks(ip_node: str, dataframe: pd.DataFrame) -> dict:
 
     reason = "Action:Add VPLS ID Clash found"
     reason2 = "VPLS Name Clash found"
-    reason3 = "Route-distinguisher Clash found"
 
     global vpls_section_filter_lines_list
     global service_file_lines_list_block
@@ -63,10 +134,7 @@ def add_action_checks(ip_node: str, dataframe: pd.DataFrame) -> dict:
         logging.info(
             f"{ip_node}: - Got the temp dataframe for vpls id {selected_vpls_id}.\n{temp_df.to_markdown()}"
         )
-        route_distinguisher_var = temp_df.iloc[0, temp_df.columns.get_loc("BGP")]
-        logging.debug(
-            f"{ip_node}: - Got the route_distinguisher_var for vpls id {selected_vpls_id}.\n{route_distinguisher_var}"
-        )
+
         selected_vpls_name = temp_df.iloc[0, temp_df.columns.get_loc("VPLS Name")]
         logging.debug(
             f"{ip_node}: - Got the selected_vpls_name for vpls id {selected_vpls_id}.\n{selected_vpls_name}"
@@ -112,21 +180,6 @@ def add_action_checks(ip_node: str, dataframe: pd.DataFrame) -> dict:
             else:
                 add_action_result_dictionary[reason].extend(temp_df["S.No."].astype(float).astype(int))
 
-        route_distinguisher_var_found = False
-
-        j = 0
-        while j < len(filtered_lines_starting_with_route_distinguisher):
-            if filtered_lines_starting_with_route_distinguisher[j].strip() == route_distinguisher_var:
-                route_distinguisher_var_found = True
-                break
-            j += 1
-
-        if route_distinguisher_var_found:
-            if reason3 not in add_action_result_dictionary:
-                add_action_result_dictionary[reason3] = []
-                add_action_result_dictionary[reason3].extend(temp_df["S.No."].astype(float).astype(int).to_list())
-            else:
-                add_action_result_dictionary[reason3].extend(temp_df["S.No."].astype(float).astype(int).to_list())
         i += 1
 
     logging.info(
@@ -154,7 +207,7 @@ def modify_action_checks(ip_node: str, dataframe: pd.DataFrame) -> dict:
 
     logging.info(f"{ip_node}: - Starting {__name__}")
 
-    reason = "Action:Add VPLS ID not found"
+    reason = "Action:Modify VPLS ID not found"
 
     global service_file_lines_list_block
 
@@ -453,6 +506,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
     #                     datefmt="%d-%b-%Y %I:%M:%S %p",
     #                     encoding="UTF-8",
     #                     level=logging.DEBUG)
+    global result_dictionary
     result_dictionary = {}
 
     dataframe = dataframe.where(~dataframe.isna(), "TempNA")
@@ -529,12 +583,25 @@ def main_func(dataframe: pd.DataFrame, ip_node: str, running_config_backup_file_
                 if len(add_action_result_dictionary_from_main_func) > 0:
                     result_dictionary.update(add_action_result_dictionary_from_main_func)
 
+            common_checks_for_sequence_add(ip_node=ip_node,
+                                           dataframe=add_action_dataframe)
+
         if modify_action_dataframe.shape[0] > 0:
             modify_action_result_dictionary_from_main_func = modify_action_checks(ip_node=ip_node,
                                                                                   dataframe=modify_action_dataframe)
             if isinstance(modify_action_result_dictionary_from_main_func, dict):
                 if len(modify_action_result_dictionary_from_main_func) > 0:
                     result_dictionary.update(modify_action_result_dictionary_from_main_func)
+
+            modify_action_sequence_add_filtered_df = modify_action_dataframe.loc[modify_action_dataframe["Sequence"].str.upper().str.endswith("ADD")]
+
+            if modify_action_sequence_add_filtered_df.shape[0] > 0:
+                logging.info(
+                    f"{ip_node}: - Got the filtered df for modify_action_sequence_add_filtered_df :\n{modify_action_sequence_add_filtered_df.to_markdown()}"
+                )
+
+                common_checks_for_sequence_add(ip_node= ip_node,
+                                               dataframe=modify_action_sequence_add_filtered_df)
 
         vsd_controller_mapping_yes_filtered_df = dataframe.loc[dataframe["VSD Controller Mapping"].str.upper().str.strip().str.endswith("YES")]
 

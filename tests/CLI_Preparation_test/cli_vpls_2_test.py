@@ -22,7 +22,7 @@ def test_add_vpls_2(caplog, capsys):
                         encoding="UTF-8",
                         level=logging.DEBUG)
     folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))                #gives the location of CLI_Automation
-    test_files_folder = os.path.join(folder, "Files_for_testing","Cli_prep_test_files")
+    test_files_folder = os.path.join(folder, "Files_for_testing", "Cli_prep_test_files")
 
     vpls_2_add_test_file = os.path.join(test_files_folder, 'File_4.xlsx')
 

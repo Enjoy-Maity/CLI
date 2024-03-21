@@ -76,7 +76,6 @@ def test_add_vpls_1(capsys):
     assert output == 'Successful'
 
 
-
 def test_delete_vpls_1(capsys):
     log_file = os.path.join(os.path.dirname(__file__),  "test_log_files.log")
     if not os.path.exists(log_file):

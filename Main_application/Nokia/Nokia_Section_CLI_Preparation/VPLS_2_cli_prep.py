@@ -670,10 +670,10 @@ def modify_action_cli_for_add_sequence(dataframe: pd.DataFrame, ip_node: str) ->
     )
 
     if filtered_dataframe_with_modify_action_add_sequence_vsd_controller_mapping_as_yes.shape[0] > 0:
-        temp_cli = f"{temp_cli}\n{modify_action_add_sequence_cli_for_vsd_controller_mapping_as_yes(filtered_dataframe_with_modify_action_add_sequence_vsd_controller_mapping_as_yes, ip_node)}"
+        temp_cli = f"{temp_cli}{modify_action_add_sequence_cli_for_vsd_controller_mapping_as_yes(filtered_dataframe_with_modify_action_add_sequence_vsd_controller_mapping_as_yes, ip_node)}"
 
     if filtered_dataframe_with_modify_action_add_sequence_vsd_controller_mapping_as_no.shape[0] > 0:
-        temp_cli = f"{temp_cli}\n{modify_action_add_sequence_cli_for_vsd_controller_mapping_as_no(filtered_dataframe_with_modify_action_add_sequence_vsd_controller_mapping_as_no, ip_node)}"
+        temp_cli = f"{temp_cli}{modify_action_add_sequence_cli_for_vsd_controller_mapping_as_no(filtered_dataframe_with_modify_action_add_sequence_vsd_controller_mapping_as_no, ip_node)}"
 
     return temp_cli
 
@@ -766,7 +766,7 @@ def main_func(dataframe: pd.DataFrame, ip_node: str) -> str:
         )
 
         if filtered_df_for_action_add.shape[0] > 0:
-            cli = f"{cli}{add_action_cli(filtered_df_for_action_add, ip_node)}\n"
+            cli = f"{cli}{add_action_cli(filtered_df_for_action_add, ip_node)}"
 
         if filtered_df_for_action_modify.shape[0] > 0:
             cli = f"{cli}{modify_action_cli(filtered_df_for_action_modify, ip_node)}"
